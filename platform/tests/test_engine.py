@@ -361,6 +361,157 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(results_by_company[state["companies"][0]["company_id"]], 3)
         self.assertEqual(results_by_company[state["companies"][1]["company_id"]], 2)
 
+    def test_trade_proposal_is_recorded_and_visible(self):
+        state = engine.create_initial_state(participant_count=3)
+        state = engine.start_simulation(state, utc())
+
+        seller = state["companies"][0]
+        buyer = state["companies"][1]
+        seller["allowances"] = round(seller["allowances"] + 15, 2)
+
+        state = engine.propose_trade(
+            state,
+            seller_company_id=seller["company_id"],
+            buyer_company_id=buyer["company_id"],
+            quantity=5,
+            price_per_allowance=125,
+            now=utc(second=7),
+        )
+
+        self.assertEqual(len(state["trades"]), 1)
+        self.assertEqual(state["trades"][0]["status"], "proposed")
+
+    def test_trade_acceptance_settles_allowances_and_cash(self):
+        state = engine.create_initial_state(participant_count=3)
+        state = engine.start_simulation(state, utc())
+
+        seller = state["companies"][0]
+        buyer = state["companies"][1]
+        seller["allowances"] = round(seller["allowances"] + 12, 2)
+        seller_cash_before = seller["cash"]
+        buyer_cash_before = buyer["cash"]
+        seller_allowances_before = seller["allowances"]
+        buyer_allowances_before = buyer["allowances"]
+
+        state = engine.propose_trade(
+            state,
+            seller_company_id=seller["company_id"],
+            buyer_company_id=buyer["company_id"],
+            quantity=4,
+            price_per_allowance=140,
+            now=utc(second=7),
+        )
+        trade_id = state["trades"][0]["trade_id"]
+
+        settled = engine.respond_to_trade(
+            state,
+            trade_id=trade_id,
+            responder_company_id=buyer["company_id"],
+            response="accept",
+            now=utc(second=8),
+        )
+
+        updated_seller = settled["companies"][0]
+        updated_buyer = settled["companies"][1]
+        trade = settled["trades"][0]
+
+        self.assertEqual(trade["status"], "accepted")
+        self.assertEqual(
+            updated_seller["allowances"], round(seller_allowances_before - 4, 2)
+        )
+        self.assertEqual(
+            updated_buyer["allowances"], round(buyer_allowances_before + 4, 2)
+        )
+        self.assertEqual(
+            updated_seller["cash"], round(seller_cash_before + (4 * 140), 2)
+        )
+        self.assertEqual(updated_buyer["cash"], round(buyer_cash_before - (4 * 140), 2))
+
+    def test_trade_rejection_and_duplicate_acceptance_are_blocked(self):
+        state = engine.create_initial_state(participant_count=3)
+        state = engine.start_simulation(state, utc())
+
+        seller = state["companies"][0]
+        buyer = state["companies"][1]
+        seller["allowances"] = round(seller["allowances"] + 10, 2)
+
+        state = engine.propose_trade(
+            state,
+            seller_company_id=seller["company_id"],
+            buyer_company_id=buyer["company_id"],
+            quantity=3,
+            price_per_allowance=130,
+            now=utc(second=7),
+        )
+        trade_id = state["trades"][0]["trade_id"]
+
+        rejected = engine.respond_to_trade(
+            state,
+            trade_id=trade_id,
+            responder_company_id=buyer["company_id"],
+            response="reject",
+            now=utc(second=8),
+        )
+        self.assertEqual(rejected["trades"][0]["status"], "rejected")
+
+        with self.assertRaises(ValueError):
+            engine.respond_to_trade(
+                rejected,
+                trade_id=trade_id,
+                responder_company_id=buyer["company_id"],
+                response="accept",
+                now=utc(second=9),
+            )
+
+    def test_trade_proposal_rejects_insufficient_holdings_and_cash(self):
+        state = engine.create_initial_state(participant_count=3)
+        state = engine.start_simulation(state, utc())
+
+        seller = state["companies"][0]
+        buyer = state["companies"][1]
+
+        with self.assertRaises(ValueError):
+            engine.propose_trade(
+                state,
+                seller_company_id=seller["company_id"],
+                buyer_company_id=buyer["company_id"],
+                quantity=999,
+                price_per_allowance=120,
+                now=utc(second=7),
+            )
+
+        seller["allowances"] = round(seller["allowances"] + 15, 2)
+        with self.assertRaises(ValueError):
+            engine.propose_trade(
+                state,
+                seller_company_id=seller["company_id"],
+                buyer_company_id=buyer["company_id"],
+                quantity=5,
+                price_per_allowance=999999,
+                now=utc(second=7),
+            )
+
+    def test_trade_expiration_marks_stale_proposals(self):
+        state = engine.create_initial_state(participant_count=3)
+        state = engine.start_simulation(state, utc())
+        seller = state["companies"][0]
+        buyer = state["companies"][1]
+        seller["allowances"] = round(seller["allowances"] + 8, 2)
+
+        state = engine.propose_trade(
+            state,
+            seller_company_id=seller["company_id"],
+            buyer_company_id=buyer["company_id"],
+            quantity=2,
+            price_per_allowance=110,
+            now=utc(second=7),
+        )
+
+        expired = engine.advance_state(
+            state, datetime(2026, 1, 1, 9, 1, 0, tzinfo=timezone.utc)
+        )
+        self.assertEqual(expired["trades"][0]["status"], "expired")
+
 
 class SettingsTests(unittest.TestCase):
     def test_session_config_registers_phase_one_and_two_app(self):

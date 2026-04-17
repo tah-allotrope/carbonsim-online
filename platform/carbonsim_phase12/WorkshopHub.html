@@ -72,7 +72,7 @@ CarbonSim Workshop Hub
 
 <div class="carbonsim-shell">
     <div class="carbonsim-hero">
-        <div class="carbonsim-kicker">Multiplayer Phase 1 + 3 Prototype</div>
+        <div class="carbonsim-kicker">Multiplayer Phase 1 + 5 Prototype</div>
         <h2 style="margin: 0 0 8px 0;">{{ company_name }} <span class="carbonsim-subtle">/ {{ sector_label }}</span></h2>
         <p id="status-text" style="margin: 0 0 16px 0; color: #365061;">{{ initial_snapshot.status_text }}</p>
         {{ if is_facilitator }}
@@ -158,6 +158,28 @@ CarbonSim Workshop Hub
         <div id="auction-board" class="carbonsim-subtle">Waiting for live session data...</div>
     </div>
 
+    <div class="carbonsim-grid">
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Trade Proposal</div>
+            <p class="carbonsim-subtle" style="margin-top: 0;">Offer allowances directly to another company at a fixed bilateral price during the decision window.</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <select id="trade-buyer" style="padding: 10px 12px; border: 1px solid #d8e2eb; border-radius: 10px; min-width: 180px;"></select>
+                <input id="trade-quantity" type="number" min="1" step="1" value="3" style="padding: 10px 12px; border: 1px solid #d8e2eb; border-radius: 10px; max-width: 110px;">
+                <input id="trade-price" type="number" min="1" step="1" value="130" style="padding: 10px 12px; border: 1px solid #d8e2eb; border-radius: 10px; max-width: 110px;">
+                <button id="propose-trade-button" class="carbonsim-button" type="button">Propose trade</button>
+            </div>
+        </div>
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">My Trade Inbox</div>
+            <div id="trade-book" class="carbonsim-subtle">Waiting for live session data...</div>
+        </div>
+    </div>
+
+    <div class="carbonsim-card">
+        <div class="carbonsim-kicker">Public Trade Feed</div>
+        <div id="trade-feed" class="carbonsim-subtle">Waiting for live session data...</div>
+    </div>
+
     <div class="carbonsim-card">
         <div class="carbonsim-kicker">Leaderboard Snapshot</div>
         <table class="carbonsim-table">
@@ -207,6 +229,11 @@ CarbonSim Workshop Hub
             buyOffsetsButton.disabled = !company || snapshot.phase !== 'decision_window';
         }
 
+        const proposeTradeButton = document.getElementById('propose-trade-button');
+        if (proposeTradeButton) {
+            proposeTradeButton.disabled = !company || snapshot.phase !== 'decision_window';
+        }
+
         if (company && company.decision_summary) {
             document.getElementById('abatement-cost').textContent = company.decision_summary.abatement_cost_committed;
             document.getElementById('active-measures').textContent = company.decision_summary.active_abatement_count;
@@ -220,6 +247,17 @@ CarbonSim Workshop Hub
             document.getElementById('max-offsets').textContent = '-';
             document.getElementById('projected-net-position').textContent = '-';
         }
+
+        const buyerSelect = document.getElementById('trade-buyer');
+        buyerSelect.innerHTML = '';
+        snapshot.leaderboard
+            .filter((entry) => !company || entry.company_name !== company.company_name)
+            .forEach((entry) => {
+                const option = document.createElement('option');
+                option.value = entry.company_id || entry.company_name;
+                option.textContent = `${entry.company_name} (${entry.sector_label})`;
+                buyerSelect.appendChild(option);
+            });
 
         const abatementControls = document.getElementById('abatement-controls');
         abatementControls.innerHTML = '';
@@ -249,6 +287,55 @@ CarbonSim Workshop Hub
                 button.addEventListener('click', () => {
                     liveSend({action: 'activate_abatement', measure_id: button.dataset.measureId});
                 });
+            });
+        }
+
+        const tradeBook = document.getElementById('trade-book');
+        tradeBook.innerHTML = '';
+        if (!snapshot.company_trade_book || !snapshot.company_trade_book.length) {
+            tradeBook.textContent = 'No trades involving this company yet.';
+        } else {
+            snapshot.company_trade_book.forEach((trade) => {
+                const row = document.createElement('div');
+                row.style.padding = '10px 0';
+                row.style.borderBottom = '1px solid #e7eef4';
+                const canRespond = company && trade.status === 'proposed' && trade.buyer_company_id === company.company_id;
+                row.innerHTML = `
+                    <div><strong>${trade.trade_id}</strong> / ${trade.status}</div>
+                    <div class="carbonsim-subtle">Seller: ${trade.seller_company_id} / Buyer: ${trade.buyer_company_id} / Qty: ${trade.quantity} / Price: ${trade.price_per_allowance}</div>
+                    ${canRespond ? `
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                            <button class="carbonsim-button trade-accept-button" type="button" data-trade-id="${trade.trade_id}">Accept</button>
+                            <button class="carbonsim-button trade-reject-button" type="button" data-trade-id="${trade.trade_id}">Reject</button>
+                        </div>
+                    ` : ''}
+                `;
+                tradeBook.appendChild(row);
+            });
+
+            document.querySelectorAll('.trade-accept-button').forEach((button) => {
+                button.addEventListener('click', () => {
+                    liveSend({action: 'respond_trade', trade_id: button.dataset.tradeId, response: 'accept'});
+                });
+            });
+            document.querySelectorAll('.trade-reject-button').forEach((button) => {
+                button.addEventListener('click', () => {
+                    liveSend({action: 'respond_trade', trade_id: button.dataset.tradeId, response: 'reject'});
+                });
+            });
+        }
+
+        const tradeFeed = document.getElementById('trade-feed');
+        tradeFeed.innerHTML = '';
+        if (!snapshot.trade_feed || !snapshot.trade_feed.length) {
+            tradeFeed.textContent = 'No public trades yet.';
+        } else {
+            snapshot.trade_feed.forEach((trade) => {
+                const item = document.createElement('div');
+                item.style.padding = '10px 0';
+                item.style.borderBottom = '1px solid #e7eef4';
+                item.innerHTML = `<strong>${trade.trade_id}</strong> / ${trade.status} / ${trade.seller_company_id} -> ${trade.buyer_company_id} / ${trade.quantity} allowances @ ${trade.price_per_allowance}`;
+                tradeFeed.appendChild(item);
             });
         }
 
@@ -359,6 +446,16 @@ CarbonSim Workshop Hub
             buyOffsetsButton.addEventListener('click', () => {
                 const quantity = Number(document.getElementById('offset-quantity').value || '0');
                 liveSend({action: 'buy_offsets', quantity});
+            });
+        }
+
+        const proposeTradeButton = document.getElementById('propose-trade-button');
+        if (proposeTradeButton) {
+            proposeTradeButton.addEventListener('click', () => {
+                const buyerCompanyId = document.getElementById('trade-buyer').value;
+                const quantity = Number(document.getElementById('trade-quantity').value || '0');
+                const pricePerAllowance = Number(document.getElementById('trade-price').value || '0');
+                liveSend({action: 'propose_trade', buyer_company_id: buyerCompanyId, quantity, price_per_allowance: pricePerAllowance});
             });
         }
     });

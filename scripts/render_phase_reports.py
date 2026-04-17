@@ -333,6 +333,82 @@ Settle --> Broadcast[Show public auction results in dashboard]""",
     )
 
 
+def phase_five_report() -> str:
+    return render_report(
+        "phase-five-secondary-trading",
+        {
+            "INPUT_OUTPUT_CONTENT": "".join(
+                [
+                    summary_card(
+                        "Input",
+                        "Phase 5 requirements for the simplest V1 secondary market: bilateral trade proposals, responses, settlement validation, and a trade feed.",
+                    ),
+                    summary_card(
+                        "Output",
+                        "A server-authoritative bilateral trading layer with proposals, accept and reject responses, expiry handling, holdings and cash checks, settlement, and a public trade feed in the workshop dashboard.",
+                    ),
+                    summary_card(
+                        "Key Files",
+                        "`platform/carbonsim_phase12/engine.py`, `platform/carbonsim_phase12/__init__.py`, `platform/carbonsim_phase12/WorkshopHub.html`, and `platform/tests/test_engine.py`",
+                    ),
+                    summary_card(
+                        "Verification",
+                        "Twenty unit tests now cover trading proposal creation, acceptance, rejection, expiry, insufficient holdings and cash, and the earlier auction and compliance behavior.",
+                    ),
+                ]
+            ),
+            "MERMAID_DIAGRAM": """flowchart LR
+Open[Decision window open] --> Propose[Seller proposes bilateral trade]
+Propose --> Validate[Server validates holdings and buyer cash]
+Validate --> Inbox[Buyer sees trade in inbox]
+Inbox --> Accept[Accept trade]
+Inbox --> Reject[Reject trade]
+Accept --> Settle[Transfer allowances and cash]
+Reject --> Close[Mark rejected]
+Propose --> Expire[Expire if unanswered]
+Settle --> Feed[Publish trade feed update]""",
+            "MATH_ALGORITHM_SECTION": unordered(
+                [
+                    "Trade value is calculated as `quantity * price_per_allowance`, and that full value must be affordable by the buyer at proposal time and again at acceptance time.",
+                    "Settlement transfers the proposed allowance quantity from seller to buyer and the total trade value from buyer cash to seller cash in one server-side transaction.",
+                    "Trade expiry is time-based: open proposals move to `expired` when the current time passes `expires_at`, preventing stale deals from settling later in the round.",
+                    "Compliance position is recalculated for both counterparties immediately after accepted trades so the dashboard reflects the new post-trade exposure without waiting for year-end processing.",
+                ]
+            ),
+            "TOOLS_METHODS": unordered(
+                [
+                    "Implementation method: keep trade lifecycle state in the shared engine next to auctions so all market actions remain auditable and server-authoritative.",
+                    "UI method: add a proposal form, buyer inbox, and public trade feed to the existing live workshop dashboard rather than branching into a separate trading page.",
+                    "Validation method: reject proposals when the seller lacks allowances or the buyer lacks cash, and reject duplicate responses once a trade is no longer `proposed`.",
+                    "Test method: write red `unittest` cases first for proposal, acceptance, rejection, expiry, and invalid settlement, then implement until the full suite returns green.",
+                ]
+            ),
+            "CHARTS_SECTION": """<div class="empty-state"><strong>No chart included.</strong><p>Phase 5 is about controlled trade lifecycle behavior and settlement integrity, so the highest-value evidence is deterministic test coverage and the public trade feed rather than a synthetic visualization.</p></div>""",
+            "LIMITATIONS_ALTERNATIVES": unordered(
+                [
+                    "The trading layer is intentionally bilateral and simple; there is no matching engine or open order book yet.",
+                    "Trades are proposed seller-to-buyer rather than being discovered in a shared request-for-quote interface, which keeps implementation legible but less market-like.",
+                    "Second-best alternative: wait until a full exchange exists, but that would postpone the strategic rebalancing behavior phase 5 is meant to introduce after auctions.",
+                ]
+            ),
+            "ERRORS_WARNINGS_FLAGS": unordered(
+                [
+                    "The only issues in this phase were test-side: one invalid timestamp helper call used `second=60`, and one settlement assertion compared against a mutated in-place object reference.",
+                    "Fixing those tests confirmed the trade engine itself already handled expiry and settlement correctly.",
+                    "The dashboard now exposes public trade history, but later phases may still choose to make parts of the feed semi-public depending on facilitator goals.",
+                ]
+            ),
+            "OPEN_QUESTIONS": unordered(
+                [
+                    "Should later versions keep bilateral targeted proposals only, or add a facilitator-mediated request board before considering a full exchange?",
+                    "Do workshops need trade cancellation before response, or is proposal plus accept or reject enough for V1?",
+                    "Next phase seed: build facilitator controls, participant health views, and export-ready session analytics on top of the now-complete compliance, auction, and bilateral trade loop.",
+                ]
+            ),
+        },
+    )
+
+
 def main() -> None:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     today = str(date.today())
@@ -342,6 +418,7 @@ def main() -> None:
         REPORTS_DIR
         / f"{today}-phase-three-abatement-offsets.html": phase_three_report(),
         REPORTS_DIR / f"{today}-phase-four-auction-market.html": phase_four_report(),
+        REPORTS_DIR / f"{today}-phase-five-secondary-trading.html": phase_five_report(),
     }
     for path, html in outputs.items():
         path.write_text(html, encoding="utf-8")

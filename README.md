@@ -1,6 +1,6 @@
 # CarbonSim Online
 
-This repository now contains both the Vietnam ETS research base and a runnable `oTree` prototype for phases 1 through 4 of the implementation plan.
+This repository now contains both the Vietnam ETS research base and a runnable `oTree` prototype for phases 1 through 5 of the implementation plan.
 
 ## What is implemented
 
@@ -10,6 +10,7 @@ This repository now contains both the Vietnam ETS research base and a runnable `
 - Phase 2 is covered by a deterministic year engine with year-start allocation, emissions growth, banking, year-end surrender, penalties, and an audit log.
 - Phase 3 adds sector-specific abatement menus, immediate vs. next-year activation timing, offset holdings with a configurable surrender cap, and dashboard projections for forward-looking compliance decisions.
 - Phase 4 adds a sealed-bid, uniform-price primary auction with auction scheduling, bid validation, deterministic clearing, settlement into allowance holdings, public result display, and facilitator open/clear controls.
+- Phase 5 adds bilateral secondary trading with trade proposals, buyer accept or reject responses, server-side holdings and cash validation, expiration handling, and a public trade feed.
 
 ## Project layout
 
@@ -58,7 +59,7 @@ Open the demo or room pages from the running server and use the `carbonsim_works
 - `../.venv/Scripts/python.exe -m unittest tests.test_engine`
 - Local `oTree` boot check against `http://127.0.0.1:8001/` after creating the database and setting the SQLite schema version expected by `oTree`
 
-The test suite now covers phase 4 behavior as well, including auction schedule creation, bid validation, uniform-price clearing, settlement, and tie handling alongside the earlier engine rules.
+The test suite now covers phase 5 behavior as well, including trade proposal, acceptance, rejection, expiration, and settlement validation alongside the earlier auction and compliance rules.
 
 ## Research documents
 

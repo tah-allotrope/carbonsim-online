@@ -26,6 +26,11 @@
 - [x] Implement the phase 4 auction engine with public result display and facilitator controls
 - [x] Update the live workshop dashboard with bid entry and auction status views
 - [x] Run verification for phase 4, generate the phase 4 report artifact, and create the requested git commit
+- [x] Extend the implementation plan to cover phase 5 bilateral secondary trading
+- [x] Add failing tests for trade proposal, acceptance, rejection, expiration, duplicate handling, and settlement validation
+- [x] Implement the phase 5 trading engine with server-side validation, audit history, and a public trade feed
+- [x] Update the live workshop dashboard with trade proposal and trade response controls
+- [x] Run verification for phase 5, generate the phase 5 report artifact, create the requested git commit, and push to origin
 
 ## Review / Results
 
@@ -50,3 +55,7 @@
 - Extended the live workshop dashboard with an auction board, public clearing output, facilitator auction lifecycle controls, and participant bid-entry controls that run through the existing `live_method` path.
 - Expanded the unit suite to 15 tests and verified auction schedule creation, invalid bid rejection, clearing, settlement, and tie behavior on top of the earlier compliance and abatement rules.
 - Generated the phase 4 HTML artifact in `reports/2026-04-17-phase-four-auction-market.html` and prepared the repo for the requested implementation commit.
+- Implemented phase 5 as a bilateral trading layer with trade proposal, buyer response, expiry handling, duplicate-response protection, server-side settlement validation, and a public trade feed recorded in the shared engine state.
+- Extended the live workshop dashboard with a trade proposal form, company trade inbox, accept and reject controls for buyers, and a public trade feed to make post-auction rebalancing visible and explainable.
+- Expanded the unit suite to 20 tests and verified trade proposal, acceptance, rejection, expiry, and insufficient holdings or cash handling on top of the earlier compliance, abatement, and auction rules.
+- Generated the phase 5 HTML artifact in `reports/2026-04-17-phase-five-secondary-trading.html` and prepared the repo for the requested commit and push to `origin`.

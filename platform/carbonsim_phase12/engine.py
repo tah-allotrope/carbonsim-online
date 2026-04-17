@@ -22,6 +22,7 @@ DEFAULT_AUCTION_COUNT = 2
 DEFAULT_AUCTION_PRICE_FLOOR = 80.0
 DEFAULT_AUCTION_PRICE_CEILING = 300.0
 DEFAULT_AUCTION_SHARE_OF_CAP = 0.12
+DEFAULT_TRADE_EXPIRY_SECONDS = 20
 
 YEARLY_ALLOCATION_FACTORS = {
     1: 0.92,
@@ -175,6 +176,7 @@ def create_initial_state(
         "auction_price_floor": DEFAULT_AUCTION_PRICE_FLOOR,
         "auction_price_ceiling": DEFAULT_AUCTION_PRICE_CEILING,
         "auction_share_of_cap": DEFAULT_AUCTION_SHARE_OF_CAP,
+        "trade_expiry_seconds": DEFAULT_TRADE_EXPIRY_SECONDS,
         "phase": PHASE_LOBBY,
         "phase_durations": durations,
         "phase_started_at": None,
@@ -183,6 +185,7 @@ def create_initial_state(
         "completed_at": None,
         "companies": companies,
         "auctions": [],
+        "trades": [],
         "audit_log": [],
     }
 
@@ -266,6 +269,136 @@ def apply_company_decision(
             now=decision_time,
         )
 
+    if action == "propose_trade":
+        return propose_trade(
+            state,
+            seller_company_id=company_id,
+            buyer_company_id=payload["buyer_company_id"],
+            quantity=payload["quantity"],
+            price_per_allowance=payload["price_per_allowance"],
+            now=decision_time,
+        )
+
+    return state
+
+
+def propose_trade(
+    state: dict[str, Any],
+    *,
+    seller_company_id: str,
+    buyer_company_id: str,
+    quantity: float,
+    price_per_allowance: float,
+    now: datetime,
+) -> dict[str, Any]:
+    state = advance_state(state, now)
+    if state["phase"] != PHASE_DECISION_WINDOW:
+        raise ValueError("Trades can only be proposed during the decision window")
+
+    seller = _get_company(state, seller_company_id)
+    buyer = _get_company(state, buyer_company_id)
+    quantity = round(float(quantity), 2)
+    price_per_allowance = round(float(price_per_allowance), 2)
+    total_value = round(quantity * price_per_allowance, 2)
+
+    if seller_company_id == buyer_company_id:
+        raise ValueError("Trade counterparty must be different from seller")
+    if quantity <= 0 or price_per_allowance <= 0:
+        raise ValueError("Trade quantity and price must be positive")
+    if seller["allowances"] < quantity:
+        raise ValueError("Seller does not have enough allowances")
+    if buyer["cash"] < total_value:
+        raise ValueError("Buyer does not have enough cash")
+
+    created_at = _normalize_time(now)
+    trade = {
+        "trade_id": f"T{len(state['trades']) + 1:03d}",
+        "seller_company_id": seller_company_id,
+        "buyer_company_id": buyer_company_id,
+        "quantity": quantity,
+        "price_per_allowance": price_per_allowance,
+        "total_value": total_value,
+        "status": "proposed",
+        "created_at": _serialize_time(created_at),
+        "expires_at": _serialize_time(
+            created_at + timedelta(seconds=state["trade_expiry_seconds"])
+        ),
+        "responded_at": None,
+    }
+    state["trades"].append(trade)
+    _append_event(
+        state,
+        "trade_proposed",
+        created_at,
+        {
+            "year": state["current_year"],
+            "trade_id": trade["trade_id"],
+            "seller_company_id": seller_company_id,
+            "buyer_company_id": buyer_company_id,
+            "quantity": quantity,
+            "price_per_allowance": price_per_allowance,
+        },
+    )
+    return state
+
+
+def respond_to_trade(
+    state: dict[str, Any],
+    *,
+    trade_id: str,
+    responder_company_id: str,
+    response: str,
+    now: datetime,
+) -> dict[str, Any]:
+    state = advance_state(state, now)
+    trade = _get_trade(state, trade_id)
+    if trade["status"] != "proposed":
+        raise ValueError("Trade is no longer open for response")
+    if responder_company_id != trade["buyer_company_id"]:
+        raise ValueError("Only the designated buyer can respond to this trade")
+
+    response_time = _normalize_time(now)
+    if response == "reject":
+        trade["status"] = "rejected"
+        trade["responded_at"] = _serialize_time(response_time)
+        _append_event(
+            state,
+            "trade_rejected",
+            response_time,
+            {"year": state["current_year"], "trade_id": trade_id},
+        )
+        return state
+
+    if response != "accept":
+        raise ValueError("Unsupported trade response")
+
+    seller = _get_company(state, trade["seller_company_id"])
+    buyer = _get_company(state, trade["buyer_company_id"])
+    if seller["allowances"] < trade["quantity"]:
+        raise ValueError("Seller no longer has enough allowances")
+    if buyer["cash"] < trade["total_value"]:
+        raise ValueError("Buyer no longer has enough cash")
+
+    seller["allowances"] = round(seller["allowances"] - trade["quantity"], 2)
+    buyer["allowances"] = round(buyer["allowances"] + trade["quantity"], 2)
+    seller["cash"] = round(seller["cash"] + trade["total_value"], 2)
+    buyer["cash"] = round(buyer["cash"] - trade["total_value"], 2)
+    _recalculate_company_projection(state, seller)
+    _recalculate_company_projection(state, buyer)
+
+    trade["status"] = "accepted"
+    trade["responded_at"] = _serialize_time(response_time)
+    _append_event(
+        state,
+        "trade_accepted",
+        response_time,
+        {
+            "year": state["current_year"],
+            "trade_id": trade_id,
+            "quantity": trade["quantity"],
+            "price_per_allowance": trade["price_per_allowance"],
+        },
+    )
     return state
 
 
@@ -414,6 +547,7 @@ def advance_state(state: dict[str, Any], now: datetime) -> dict[str, Any]:
         return state
 
     current_time = _normalize_time(now)
+    _expire_trades(state, current_time)
     while (
         state["phase_deadline_at"]
         and _parse_time(state["phase_deadline_at"]) <= current_time
@@ -489,6 +623,7 @@ def build_player_snapshot(
     ):
         leaderboard.append(
             {
+                "company_id": item["company_id"],
                 "company_name": item["company_name"],
                 "sector_label": item["sector"].replace("_", " ").title(),
                 "banked_allowances": item["banked_allowances"],
@@ -523,6 +658,25 @@ def build_player_snapshot(
             }
         )
 
+    trade_feed = []
+    company_trade_book = []
+    for trade in state["trades"]:
+        trade_feed.append(
+            {
+                "trade_id": trade["trade_id"],
+                "seller_company_id": trade["seller_company_id"],
+                "buyer_company_id": trade["buyer_company_id"],
+                "quantity": trade["quantity"],
+                "price_per_allowance": trade["price_per_allowance"],
+                "status": trade["status"],
+            }
+        )
+        if company and (
+            trade["seller_company_id"] == company["company_id"]
+            or trade["buyer_company_id"] == company["company_id"]
+        ):
+            company_trade_book.append(deepcopy(trade_feed[-1]))
+
     return {
         "participant_label": participant_label,
         "phase": state["phase"],
@@ -537,7 +691,9 @@ def build_player_snapshot(
         "can_start": is_facilitator and state["phase"] == PHASE_LOBBY,
         "is_facilitator": is_facilitator,
         "auction_board": auction_board,
+        "trade_feed": trade_feed,
         "company": None if company is None else _company_snapshot(state, company),
+        "company_trade_book": company_trade_book,
         "leaderboard": leaderboard,
         "recent_events": recent_events,
     }
@@ -697,6 +853,14 @@ def _event_summary(event_type: str, details: dict[str, Any]) -> str:
         return f"Company {details['company_id']} submitted {details['quantity']} allowances at bid price {details['price']}"
     if event_type == "auction_cleared":
         return f"Auction {details['auction_id']} cleared at {details['clearing_price']} for {details['cleared_quantity']} allowances"
+    if event_type == "trade_proposed":
+        return f"Trade {details['trade_id']} proposed: seller {details['seller_company_id']} offered {details['quantity']} allowances to {details['buyer_company_id']} at {details['price_per_allowance']}"
+    if event_type == "trade_rejected":
+        return f"Trade {details['trade_id']} was rejected"
+    if event_type == "trade_accepted":
+        return f"Trade {details['trade_id']} settled for {details['quantity']} allowances at {details['price_per_allowance']}"
+    if event_type == "trade_expired":
+        return f"Trade {details['trade_id']} expired without a response"
     if event_type == "session_completed":
         return f"All {details['year']} simulation years are complete"
     return event_type.replace("_", " ")
@@ -708,7 +872,7 @@ def _status_text(state: dict[str, Any]) -> str:
     if state["phase"] == PHASE_YEAR_START:
         return "Fresh annual allocations have been issued and the cap has tightened. Participants should review their company positions."
     if state["phase"] == PHASE_DECISION_WINDOW:
-        return "The action window is open. Participants can commit abatement measures, buy offsets, and submit sealed bids into the current allowance auction while projected compliance updates live."
+        return "The action window is open. Participants can commit abatement measures, buy offsets, submit sealed bids into the current allowance auction, and propose bilateral trades while projected compliance updates live."
     if state["phase"] == PHASE_COMPLIANCE:
         return "Year-end surrender has been processed. Surplus allowances are banked and shortfalls trigger penalties."
     return "The three-year phase 1 and 2 prototype is complete and ready for debrief."
@@ -732,6 +896,10 @@ def _get_auction(state: dict[str, Any], auction_id: str) -> dict[str, Any]:
     return next(
         auction for auction in state["auctions"] if auction["auction_id"] == auction_id
     )
+
+
+def _get_trade(state: dict[str, Any], trade_id: str) -> dict[str, Any]:
+    return next(trade for trade in state["trades"] if trade["trade_id"] == trade_id)
 
 
 def _build_year_auctions(state: dict[str, Any]) -> list[dict[str, Any]]:
@@ -781,6 +949,21 @@ def _recalculate_company_projection(
         - company["offset_holdings"],
         2,
     )
+
+
+def _expire_trades(state: dict[str, Any], now: datetime) -> None:
+    for trade in state["trades"]:
+        if trade["status"] != "proposed":
+            continue
+        if _parse_time(trade["expires_at"]) <= now:
+            trade["status"] = "expired"
+            trade["responded_at"] = _serialize_time(now)
+            _append_event(
+                state,
+                "trade_expired",
+                now,
+                {"year": state["current_year"], "trade_id": trade["trade_id"]},
+            )
 
 
 def _decision_summary(state: dict[str, Any], company: dict[str, Any]) -> dict[str, Any]:

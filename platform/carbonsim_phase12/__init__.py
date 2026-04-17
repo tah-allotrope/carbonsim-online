@@ -6,8 +6,8 @@ from . import engine
 
 
 doc = """
-Phase 1 through 3 CarbonSim prototype built on oTree with a deterministic year engine,
-facilitator-controlled session start, and live dashboard decisions for abatement and offsets.
+Phase 1 through 5 CarbonSim prototype built on oTree with a deterministic year engine,
+facilitator-controlled session start, auctions, and live dashboard decisions for abatement, offsets, and bilateral trading.
 """
 
 
@@ -176,6 +176,30 @@ def live_workshop_hub(player: Player, data):
                 "quantity": data.get("quantity", 0),
                 "price": data.get("price", 0),
             },
+            now=_now(),
+        )
+        player.session.carbonsim_state = state
+
+    if action == "propose_trade":
+        state = engine.apply_company_decision(
+            state,
+            company_id=player.company_id,
+            action="propose_trade",
+            payload={
+                "buyer_company_id": data.get("buyer_company_id"),
+                "quantity": data.get("quantity", 0),
+                "price_per_allowance": data.get("price_per_allowance", 0),
+            },
+            now=_now(),
+        )
+        player.session.carbonsim_state = state
+
+    if action == "respond_trade":
+        state = engine.respond_to_trade(
+            state,
+            trade_id=data.get("trade_id"),
+            responder_company_id=player.company_id,
+            response=data.get("response"),
             now=_now(),
         )
         player.session.carbonsim_state = state
