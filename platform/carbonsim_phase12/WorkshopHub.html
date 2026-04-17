@@ -1,0 +1,366 @@
+{{ block title }}
+CarbonSim Workshop Hub
+{{ endblock }}
+
+{{ block content }}
+<style>
+    .carbonsim-shell {
+        font-family: Arial, sans-serif;
+        display: grid;
+        gap: 16px;
+    }
+    .carbonsim-hero,
+    .carbonsim-card {
+        border: 1px solid #d8e2eb;
+        border-radius: 16px;
+        background: #ffffff;
+        padding: 20px;
+    }
+    .carbonsim-hero {
+        background: linear-gradient(135deg, #eef8f1, #f7fbff);
+    }
+    .carbonsim-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    .carbonsim-kicker {
+        color: #5f7788;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+    }
+    .carbonsim-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #123447;
+    }
+    .carbonsim-subtle {
+        color: #5f7788;
+    }
+    .carbonsim-list {
+        margin: 0;
+        padding-left: 18px;
+        color: #365061;
+    }
+    .carbonsim-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .carbonsim-table th,
+    .carbonsim-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e7eef4;
+        text-align: left;
+        font-size: 14px;
+    }
+    .carbonsim-button {
+        border: 0;
+        border-radius: 999px;
+        background: #1c7c54;
+        color: white;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .carbonsim-button[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="carbonsim-shell">
+    <div class="carbonsim-hero">
+        <div class="carbonsim-kicker">Multiplayer Phase 1 + 3 Prototype</div>
+        <h2 style="margin: 0 0 8px 0;">{{ company_name }} <span class="carbonsim-subtle">/ {{ sector_label }}</span></h2>
+        <p id="status-text" style="margin: 0 0 16px 0; color: #365061;">{{ initial_snapshot.status_text }}</p>
+        {{ if is_facilitator }}
+        <button id="start-button" class="carbonsim-button" type="button">Start simulation</button>
+        <span class="carbonsim-subtle" style="margin-left: 12px;">The facilitator controls the first year launch from this page while the built-in oTree admin controls room and session creation.</span>
+        {{ endif }}
+    </div>
+
+    <div class="carbonsim-grid">
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Current Phase</div>
+            <div class="carbonsim-value" id="phase-label">{{ initial_snapshot.phase_label }}</div>
+        </div>
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Simulation Year</div>
+            <div class="carbonsim-value" id="year-label">{{ initial_snapshot.current_year }} / {{ initial_snapshot.num_years }}</div>
+        </div>
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Cap</div>
+            <div class="carbonsim-value" id="cap-label">{{ initial_snapshot.current_cap }}</div>
+        </div>
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Timer</div>
+            <div class="carbonsim-value" id="timer-label">{{ initial_snapshot.countdown_seconds }}</div>
+        </div>
+    </div>
+
+    <div class="carbonsim-grid">
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Company Dashboard</div>
+            <table class="carbonsim-table">
+                <tbody>
+                    <tr><th>Projected emissions</th><td id="projected-emissions">-</td></tr>
+                    <tr><th>Annual allocation</th><td id="year-allocation">-</td></tr>
+                    <tr><th>Allowance holdings</th><td id="allowances">-</td></tr>
+                    <tr><th>Offset holdings</th><td id="offset-holdings">-</td></tr>
+                    <tr><th>Auction allowances won</th><td id="auction-won">-</td></tr>
+                    <tr><th>Banked allowances</th><td id="banked-allowances">-</td></tr>
+                    <tr><th>Compliance gap</th><td id="compliance-gap">-</td></tr>
+                    <tr><th>Penalty due</th><td id="penalty-due">-</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Decision Impact</div>
+            <table class="carbonsim-table">
+                <tbody>
+                    <tr><th>Abatement cost committed</th><td id="abatement-cost">-</td></tr>
+                    <tr><th>Active measures</th><td id="active-measures">-</td></tr>
+                    <tr><th>Pending measures</th><td id="pending-measures">-</td></tr>
+                    <tr><th>Max offsets usable</th><td id="max-offsets">-</td></tr>
+                    <tr><th>Projected net position</th><td id="projected-net-position">-</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Recent Engine Events</div>
+            <ul id="event-list" class="carbonsim-list">
+                <li>Waiting for live session data...</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="carbonsim-grid">
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Abatement Menu</div>
+            <div id="abatement-controls" class="carbonsim-subtle">Waiting for live session data...</div>
+        </div>
+        <div class="carbonsim-card">
+            <div class="carbonsim-kicker">Offsets</div>
+            <p class="carbonsim-subtle" style="margin-top: 0;">Buy offsets during the decision window. Only the configured share of emissions can be used for compliance at year-end.</p>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <input id="offset-quantity" type="number" min="1" step="1" value="5" style="padding: 10px 12px; border: 1px solid #d8e2eb; border-radius: 10px; max-width: 120px;">
+                <button id="buy-offsets-button" class="carbonsim-button" type="button">Buy offsets</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="carbonsim-card">
+        <div class="carbonsim-kicker">Allowance Auctions</div>
+        <div id="auction-board" class="carbonsim-subtle">Waiting for live session data...</div>
+    </div>
+
+    <div class="carbonsim-card">
+        <div class="carbonsim-kicker">Leaderboard Snapshot</div>
+        <table class="carbonsim-table">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Sector</th>
+                    <th>Banked</th>
+                    <th>Gap</th>
+                    <th>Total penalties</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <tr><td colspan="5">Waiting for live session data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const initialSnapshot = js_vars.initial_snapshot;
+
+    function renderState(snapshot) {
+        document.getElementById('status-text').textContent = snapshot.status_text;
+        document.getElementById('phase-label').textContent = snapshot.phase_label;
+        document.getElementById('year-label').textContent = `${snapshot.current_year} / ${snapshot.num_years}`;
+        document.getElementById('cap-label').textContent = snapshot.current_cap;
+        document.getElementById('timer-label').textContent = snapshot.countdown_seconds;
+
+        const startButton = document.getElementById('start-button');
+        if (startButton) {
+            startButton.disabled = !snapshot.can_start;
+        }
+
+        const company = snapshot.company;
+        document.getElementById('projected-emissions').textContent = company ? company.projected_emissions : '-';
+        document.getElementById('year-allocation').textContent = company ? company.current_year_allocation : '-';
+        document.getElementById('allowances').textContent = company ? company.allowances : '-';
+        document.getElementById('offset-holdings').textContent = company ? company.offset_holdings : '-';
+        document.getElementById('auction-won').textContent = company ? company.auction_allowances_won : '-';
+        document.getElementById('banked-allowances').textContent = company ? company.banked_allowances : '-';
+        document.getElementById('compliance-gap').textContent = company ? company.compliance_gap : '-';
+        document.getElementById('penalty-due').textContent = company ? company.penalty_due : '-';
+
+        const buyOffsetsButton = document.getElementById('buy-offsets-button');
+        if (buyOffsetsButton) {
+            buyOffsetsButton.disabled = !company || snapshot.phase !== 'decision_window';
+        }
+
+        if (company && company.decision_summary) {
+            document.getElementById('abatement-cost').textContent = company.decision_summary.abatement_cost_committed;
+            document.getElementById('active-measures').textContent = company.decision_summary.active_abatement_count;
+            document.getElementById('pending-measures').textContent = company.decision_summary.pending_abatement_count;
+            document.getElementById('max-offsets').textContent = company.decision_summary.max_offsets_usable_this_year;
+            document.getElementById('projected-net-position').textContent = company.decision_summary.projected_net_position;
+        } else {
+            document.getElementById('abatement-cost').textContent = '-';
+            document.getElementById('active-measures').textContent = '-';
+            document.getElementById('pending-measures').textContent = '-';
+            document.getElementById('max-offsets').textContent = '-';
+            document.getElementById('projected-net-position').textContent = '-';
+        }
+
+        const abatementControls = document.getElementById('abatement-controls');
+        abatementControls.innerHTML = '';
+        if (!company || !company.abatement_menu.length) {
+            abatementControls.textContent = 'No abatement options available.';
+        } else {
+            company.abatement_menu.forEach((measure) => {
+                const wrap = document.createElement('div');
+                wrap.style.padding = '12px 0';
+                wrap.style.borderBottom = '1px solid #e7eef4';
+                const disabled = snapshot.phase !== 'decision_window' || measure.is_active || measure.is_pending;
+                const status = measure.is_active ? 'Active now' : (measure.is_pending ? 'Queued for next year' : 'Available');
+                wrap.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <div>
+                            <strong>${measure.label}</strong>
+                            <div class="carbonsim-subtle">Cuts ${measure.abatement_amount} emissions, costs ${measure.cost}, activates ${measure.activation_timing}.</div>
+                            <div class="carbonsim-subtle">Status: ${status}</div>
+                        </div>
+                        <button class="carbonsim-button abatement-button" type="button" data-measure-id="${measure.measure_id}" ${disabled ? 'disabled' : ''}>Commit</button>
+                    </div>
+                `;
+                abatementControls.appendChild(wrap);
+            });
+
+            document.querySelectorAll('.abatement-button').forEach((button) => {
+                button.addEventListener('click', () => {
+                    liveSend({action: 'activate_abatement', measure_id: button.dataset.measureId});
+                });
+            });
+        }
+
+        const auctionBoard = document.getElementById('auction-board');
+        auctionBoard.innerHTML = '';
+        if (!snapshot.auction_board || !snapshot.auction_board.length) {
+            auctionBoard.textContent = 'No auctions scheduled for this year yet.';
+        } else {
+            snapshot.auction_board.forEach((auction) => {
+                const panel = document.createElement('div');
+                panel.style.borderBottom = '1px solid #e7eef4';
+                panel.style.padding = '12px 0';
+                const resultsMarkup = auction.results && auction.results.length
+                    ? `<div class="carbonsim-subtle" style="margin-top:8px;">Results: ${auction.results.map((result) => `${result.company_id} won ${result.awarded_quantity}`).join(', ')}</div>`
+                    : '';
+                const facilitatorControls = snapshot.is_facilitator
+                    ? `
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+                            <button class="carbonsim-button auction-open-button" type="button" data-auction-id="${auction.auction_id}" ${auction.status !== 'scheduled' ? 'disabled' : ''}>Open</button>
+                            <button class="carbonsim-button auction-close-button" type="button" data-auction-id="${auction.auction_id}" ${auction.status !== 'open' ? 'disabled' : ''}>Clear</button>
+                        </div>
+                    `
+                    : '';
+                const bidForm = !snapshot.is_facilitator
+                    ? `
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center;">
+                            <input class="auction-quantity" type="number" min="1" step="1" value="5" style="padding: 10px 12px; border: 1px solid #d8e2eb; border-radius: 10px; max-width: 110px;" ${auction.status !== 'open' ? 'disabled' : ''}>
+                            <input class="auction-price" type="number" min="80" max="300" step="1" value="120" style="padding: 10px 12px; border: 1px solid #d8e2eb; border-radius: 10px; max-width: 110px;" ${auction.status !== 'open' ? 'disabled' : ''}>
+                            <button class="carbonsim-button auction-bid-button" type="button" data-auction-id="${auction.auction_id}" ${auction.status !== 'open' ? 'disabled' : ''}>Submit bid</button>
+                        </div>
+                    `
+                    : '';
+                panel.innerHTML = `
+                    <div><strong>${auction.label}</strong></div>
+                    <div class="carbonsim-subtle">Status: ${auction.status} / Supply: ${auction.supply} / Bid count: ${auction.bid_count} / Clearing price: ${auction.clearing_price || '-'}</div>
+                    ${facilitatorControls}
+                    ${bidForm}
+                    ${resultsMarkup}
+                `;
+                auctionBoard.appendChild(panel);
+            });
+
+            document.querySelectorAll('.auction-open-button').forEach((button) => {
+                button.addEventListener('click', () => {
+                    liveSend({action: 'open_auction', auction_id: button.dataset.auctionId});
+                });
+            });
+            document.querySelectorAll('.auction-close-button').forEach((button) => {
+                button.addEventListener('click', () => {
+                    liveSend({action: 'close_auction', auction_id: button.dataset.auctionId});
+                });
+            });
+            document.querySelectorAll('.auction-bid-button').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const wrap = button.parentElement;
+                    const quantity = Number(wrap.querySelector('.auction-quantity').value || '0');
+                    const price = Number(wrap.querySelector('.auction-price').value || '0');
+                    liveSend({action: 'submit_auction_bid', auction_id: button.dataset.auctionId, quantity, price});
+                });
+            });
+        }
+
+        const eventList = document.getElementById('event-list');
+        eventList.innerHTML = '';
+        if (!snapshot.recent_events.length) {
+            eventList.innerHTML = '<li>No events yet.</li>';
+        } else {
+            snapshot.recent_events.forEach((event) => {
+                const item = document.createElement('li');
+                item.textContent = `${event.timestamp}: ${event.summary}`;
+                eventList.appendChild(item);
+            });
+        }
+
+        const leaderboardBody = document.getElementById('leaderboard-body');
+        leaderboardBody.innerHTML = '';
+        snapshot.leaderboard.forEach((entry) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${entry.company_name}</td>
+                <td>${entry.sector_label}</td>
+                <td>${entry.banked_allowances}</td>
+                <td>${entry.compliance_gap}</td>
+                <td>${entry.cumulative_penalties}</td>
+            `;
+            leaderboardBody.appendChild(row);
+        });
+    }
+
+    function liveRecv(data) {
+        if (data.type === 'state') {
+            renderState(data.payload);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderState(initialSnapshot);
+        liveSend({action: 'refresh'});
+        setInterval(() => liveSend({action: 'refresh'}), 2000);
+
+        const startButton = document.getElementById('start-button');
+        if (startButton) {
+            startButton.addEventListener('click', () => liveSend({action: 'start_session'}));
+        }
+
+        const buyOffsetsButton = document.getElementById('buy-offsets-button');
+        if (buyOffsetsButton) {
+            buyOffsetsButton.addEventListener('click', () => {
+                const quantity = Number(document.getElementById('offset-quantity').value || '0');
+                liveSend({action: 'buy_offsets', quantity});
+            });
+        }
+    });
+</script>
+{{ endblock }}

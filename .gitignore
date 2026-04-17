@@ -1,2 +1,7 @@
 # Temporary text files from PDF extraction
 *.txt
+.venv/
+**/__pycache__/
+*.pyc
+platform/db.sqlite3
+reports/
