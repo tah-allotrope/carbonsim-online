@@ -5,3 +5,10 @@
 *.pyc
 platform/db.sqlite3
 reports/
+
+# Environment and deployment secrets
+.env
+*.env.local
+
+# Docker volumes
+pgdata/

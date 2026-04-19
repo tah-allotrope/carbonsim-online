@@ -10,7 +10,7 @@ SESSION_CONFIGS = [
         scenario="vietnam_pilot",
         bot_count=0,
         bot_strategy="moderate",
-        doc="Phase 1-7 prototype with scenario packs, bots, shocks, facilitator tools, and full trading.",
+        doc="Full CarbonSim workshop with Vietnam Pilot scenario, facilitator tools, bots, shocks, and trading.",
     ),
     dict(
         name="carbonsim_high_pressure",
@@ -33,6 +33,17 @@ SESSION_CONFIGS = [
         bot_count=0,
         bot_strategy="moderate",
         doc="Introductory scenario with gentler cap decline and lower penalties.",
+    ),
+    dict(
+        name="carbonsim_workshop_with_bots",
+        display_name="CarbonSim Workshop (Vietnam Pilot + Bots)",
+        app_sequence=["carbonsim_phase12"],
+        num_demo_participants=3,
+        phase_durations=dict(year_start=5, decision_window=20, compliance=5),
+        scenario="vietnam_pilot",
+        bot_count=3,
+        bot_strategy="moderate",
+        doc="Vietnam Pilot scenario with 3 bot participants for liquidity support.",
     ),
 ]
 
@@ -66,7 +77,19 @@ ROOMS = [
     dict(
         name="workshop_room",
         display_name="CarbonSim Workshop Room",
-    )
+    ),
+    dict(
+        name="demo_room",
+        display_name="CarbonSim Demo Room",
+    ),
 ]
 
-SECRET_KEY = "1314886002300"
+# Secret key: use environment variable in production, fall back to dev default
+SECRET_KEY = environ.get("SECRET_KEY", "1314886002300")
+
+# Production setting: enables HTTPS-aware cookie handling and production optimizations
+OTREE_PRODUCTION = environ.get("OTREE_PRODUCTION", "").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+)

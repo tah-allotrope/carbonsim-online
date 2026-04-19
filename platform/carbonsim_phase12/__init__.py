@@ -3,13 +3,15 @@ from datetime import datetime, timezone
 from otree.api import *
 
 from . import engine
+from . import deployment
 
 
 doc = """
-Phase 1 through 7 CarbonSim prototype built on oTree with a deterministic year engine,
+CarbonSim workshop platform built on oTree with a deterministic year engine,
 facilitator-controlled session pause/resume/advance, participant status tracking,
 exportable session data, scenario packs, bot participants, shock events,
-and live dashboard decisions for abatement, offsets, auctions, and bilateral trading.
+live dashboard decisions for abatement, offsets, auctions, and bilateral trading,
+deployment hardening, health checks, and session recovery.
 """
 
 
@@ -156,6 +158,24 @@ def live_workshop_hub(player: Player, data):
     state = _get_state(player)
     action = data.get("action") if isinstance(data, dict) else None
 
+    if action == "reconnect":
+        engine.update_participant_status(
+            state, company_id=player.company_id, action="reconnect", now=_now()
+        )
+        player.session.carbonsim_state = state
+        recovered = deployment.reconnect_company(state, player.company_id)
+        return {
+            player.id_in_group: {
+                "type": "reconnect",
+                "payload": recovered or {},
+                "role": deployment.get_company_role(state, player.company_id),
+            },
+        }
+
+    if action == "health_check":
+        health = deployment.health_check(state)
+        return {player.id_in_group: {"type": "health_check", "payload": health}}
+
     if (
         action == "start_session"
         and player.is_facilitator
@@ -282,6 +302,10 @@ def live_workshop_hub(player: Player, data):
 def live_facilitator_panel(player: Player, data):
     state = _get_state(player)
     action = data.get("action") if isinstance(data, dict) else None
+
+    if action == "health_check":
+        health = deployment.health_check(state)
+        return {player.id_in_group: {"type": "health_check", "payload": health}}
 
     if action == "pause_session" and player.is_facilitator:
         state = engine.pause_session(state, _now())
