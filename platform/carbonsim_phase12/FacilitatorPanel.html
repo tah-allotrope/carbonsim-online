@@ -1,0 +1,318 @@
+{{ block title }}
+CarbonSim Facilitator Panel
+{{ endblock }}
+
+{{ block content }}
+<style>
+    .fac-shell {
+        font-family: Arial, sans-serif;
+        display: grid;
+        gap: 16px;
+    }
+    .fac-hero,
+    .fac-card {
+        border: 1px solid #d8e2eb;
+        border-radius: 16px;
+        background: #ffffff;
+        padding: 20px;
+    }
+    .fac-hero {
+        background: linear-gradient(135deg, #eef8f1, #f7fbff);
+    }
+    .fac-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    .fac-kicker {
+        color: #5f7788;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+    }
+    .fac-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #123447;
+    }
+    .fac-subtle {
+        color: #5f7788;
+    }
+    .fac-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .fac-table th,
+    .fac-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e7eef4;
+        text-align: left;
+        font-size: 14px;
+    }
+    .fac-button {
+        border: 0;
+        border-radius: 999px;
+        background: #1c7c54;
+        color: white;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .fac-button[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    .fac-button.danger {
+        background: #b33a3a;
+    }
+    .fac-button.secondary {
+        background: #4a6e8a;
+    }
+    .fac-button.export-btn {
+        background: #2d6a4f;
+    }
+    .fac-button.warn-btn {
+        background: #c97d2a;
+    }
+    .fac-button.shock-btn {
+        background: #8b3a3a;
+    }
+    .fac-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .fac-shock-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 10px;
+    }
+</style>
+
+<div class="fac-shell">
+    <div class="fac-hero">
+        <div class="fac-kicker">Facilitator Control Panel</div>
+        <h2 style="margin: 0 0 8px 0;">Session Management</h2>
+        <p id="fac-status-text" class="fac-subtle" style="margin: 0 0 16px 0;">Waiting for session data...</p>
+        <div class="fac-controls">
+            <button id="pause-button" class="fac-button" type="button" disabled>Pause session</button>
+            <button id="resume-button" class="fac-button secondary" type="button" disabled>Resume session</button>
+            <button id="advance-button" class="fac-button secondary" type="button" disabled>Advance phase</button>
+            <button id="export-button" class="fac-button export-btn" type="button" disabled>Export session data</button>
+        </div>
+        <div class="fac-shock-row">
+            <button id="run-bots-button" class="fac-button warn-btn" type="button" disabled>Run bot turn</button>
+            <select id="shock-type" style="padding: 10px 12px; border: 1px solid #d8e2eb; border-radius: 10px;">
+                <option value="emissions_spike">Emissions spike</option>
+                <option value="allowance_withdrawal">Allowance withdrawal</option>
+                <option value="cost_shock">Cost shock</option>
+                <option value="offset_supply_change">Offset supply change</option>
+            </select>
+            <input id="shock-magnitude" type="number" min="0.01" max="0.5" step="0.01" value="0.1" style="padding: 10px 12px; border: 1px solid #d8e2eb; border-radius: 10px; max-width: 90px;">
+            <button id="apply-shock-button" class="fac-button shock-btn" type="button" disabled>Apply shock</button>
+        </div>
+    </div>
+
+    <div class="fac-grid">
+        <div class="fac-card">
+            <div class="fac-kicker">Current Phase</div>
+            <div class="fac-value" id="fac-phase-label">-</div>
+        </div>
+        <div class="fac-card">
+            <div class="fac-kicker">Simulation Year</div>
+            <div class="fac-value" id="fac-year-label">- / -</div>
+        </div>
+        <div class="fac-card">
+            <div class="fac-kicker">Cap</div>
+            <div class="fac-value" id="fac-cap-label">-</div>
+        </div>
+        <div class="fac-card">
+            <div class="fac-kicker">Timer</div>
+            <div class="fac-value" id="fac-timer-label">-</div>
+        </div>
+    </div>
+
+    <div class="fac-card">
+        <div class="fac-kicker">Participant Status</div>
+        <table class="fac-table">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Sector</th>
+                    <th>Decisions (current year)</th>
+                    <th>Cash</th>
+                    <th>Allowances</th>
+                    <th>Compliance gap</th>
+                    <th>Penalties (cumulative)</th>
+                    <th>Last action</th>
+                </tr>
+            </thead>
+            <tbody id="fac-participant-body">
+                <tr><td colspan="8">Waiting for data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="fac-card">
+        <div class="fac-kicker">Auction Log</div>
+        <div id="fac-auction-log" class="fac-subtle">Waiting for data...</div>
+    </div>
+
+    <div class="fac-card">
+        <div class="fac-kicker">Active Shocks</div>
+        <div id="fac-shocks" class="fac-subtle">No shocks applied yet.</div>
+    </div>
+
+    <div class="fac-card">
+        <div class="fac-kicker">Session Summary</div>
+        <div id="fac-session-summary" class="fac-subtle">Run the simulation to completion and export session data to see a full summary here.</div>
+    </div>
+
+    <div class="fac-card" id="fac-export-output-card" style="display:none;">
+        <div class="fac-kicker">Exported Data</div>
+        <pre id="fac-export-output" style="max-height:400px; overflow:auto; font-size:12px; background:#f4f8fa; padding:12px; border-radius:8px;"></pre>
+    </div>
+</div>
+
+<script>
+    const initialSnapshot = js_vars.initial_facilitator_snapshot;
+
+    function renderFacilitatorState(snapshot) {
+        document.getElementById('fac-phase-label').textContent = snapshot.phase_label;
+        document.getElementById('fac-year-label').textContent = `${snapshot.current_year} / ${snapshot.num_years}`;
+        document.getElementById('fac-cap-label').textContent = snapshot.current_cap;
+        document.getElementById('fac-timer-label').textContent = snapshot.countdown_seconds;
+        document.getElementById('fac-status-text').textContent = snapshot.session_complete
+            ? 'Session complete. Export data for debriefing.'
+            : snapshot.can_resume
+                ? 'Session is paused. Use Resume to continue.'
+                : `Year ${snapshot.current_year} of ${snapshot.num_years} — ${snapshot.phase_label}`;
+
+        document.getElementById('pause-button').disabled = !snapshot.can_pause;
+        document.getElementById('resume-button').disabled = !snapshot.can_resume;
+        document.getElementById('advance-button').disabled = !snapshot.can_advance_phase;
+        document.getElementById('export-button').disabled = false;
+        document.getElementById('run-bots-button').disabled = !snapshot.can_advance_phase;
+        document.getElementById('apply-shock-button').disabled = !snapshot.can_advance_phase;
+
+        const tbody = document.getElementById('fac-participant-body');
+        tbody.innerHTML = '';
+        if (!snapshot.participant_rows || !snapshot.participant_rows.length) {
+            tbody.innerHTML = '<tr><td colspan="8">No participants yet.</td></tr>';
+        } else {
+            snapshot.participant_rows.forEach((row) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.company_name}</td>
+                    <td>${row.sector_label}</td>
+                    <td>${row.decisions_this_year}</td>
+                    <td>${row.cash}</td>
+                    <td>${row.allowances}</td>
+                    <td>${row.compliance_gap}</td>
+                    <td>${row.cumulative_penalties}</td>
+                    <td>${row.last_action || 'none'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        const auctionLog = document.getElementById('fac-auction-log');
+        auctionLog.innerHTML = '';
+        if (!snapshot.auction_log || !snapshot.auction_log.length) {
+            auctionLog.textContent = 'No auctions yet.';
+        } else {
+            const table = document.createElement('table');
+            table.className = 'fac-table';
+            table.innerHTML = `
+                <thead><tr><th>ID</th><th>Year</th><th>Status</th><th>Supply</th><th>Clearing price</th><th>Bids</th></tr></thead>
+            `;
+            const tBody = document.createElement('tbody');
+            snapshot.auction_log.forEach((a) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${a.auction_id}</td><td>${a.year}</td><td>${a.status}</td><td>${a.supply}</td><td>${a.clearing_price || '-'}</td><td>${a.bid_count}</td>`;
+                tBody.appendChild(tr);
+            });
+            table.appendChild(tBody);
+            auctionLog.appendChild(table);
+        }
+    }
+
+    function liveRecv(data) {
+        if (data.type === 'facilitator_state') {
+            renderFacilitatorState(data.payload);
+        } else if (data.type === 'export') {
+            const outputCard = document.getElementById('fac-export-output-card');
+            outputCard.style.display = 'block';
+            const output = document.getElementById('fac-export-output');
+            output.textContent = JSON.stringify(data.payload, null, 2);
+
+            if (data.summary) {
+                const shocksDiv = document.getElementById('fac-shocks');
+        shocksDiv.innerHTML = '';
+        if (!snapshot.active_shocks || !snapshot.active_shocks.length) {
+            shocksDiv.textContent = 'No shocks applied yet.';
+        } else {
+            snapshot.active_shocks.forEach((shock) => {
+                const div = document.createElement('div');
+                div.style.padding = '8px 0';
+                div.style.borderBottom = '1px solid #e7eef4';
+                div.innerHTML = `<strong>${shock.shock_type.replace(/_/g, ' ')}</strong> / year ${shock.year} / magnitude ${shock.magnitude} / ${shock.applied_at}`;
+                shocksDiv.appendChild(div);
+            });
+        }
+
+        const summaryDiv = document.getElementById('fac-session-summary');
+                summaryDiv.innerHTML = '';
+                const s = data.summary;
+                const block = document.createElement('div');
+                block.innerHTML = `
+                    <h3 style="margin:0 0 8px 0;">${s.headline}</h3>
+                    <p><strong>Total penalties:</strong> ${s.total_penalties_across_all_companies}</p>
+                    <p><strong>Trades completed:</strong> ${s.total_trades_completed} / <strong>Auctions cleared:</strong> ${s.total_auctions_cleared} / <strong>Avg clearing price:</strong> ${s.average_clearing_price}</p>
+                    <p><strong>Facilitator notes:</strong></p>
+                    <ul>${s.facilitator_notes.map(n => `<li>${n}</li>`).join('')}</ul>
+                    <h4 style="margin:12px 0 4px 0;">Rankings</h4>
+                    <table class="fac-table"><thead><tr><th>Rank</th><th>Company</th><th>Sector</th><th>Penalties</th><th>Banked</th><th>Cash left</th><th>Abatement</th></tr></thead><tbody>
+                    ${s.rankings.map(r => `<tr><td>${r.rank}</td><td>${r.company_name}</td><td>${r.sector}</td><td>${r.cumulative_penalties}</td><td>${r.banked_allowances}</td><td>${r.cash_remaining}</td><td>${r.total_abatement}</td></tr>`).join('')}
+                    </tbody></table>
+                `;
+                summaryDiv.appendChild(block);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderFacilitatorState(initialSnapshot);
+        liveSend({action: 'refresh'});
+
+        setInterval(() => liveSend({action: 'refresh'}), 3000);
+
+        document.getElementById('pause-button').addEventListener('click', () => {
+            liveSend({action: 'pause_session'});
+        });
+        document.getElementById('resume-button').addEventListener('click', () => {
+            liveSend({action: 'resume_session'});
+        });
+        document.getElementById('advance-button').addEventListener('click', () => {
+            liveSend({action: 'force_advance_phase'});
+        });
+        document.getElementById('export-button').addEventListener('click', () => {
+            liveSend({action: 'export_session'});
+        });
+
+        document.getElementById('run-bots-button').addEventListener('click', () => {
+            liveSend({action: 'run_bots'});
+        });
+
+        document.getElementById('apply-shock-button').addEventListener('click', () => {
+            const shockType = document.getElementById('shock-type').value;
+            const magnitude = parseFloat(document.getElementById('shock-magnitude').value || '0.1');
+            liveSend({action: 'apply_shock', shock_type: shockType, magnitude: magnitude});
+        });
+    });
+</script>
+{{ endblock }}

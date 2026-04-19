@@ -6,8 +6,10 @@ from . import engine
 
 
 doc = """
-Phase 1 through 5 CarbonSim prototype built on oTree with a deterministic year engine,
-facilitator-controlled session start, auctions, and live dashboard decisions for abatement, offsets, and bilateral trading.
+Phase 1 through 7 CarbonSim prototype built on oTree with a deterministic year engine,
+facilitator-controlled session pause/resume/advance, participant status tracking,
+exportable session data, scenario packs, bot participants, shock events,
+and live dashboard decisions for abatement, offsets, auctions, and bilateral trading.
 """
 
 
@@ -39,12 +41,22 @@ def creating_session(subsession: Subsession):
 
     session = subsession.session
     players = subsession.get_players()
+    config = session.config or {}
+    scenario = config.get("scenario", "vietnam_pilot")
+    bot_count = config.get("bot_count", 0)
+    bot_strategy = config.get("bot_strategy", engine.BOT_STRATEGY_MODERATE)
+
     state = engine.create_initial_state(
         participant_count=len(players),
-        phase_durations=session.config.get("phase_durations"),
+        phase_durations=config.get("phase_durations"),
+        scenario=scenario,
+        bot_count=bot_count,
+        bot_strategy=bot_strategy,
     )
 
     for index, player in enumerate(players):
+        if index >= len(state["companies"]):
+            break
         assignment = state["companies"][index]
         player.company_id = assignment["company_id"]
         player.company_name = assignment["company_name"]
@@ -118,6 +130,28 @@ class WorkshopHub(Page):
         return dict(initial_snapshot=_snapshot_for(player))
 
 
+class FacilitatorPanel(Page):
+    live_method = "live_facilitator_panel"
+
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.is_facilitator
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        state = _get_state(player)
+        facilitator_snapshot = engine.build_facilitator_snapshot(state, now=_now())
+        return dict(
+            initial_facilitator_snapshot=facilitator_snapshot,
+        )
+
+    @staticmethod
+    def js_vars(player: Player):
+        state = _get_state(player)
+        facilitator_snapshot = engine.build_facilitator_snapshot(state, now=_now())
+        return dict(initial_facilitator_snapshot=facilitator_snapshot)
+
+
 def live_workshop_hub(player: Player, data):
     state = _get_state(player)
     action = data.get("action") if isinstance(data, dict) else None
@@ -130,6 +164,18 @@ def live_workshop_hub(player: Player, data):
         state = engine.start_simulation(state, _now())
         player.session.carbonsim_state = state
 
+    if action == "pause_session" and player.is_facilitator:
+        state = engine.pause_session(state, _now())
+        player.session.carbonsim_state = state
+
+    if action == "resume_session" and player.is_facilitator:
+        state = engine.resume_session(state, _now())
+        player.session.carbonsim_state = state
+
+    if action == "force_advance_phase" and player.is_facilitator:
+        state = engine.force_advance_phase(state, _now())
+        player.session.carbonsim_state = state
+
     if action == "activate_abatement":
         state = engine.apply_company_decision(
             state,
@@ -137,6 +183,9 @@ def live_workshop_hub(player: Player, data):
             action="activate_abatement",
             payload={"measure_id": data.get("measure_id")},
             now=_now(),
+        )
+        engine.update_participant_status(
+            state, company_id=player.company_id, action="activate_abatement", now=_now()
         )
         player.session.carbonsim_state = state
 
@@ -147,6 +196,9 @@ def live_workshop_hub(player: Player, data):
             action="buy_offsets",
             payload={"quantity": data.get("quantity", 0)},
             now=_now(),
+        )
+        engine.update_participant_status(
+            state, company_id=player.company_id, action="buy_offsets", now=_now()
         )
         player.session.carbonsim_state = state
 
@@ -178,6 +230,9 @@ def live_workshop_hub(player: Player, data):
             },
             now=_now(),
         )
+        engine.update_participant_status(
+            state, company_id=player.company_id, action="submit_auction_bid", now=_now()
+        )
         player.session.carbonsim_state = state
 
     if action == "propose_trade":
@@ -192,6 +247,9 @@ def live_workshop_hub(player: Player, data):
             },
             now=_now(),
         )
+        engine.update_participant_status(
+            state, company_id=player.company_id, action="propose_trade", now=_now()
+        )
         player.session.carbonsim_state = state
 
     if action == "respond_trade":
@@ -202,9 +260,74 @@ def live_workshop_hub(player: Player, data):
             response=data.get("response"),
             now=_now(),
         )
+        engine.update_participant_status(
+            state, company_id=player.company_id, action="respond_trade", now=_now()
+        )
         player.session.carbonsim_state = state
+
+    if action == "export_session" and player.is_facilitator:
+        export = engine.export_session_data(state)
+        player.session.carbonsim_state = state
+        return {
+            **_broadcast_state(player, state),
+            player.id_in_group: {
+                "type": "export",
+                "payload": export,
+            },
+        }
 
     return _broadcast_state(player, state)
 
 
-page_sequence = [Welcome, WorkshopHub]
+def live_facilitator_panel(player: Player, data):
+    state = _get_state(player)
+    action = data.get("action") if isinstance(data, dict) else None
+
+    if action == "pause_session" and player.is_facilitator:
+        state = engine.pause_session(state, _now())
+        player.session.carbonsim_state = state
+
+    if action == "resume_session" and player.is_facilitator:
+        state = engine.resume_session(state, _now())
+        player.session.carbonsim_state = state
+
+    if action == "force_advance_phase" and player.is_facilitator:
+        state = engine.force_advance_phase(state, _now())
+        state = engine.run_bot_turns(state, now=_now())
+        player.session.carbonsim_state = state
+
+    if action == "apply_shock" and player.is_facilitator:
+        state = engine.apply_shock(
+            state,
+            shock_type=data.get("shock_type", "emissions_spike"),
+            magnitude=float(data.get("magnitude", 0.1)),
+            now=_now(),
+        )
+        player.session.carbonsim_state = state
+
+    if action == "run_bots" and player.is_facilitator:
+        state = engine.run_bot_turns(state, now=_now())
+        player.session.carbonsim_state = state
+
+    if action == "export_session" and player.is_facilitator:
+        export = engine.export_session_data(state)
+        summary = engine.build_session_summary(state)
+        player.session.carbonsim_state = state
+        return {
+            player.id_in_group: {
+                "type": "export",
+                "payload": export,
+                "summary": summary,
+            },
+        }
+
+    facilitator_snapshot = engine.build_facilitator_snapshot(state, now=_now())
+    return {
+        player.id_in_group: {
+            "type": "facilitator_state",
+            "payload": facilitator_snapshot,
+        },
+    }
+
+
+page_sequence = [Welcome, WorkshopHub, FacilitatorPanel]

@@ -10,6 +10,7 @@ PHASE_YEAR_START = "year_start"
 PHASE_DECISION_WINDOW = "decision_window"
 PHASE_COMPLIANCE = "compliance"
 PHASE_COMPLETE = "complete"
+PHASE_PAUSED = "paused"
 
 DEFAULT_PHASE_DURATIONS = {
     PHASE_YEAR_START: 5,
@@ -23,6 +24,326 @@ DEFAULT_AUCTION_PRICE_FLOOR = 80.0
 DEFAULT_AUCTION_PRICE_CEILING = 300.0
 DEFAULT_AUCTION_SHARE_OF_CAP = 0.12
 DEFAULT_TRADE_EXPIRY_SECONDS = 20
+DEFAULT_OFFSET_PRICE = 25.0
+DEFAULT_PENALTY_RATE = 200.0
+
+SCENARIO_PACKS = {
+    "vietnam_pilot": {
+        "label": "Vietnam Pilot (Default)",
+        "description": "Three-year arc with tightening allocation, sector-specific abatement, and limited offsets aligned with Vietnam's pilot ETS posture.",
+        "num_years": 3,
+        "penalty_rate": 200.0,
+        "offset_usage_cap": 0.1,
+        "offset_price": 25.0,
+        "auction_count_per_year": 2,
+        "auction_price_floor": 80.0,
+        "auction_price_ceiling": 300.0,
+        "auction_share_of_cap": 0.12,
+        "trade_expiry_seconds": 20,
+        "allocation_factors": {1: 0.92, 2: 0.88, 3: 0.84},
+        "company_library": [
+            {
+                "company_name": "Red River Thermal",
+                "sector": "thermal_power",
+                "baseline_emissions": 120.0,
+                "growth_rate": 0.030,
+                "cash": 1_500_000.0,
+            },
+            {
+                "company_name": "Hai Phong Steel",
+                "sector": "steel",
+                "baseline_emissions": 95.0,
+                "growth_rate": 0.022,
+                "cash": 1_250_000.0,
+            },
+            {
+                "company_name": "Da Nang Cement",
+                "sector": "cement",
+                "baseline_emissions": 88.0,
+                "growth_rate": 0.018,
+                "cash": 1_050_000.0,
+            },
+        ],
+        "abatement_catalog": {
+            "thermal_power": [
+                {
+                    "measure_id": "tp_heat_rate_upgrade",
+                    "label": "Heat-rate upgrade",
+                    "abatement_amount": 10.0,
+                    "cost": 90000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "tp_cofiring_preparation",
+                    "label": "Biomass cofiring preparation",
+                    "abatement_amount": 7.0,
+                    "cost": 65000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+            "steel": [
+                {
+                    "measure_id": "st_waste_heat_recovery",
+                    "label": "Waste heat recovery",
+                    "abatement_amount": 8.0,
+                    "cost": 72000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "st_scrap_optimization",
+                    "label": "Scrap ratio optimization",
+                    "abatement_amount": 5.0,
+                    "cost": 50000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+            "cement": [
+                {
+                    "measure_id": "ce_blended_clinker_shift",
+                    "label": "Blended clinker shift",
+                    "abatement_amount": 6.0,
+                    "cost": 46000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "ce_kiln_control_upgrade",
+                    "label": "Kiln control upgrade",
+                    "abatement_amount": 4.0,
+                    "cost": 38000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+        },
+    },
+    "high_pressure": {
+        "label": "High Pressure",
+        "description": "Sharper cap decline and higher penalty rate forces aggressive abatement and trading.",
+        "num_years": 3,
+        "penalty_rate": 350.0,
+        "offset_usage_cap": 0.05,
+        "offset_price": 40.0,
+        "auction_count_per_year": 2,
+        "auction_price_floor": 100.0,
+        "auction_price_ceiling": 400.0,
+        "auction_share_of_cap": 0.15,
+        "trade_expiry_seconds": 20,
+        "allocation_factors": {1: 0.90, 2: 0.82, 3: 0.74},
+        "company_library": [
+            {
+                "company_name": "Red River Thermal",
+                "sector": "thermal_power",
+                "baseline_emissions": 120.0,
+                "growth_rate": 0.035,
+                "cash": 1_400_000.0,
+            },
+            {
+                "company_name": "Hai Phong Steel",
+                "sector": "steel",
+                "baseline_emissions": 95.0,
+                "growth_rate": 0.025,
+                "cash": 1_150_000.0,
+            },
+            {
+                "company_name": "Da Nang Cement",
+                "sector": "cement",
+                "baseline_emissions": 88.0,
+                "growth_rate": 0.020,
+                "cash": 950_000.0,
+            },
+        ],
+        "abatement_catalog": {
+            "thermal_power": [
+                {
+                    "measure_id": "tp_heat_rate_upgrade",
+                    "label": "Heat-rate upgrade",
+                    "abatement_amount": 10.0,
+                    "cost": 90000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "tp_cofiring_preparation",
+                    "label": "Biomass cofiring preparation",
+                    "abatement_amount": 7.0,
+                    "cost": 65000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+            "steel": [
+                {
+                    "measure_id": "st_waste_heat_recovery",
+                    "label": "Waste heat recovery",
+                    "abatement_amount": 8.0,
+                    "cost": 72000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "st_scrap_optimization",
+                    "label": "Scrap ratio optimization",
+                    "abatement_amount": 5.0,
+                    "cost": 50000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+            "cement": [
+                {
+                    "measure_id": "ce_blended_clinker_shift",
+                    "label": "Blended clinker shift",
+                    "abatement_amount": 6.0,
+                    "cost": 46000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "ce_kiln_control_upgrade",
+                    "label": "Kiln control upgrade",
+                    "abatement_amount": 4.0,
+                    "cost": 38000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+        },
+    },
+    "generous": {
+        "label": "Generous Allocation",
+        "description": "Gentler cap decline with lower penalties, suitable for introductory workshops where the learning focus is on market mechanics.",
+        "num_years": 3,
+        "penalty_rate": 120.0,
+        "offset_usage_cap": 0.15,
+        "offset_price": 18.0,
+        "auction_count_per_year": 2,
+        "auction_price_floor": 50.0,
+        "auction_price_ceiling": 250.0,
+        "auction_share_of_cap": 0.10,
+        "trade_expiry_seconds": 25,
+        "allocation_factors": {1: 0.95, 2: 0.92, 3: 0.89},
+        "company_library": [
+            {
+                "company_name": "Red River Thermal",
+                "sector": "thermal_power",
+                "baseline_emissions": 120.0,
+                "growth_rate": 0.025,
+                "cash": 1_600_000.0,
+            },
+            {
+                "company_name": "Hai Phong Steel",
+                "sector": "steel",
+                "baseline_emissions": 95.0,
+                "growth_rate": 0.018,
+                "cash": 1_350_000.0,
+            },
+            {
+                "company_name": "Da Nang Cement",
+                "sector": "cement",
+                "baseline_emissions": 88.0,
+                "growth_rate": 0.015,
+                "cash": 1_150_000.0,
+            },
+        ],
+        "abatement_catalog": {
+            "thermal_power": [
+                {
+                    "measure_id": "tp_heat_rate_upgrade",
+                    "label": "Heat-rate upgrade",
+                    "abatement_amount": 12.0,
+                    "cost": 85000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "tp_cofiring_preparation",
+                    "label": "Biomass cofiring preparation",
+                    "abatement_amount": 8.0,
+                    "cost": 55000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+            "steel": [
+                {
+                    "measure_id": "st_waste_heat_recovery",
+                    "label": "Waste heat recovery",
+                    "abatement_amount": 9.0,
+                    "cost": 68000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "st_scrap_optimization",
+                    "label": "Scrap ratio optimization",
+                    "abatement_amount": 6.0,
+                    "cost": 42000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+            "cement": [
+                {
+                    "measure_id": "ce_blended_clinker_shift",
+                    "label": "Blended clinker shift",
+                    "abatement_amount": 7.0,
+                    "cost": 38000.0,
+                    "activation_timing": "immediate",
+                },
+                {
+                    "measure_id": "ce_kiln_control_upgrade",
+                    "label": "Kiln control upgrade",
+                    "abatement_amount": 5.0,
+                    "cost": 32000.0,
+                    "activation_timing": "next_year",
+                },
+            ],
+        },
+    },
+}
+
+SHOCK_CATALOG = {
+    "emissions_spike": {
+        "label": "Emissions Spike",
+        "description": "Increase projected emissions for all companies in the current year by a percentage, simulating an unexpected production surge.",
+        "applies_to": "all_companies",
+    },
+    "allowance_withdrawal": {
+        "label": "Allowance Withdrawal",
+        "description": "Reduce current allowance holdings by a percentage, simulating a regulatory correction or pre-verification adjustment.",
+        "applies_to": "all_companies",
+    },
+    "cost_shock": {
+        "label": "Cost Shock",
+        "description": "Reduce cash for all companies by a percentage, simulating an external financial shock.",
+        "applies_to": "all_companies",
+    },
+    "offset_supply_change": {
+        "label": "Offset Supply Change",
+        "description": "Change the offset usage cap for the current year, simulating policy changes to offset eligibility.",
+        "applies_to": "session_wide",
+    },
+}
+
+BOT_STRATEGY_CONSERVATIVE = "conservative"
+BOT_STRATEGY_MODERATE = "moderate"
+BOT_STRATEGY_AGGRESSIVE = "aggressive"
+
+BOT_STRATEGIES = {
+    BOT_STRATEGY_CONSERVATIVE: {
+        "label": "Conservative",
+        "description": "Activates cheap abatement early, buys small offsets to cover gap, bids conservatively in auctions, avoids trades.",
+        "abatement_threshold_fraction": 0.5,
+        "offset_gap_fraction": 0.3,
+        "auction_bid_fraction": 0.6,
+        "trade_likelihood": 0.0,
+    },
+    BOT_STRATEGY_MODERATE: {
+        "label": "Moderate",
+        "description": "Activates all immediate abatement, buys offsets for half the remaining gap, bids at mid-range in auctions, occasionally trades.",
+        "abatement_threshold_fraction": 1.0,
+        "offset_gap_fraction": 0.5,
+        "auction_bid_fraction": 0.8,
+        "trade_likelihood": 0.3,
+    },
+    BOT_STRATEGY_AGGRESSIVE: {
+        "label": "Aggressive",
+        "description": "Activates all abatement, buys offsets aggressively, bids high in auctions, actively seeks trades.",
+        "abatement_threshold_fraction": 1.0,
+        "offset_gap_fraction": 0.8,
+        "auction_bid_fraction": 1.0,
+        "trade_likelihood": 0.5,
+    },
+}
 
 YEARLY_ALLOCATION_FACTORS = {
     1: 0.92,
@@ -30,29 +351,9 @@ YEARLY_ALLOCATION_FACTORS = {
     3: 0.84,
 }
 
-COMPANY_LIBRARY = [
-    {
-        "company_name": "Red River Thermal",
-        "sector": "thermal_power",
-        "baseline_emissions": 120.0,
-        "growth_rate": 0.030,
-        "cash": 1_500_000.0,
-    },
-    {
-        "company_name": "Hai Phong Steel",
-        "sector": "steel",
-        "baseline_emissions": 95.0,
-        "growth_rate": 0.022,
-        "cash": 1_250_000.0,
-    },
-    {
-        "company_name": "Da Nang Cement",
-        "sector": "cement",
-        "baseline_emissions": 88.0,
-        "growth_rate": 0.018,
-        "cash": 1_050_000.0,
-    },
-]
+COMPANY_LIBRARY = SCENARIO_PACKS["vietnam_pilot"]["company_library"]
+
+ABATEMENT_CATALOG = SCENARIO_PACKS["vietnam_pilot"]["abatement_catalog"]
 
 PHASE_LABELS = {
     PHASE_LOBBY: "Lobby",
@@ -60,57 +361,7 @@ PHASE_LABELS = {
     PHASE_DECISION_WINDOW: "Decision Window",
     PHASE_COMPLIANCE: "Compliance Review",
     PHASE_COMPLETE: "Session Complete",
-}
-
-ABATEMENT_CATALOG = {
-    "thermal_power": [
-        {
-            "measure_id": "tp_heat_rate_upgrade",
-            "label": "Heat-rate upgrade",
-            "abatement_amount": 10.0,
-            "cost": 90000.0,
-            "activation_timing": "immediate",
-        },
-        {
-            "measure_id": "tp_cofiring_preparation",
-            "label": "Biomass cofiring preparation",
-            "abatement_amount": 7.0,
-            "cost": 65000.0,
-            "activation_timing": "next_year",
-        },
-    ],
-    "steel": [
-        {
-            "measure_id": "st_waste_heat_recovery",
-            "label": "Waste heat recovery",
-            "abatement_amount": 8.0,
-            "cost": 72000.0,
-            "activation_timing": "immediate",
-        },
-        {
-            "measure_id": "st_scrap_optimization",
-            "label": "Scrap ratio optimization",
-            "abatement_amount": 5.0,
-            "cost": 50000.0,
-            "activation_timing": "next_year",
-        },
-    ],
-    "cement": [
-        {
-            "measure_id": "ce_blended_clinker_shift",
-            "label": "Blended clinker shift",
-            "abatement_amount": 6.0,
-            "cost": 46000.0,
-            "activation_timing": "immediate",
-        },
-        {
-            "measure_id": "ce_kiln_control_upgrade",
-            "label": "Kiln control upgrade",
-            "abatement_amount": 4.0,
-            "cost": 38000.0,
-            "activation_timing": "next_year",
-        },
-    ],
+    PHASE_PAUSED: "Paused",
 }
 
 
@@ -134,21 +385,50 @@ def create_initial_state(
     participant_count: int,
     *,
     num_years: int = 3,
-    penalty_rate: float = 200.0,
-    offset_usage_cap: float = DEFAULT_OFFSET_USAGE_CAP,
+    penalty_rate: float | None = None,
+    offset_usage_cap: float | None = None,
     phase_durations: dict[str, int] | None = None,
+    scenario: str | None = None,
+    bot_count: int = 0,
+    bot_strategy: str = BOT_STRATEGY_MODERATE,
 ) -> dict[str, Any]:
+    pack = SCENARIO_PACKS.get(
+        scenario or "vietnam_pilot", SCENARIO_PACKS["vietnam_pilot"]
+    )
     durations = dict(DEFAULT_PHASE_DURATIONS)
     if phase_durations:
         durations.update(phase_durations)
 
+    effective_penalty = (
+        penalty_rate if penalty_rate is not None else pack["penalty_rate"]
+    )
+    effective_offset_cap = (
+        offset_usage_cap if offset_usage_cap is not None else pack["offset_usage_cap"]
+    )
+    allocation_factors = pack.get("allocation_factors", YEARLY_ALLOCATION_FACTORS)
+    scenario_library = pack["company_library"]
+    scenario_abatement = pack["abatement_catalog"]
+
+    human_count = participant_count
+    total_count = human_count + bot_count
     companies = []
-    for spec in build_company_specs(participant_count):
+    for index in range(total_count):
+        base = deepcopy(scenario_library[index % len(scenario_library)])
+        cohort = index // len(scenario_library)
+        suffix = "" if cohort == 0 else f" {cohort + 1}"
+        is_bot = index >= human_count
+        base["company_id"] = f"C{index + 1:02d}"
+        base["company_name"] = f"{base['company_name']}{suffix}"
+        baseline_multiplier = 1 + (cohort * 0.04)
+        base["baseline_emissions"] = round(
+            base["baseline_emissions"] * baseline_multiplier, 2
+        )
+        base["cash"] = round(base["cash"] + (cohort * 175_000), 2)
         companies.append(
             {
-                **spec,
+                **base,
                 "current_year_allocation": 0.0,
-                "projected_emissions": spec["baseline_emissions"],
+                "projected_emissions": base["baseline_emissions"],
                 "allowances": 0.0,
                 "banked_allowances": 0.0,
                 "offset_holdings": 0.0,
@@ -156,28 +436,46 @@ def create_initial_state(
                 "penalty_due": 0.0,
                 "cumulative_penalties": 0.0,
                 "compliance_gap": 0.0,
-                "abatement_menu": build_abatement_menu(spec["sector"]),
+                "abatement_menu": [
+                    deepcopy(m) for m in scenario_abatement[base["sector"]]
+                ],
                 "active_abatement_ids": [],
                 "pending_abatement_ids": [],
                 "abatement_cost_committed": 0.0,
                 "auction_allowances_won": 0.0,
                 "year_results": [],
+                "is_bot": is_bot,
+                "bot_strategy": bot_strategy if is_bot else None,
             }
         )
 
     return {
-        "participant_count": participant_count,
+        "participant_count": human_count,
+        "total_count": total_count,
         "num_years": num_years,
         "current_year": 0,
         "current_cap": 0.0,
-        "penalty_rate": penalty_rate,
-        "offset_usage_cap": offset_usage_cap,
-        "auction_count_per_year": DEFAULT_AUCTION_COUNT,
-        "auction_price_floor": DEFAULT_AUCTION_PRICE_FLOOR,
-        "auction_price_ceiling": DEFAULT_AUCTION_PRICE_CEILING,
-        "auction_share_of_cap": DEFAULT_AUCTION_SHARE_OF_CAP,
-        "trade_expiry_seconds": DEFAULT_TRADE_EXPIRY_SECONDS,
+        "penalty_rate": effective_penalty,
+        "offset_usage_cap": effective_offset_cap,
+        "offset_price": pack.get("offset_price", DEFAULT_OFFSET_PRICE),
+        "auction_count_per_year": pack.get(
+            "auction_count_per_year", DEFAULT_AUCTION_COUNT
+        ),
+        "auction_price_floor": pack.get(
+            "auction_price_floor", DEFAULT_AUCTION_PRICE_FLOOR
+        ),
+        "auction_price_ceiling": pack.get(
+            "auction_price_ceiling", DEFAULT_AUCTION_PRICE_CEILING
+        ),
+        "auction_share_of_cap": pack.get(
+            "auction_share_of_cap", DEFAULT_AUCTION_SHARE_OF_CAP
+        ),
+        "trade_expiry_seconds": pack.get(
+            "trade_expiry_seconds", DEFAULT_TRADE_EXPIRY_SECONDS
+        ),
+        "allocation_factors": allocation_factors,
         "phase": PHASE_LOBBY,
+        "paused_from": None,
         "phase_durations": durations,
         "phase_started_at": None,
         "phase_deadline_at": None,
@@ -187,6 +485,9 @@ def create_initial_state(
         "auctions": [],
         "trades": [],
         "audit_log": [],
+        "participant_status": {},
+        "scenario": scenario or "vietnam_pilot",
+        "active_shocks": [],
     }
 
 
@@ -242,7 +543,9 @@ def apply_company_decision(
         quantity = round(float(payload.get("quantity", 0)), 2)
         if quantity <= 0:
             return state
-        offset_price = payload.get("price_per_unit", 25.0)
+        offset_price = payload.get(
+            "price_per_unit", state.get("offset_price", DEFAULT_OFFSET_PRICE)
+        )
         total_cost = round(quantity * float(offset_price), 2)
         company["offset_holdings"] = round(company["offset_holdings"] + quantity, 2)
         company["cash"] = round(company["cash"] - total_cost, 2)
@@ -542,8 +845,140 @@ def start_simulation(state: dict[str, Any], now: datetime) -> dict[str, Any]:
     return state
 
 
+def pause_session(state: dict[str, Any], now: datetime) -> dict[str, Any]:
+    phasable = {PHASE_YEAR_START, PHASE_DECISION_WINDOW, PHASE_COMPLIANCE}
+    if state["phase"] not in phasable:
+        return state
+
+    current_time = _normalize_time(now)
+    state["paused_from"] = _serialize_time(current_time)
+    state["phase_before_pause"] = state["phase"]
+    state["phase"] = PHASE_PAUSED
+    _append_event(
+        state, "session_paused", current_time, {"year": state["current_year"]}
+    )
+    return state
+
+
+def resume_session(state: dict[str, Any], now: datetime) -> dict[str, Any]:
+    if state["phase"] != PHASE_PAUSED:
+        return state
+
+    current_time = _normalize_time(now)
+    previous_phase = state.get("phase_before_pause", PHASE_YEAR_START)
+    pause_duration = current_time - _parse_time(state["paused_from"])
+
+    state["phase"] = previous_phase
+    state["paused_from"] = None
+    state.pop("phase_before_pause", None)
+
+    if state["phase_deadline_at"]:
+        old_deadline = _parse_time(state["phase_deadline_at"])
+        new_deadline = old_deadline + pause_duration
+        state["phase_deadline_at"] = _serialize_time(new_deadline)
+
+    _append_event(
+        state, "session_resumed", current_time, {"year": state["current_year"]}
+    )
+    return state
+
+
+def force_advance_phase(state: dict[str, Any], now: datetime) -> dict[str, Any]:
+    if state["phase"] in {PHASE_LOBBY, PHASE_COMPLETE, PHASE_PAUSED}:
+        return state
+
+    current_time = _normalize_time(now)
+    previous_phase = state["phase"]
+
+    if state["phase"] == PHASE_YEAR_START:
+        _set_phase(state, PHASE_DECISION_WINDOW, current_time)
+        _append_event(
+            state,
+            "decision_window_opened",
+            current_time,
+            {"year": state["current_year"]},
+        )
+        _append_event(
+            state,
+            "phase_force_advanced",
+            current_time,
+            {"year": state["current_year"], "from_phase": previous_phase},
+        )
+        return state
+
+    if state["phase"] == PHASE_DECISION_WINDOW:
+        _close_current_year(state, current_time)
+        _set_phase(state, PHASE_COMPLIANCE, current_time)
+        _append_event(
+            state,
+            "phase_force_advanced",
+            current_time,
+            {"year": state["current_year"], "from_phase": previous_phase},
+        )
+        return state
+
+    if state["phase"] == PHASE_COMPLIANCE:
+        if state["current_year"] >= state["num_years"]:
+            state["phase"] = PHASE_COMPLETE
+            state["phase_started_at"] = _serialize_time(current_time)
+            state["phase_deadline_at"] = None
+            state["completed_at"] = _serialize_time(current_time)
+            _append_event(
+                state,
+                "session_completed",
+                current_time,
+                {"year": state["current_year"]},
+            )
+            _append_event(
+                state,
+                "phase_force_advanced",
+                current_time,
+                {"year": state["current_year"], "from_phase": previous_phase},
+            )
+        else:
+            _start_year(state, state["current_year"] + 1, current_time)
+            _append_event(
+                state,
+                "phase_force_advanced",
+                current_time,
+                {"year": state["current_year"], "from_phase": previous_phase},
+            )
+        return state
+
+    return state
+
+
+def update_participant_status(
+    state: dict[str, Any],
+    *,
+    company_id: str,
+    action: str,
+    now: datetime,
+) -> dict[str, Any]:
+    current_time = _normalize_time(now)
+    status = state.setdefault("participant_status", {})
+    if company_id not in status:
+        status[company_id] = {
+            "last_seen": None,
+            "last_action": None,
+            "decision_count_this_year": 0,
+        }
+    entry = status[company_id]
+    entry["last_seen"] = _serialize_time(current_time)
+    entry["last_action"] = action
+    if action in {
+        "activate_abatement",
+        "buy_offsets",
+        "submit_auction_bid",
+        "propose_trade",
+        "respond_trade",
+    }:
+        entry["decision_count_this_year"] = entry.get("decision_count_this_year", 0) + 1
+    return state
+
+
 def advance_state(state: dict[str, Any], now: datetime) -> dict[str, Any]:
-    if state["phase"] in {PHASE_LOBBY, PHASE_COMPLETE}:
+    if state["phase"] in {PHASE_LOBBY, PHASE_COMPLETE, PHASE_PAUSED}:
         return state
 
     current_time = _normalize_time(now)
@@ -689,6 +1124,13 @@ def build_player_snapshot(
         "session_started": state["phase"] != PHASE_LOBBY,
         "session_complete": state["phase"] == PHASE_COMPLETE,
         "can_start": is_facilitator and state["phase"] == PHASE_LOBBY,
+        "can_pause": is_facilitator
+        and state["phase"]
+        in {PHASE_YEAR_START, PHASE_DECISION_WINDOW, PHASE_COMPLIANCE},
+        "can_resume": is_facilitator and state["phase"] == PHASE_PAUSED,
+        "can_advance_phase": is_facilitator
+        and state["phase"]
+        in {PHASE_YEAR_START, PHASE_DECISION_WINDOW, PHASE_COMPLIANCE},
         "is_facilitator": is_facilitator,
         "auction_board": auction_board,
         "trade_feed": trade_feed,
@@ -697,6 +1139,513 @@ def build_player_snapshot(
         "leaderboard": leaderboard,
         "recent_events": recent_events,
     }
+
+
+def build_facilitator_snapshot(
+    state: dict[str, Any],
+    *,
+    now: datetime,
+) -> dict[str, Any]:
+    current_time = _normalize_time(now)
+    deadline = (
+        _parse_time(state["phase_deadline_at"]) if state["phase_deadline_at"] else None
+    )
+    countdown = (
+        0
+        if deadline is None
+        else max(0, int((deadline - current_time).total_seconds()))
+    )
+
+    participant_rows = []
+    status_map = state.get("participant_status", {})
+    for company in state["companies"]:
+        cid = company["company_id"]
+        entry = status_map.get(cid, {})
+        participant_rows.append(
+            {
+                "company_id": cid,
+                "company_name": company["company_name"],
+                "sector_label": company["sector"].replace("_", " ").title(),
+                "last_seen": entry.get("last_seen"),
+                "last_action": entry.get("last_action"),
+                "decisions_this_year": entry.get("decision_count_this_year", 0),
+                "cash": company["cash"],
+                "allowances": company["allowances"],
+                "compliance_gap": company["compliance_gap"],
+                "cumulative_penalties": company["cumulative_penalties"],
+            }
+        )
+
+    auction_log = []
+    for auction in state["auctions"]:
+        auction_log.append(
+            {
+                "auction_id": auction["auction_id"],
+                "year": auction["year"],
+                "label": auction["label"],
+                "status": auction["status"],
+                "supply": auction["supply"],
+                "clearing_price": auction["clearing_price"],
+                "bid_count": len(auction["bids"]),
+            }
+        )
+
+    return {
+        "phase": state["phase"],
+        "phase_label": PHASE_LABELS[state["phase"]],
+        "current_year": state["current_year"],
+        "num_years": state["num_years"],
+        "current_cap": state["current_cap"],
+        "countdown_seconds": countdown,
+        "can_pause": state["phase"]
+        in {PHASE_YEAR_START, PHASE_DECISION_WINDOW, PHASE_COMPLIANCE},
+        "can_resume": state["phase"] == PHASE_PAUSED,
+        "can_advance_phase": state["phase"]
+        in {PHASE_YEAR_START, PHASE_DECISION_WINDOW, PHASE_COMPLIANCE},
+        "session_complete": state["phase"] == PHASE_COMPLETE,
+        "scenario": state.get("scenario", "vietnam_pilot"),
+        "bot_count": sum(1 for c in state["companies"] if c.get("is_bot")),
+        "active_shocks": state.get("active_shocks", []),
+        "participant_rows": participant_rows,
+        "auction_log": auction_log,
+        "trade_count": len(state["trades"]),
+        "audit_log_length": len(state["audit_log"]),
+    }
+
+
+def export_session_data(state: dict[str, Any]) -> dict[str, Any]:
+    companies_export = []
+    for company in state["companies"]:
+        companies_export.append(
+            {
+                "company_id": company["company_id"],
+                "company_name": company["company_name"],
+                "sector": company["sector"],
+                "baseline_emissions": company["baseline_emissions"],
+                "growth_rate": company["growth_rate"],
+                "current_year_allocation": company["current_year_allocation"],
+                "projected_emissions": company["projected_emissions"],
+                "allowances": company["allowances"],
+                "banked_allowances": company["banked_allowances"],
+                "offset_holdings": company["offset_holdings"],
+                "offsets_used_for_compliance": company["offsets_used_for_compliance"],
+                "penalty_due": company["penalty_due"],
+                "cumulative_penalties": company["cumulative_penalties"],
+                "cash": company["cash"],
+                "abatement_cost_committed": company["abatement_cost_committed"],
+                "active_abatement_ids": list(company["active_abatement_ids"]),
+                "pending_abatement_ids": list(company["pending_abatement_ids"]),
+                "auction_allowances_won": company["auction_allowances_won"],
+                "year_results": company["year_results"],
+            }
+        )
+
+    auctions_export = []
+    for auction in state["auctions"]:
+        auctions_export.append(
+            {
+                "auction_id": auction["auction_id"],
+                "year": auction["year"],
+                "label": auction["label"],
+                "status": auction["status"],
+                "supply": auction["supply"],
+                "clearing_price": auction.get("clearing_price", 0),
+                "bids": auction["bids"],
+                "results": auction.get("results", []),
+                "opened_at": auction.get("opened_at"),
+                "closed_at": auction.get("closed_at"),
+            }
+        )
+
+    trades_export = []
+    for trade in state["trades"]:
+        trades_export.append(
+            {
+                "trade_id": trade["trade_id"],
+                "seller_company_id": trade["seller_company_id"],
+                "buyer_company_id": trade["buyer_company_id"],
+                "quantity": trade["quantity"],
+                "price_per_allowance": trade["price_per_allowance"],
+                "total_value": trade["total_value"],
+                "status": trade["status"],
+                "created_at": trade["created_at"],
+                "responded_at": trade.get("responded_at"),
+            }
+        )
+
+    rankings_export = []
+    for rank_index, company in enumerate(
+        sorted(
+            state["companies"],
+            key=lambda c: (
+                c["cumulative_penalties"],
+                c["penalty_due"],
+                -c["banked_allowances"],
+            ),
+        ),
+        start=1,
+    ):
+        total_abatement = sum(
+            m["abatement_amount"]
+            for m in company["abatement_menu"]
+            if m["measure_id"] in company["active_abatement_ids"]
+        )
+        rankings_export.append(
+            {
+                "rank": rank_index,
+                "company_id": company["company_id"],
+                "company_name": company["company_name"],
+                "sector": company["sector"],
+                "cumulative_penalties": company["cumulative_penalties"],
+                "banked_allowances": company["banked_allowances"],
+                "cash_remaining": company["cash"],
+                "total_abatement": total_abatement,
+                "year_results": company["year_results"],
+            }
+        )
+
+    return {
+        "phase": state["phase"],
+        "current_year": state["current_year"],
+        "num_years": state["num_years"],
+        "current_cap": state["current_cap"],
+        "penalty_rate": state["penalty_rate"],
+        "offset_usage_cap": state["offset_usage_cap"],
+        "started_at": state.get("started_at"),
+        "completed_at": state.get("completed_at"),
+        "companies": companies_export,
+        "auctions": auctions_export,
+        "trades": trades_export,
+        "rankings": rankings_export,
+        "audit_log": state["audit_log"],
+    }
+
+
+def build_session_summary(state: dict[str, Any]) -> dict[str, Any]:
+    export = export_session_data(state)
+    rankings = export["rankings"]
+
+    total_penalties = sum(c["cumulative_penalties"] for c in state["companies"])
+    total_trades_completed = len(
+        [t for t in state["trades"] if t["status"] == "accepted"]
+    )
+    total_auctions_cleared = len(
+        [a for a in state["auctions"] if a["status"] == "cleared"]
+    )
+    avg_clearing_price = 0.0
+    cleared_auctions = [
+        a
+        for a in state["auctions"]
+        if a["status"] == "cleared" and a["clearing_price"] > 0
+    ]
+    if cleared_auctions:
+        avg_clearing_price = round(
+            sum(a["clearing_price"] for a in cleared_auctions) / len(cleared_auctions),
+            2,
+        )
+
+    year_summaries = []
+    for year in range(1, state["current_year"] + 1):
+        year_companies = []
+        for company in state["companies"]:
+            year_result = next(
+                (r for r in company["year_results"] if r["year"] == year), None
+            )
+            if year_result:
+                year_companies.append(
+                    {
+                        "company_id": company["company_id"],
+                        "company_name": company["company_name"],
+                        "projected_emissions": year_result["projected_emissions"],
+                        "allocation": year_result["allocation"],
+                        "offsets_used": year_result["offsets_used_for_compliance"],
+                        "banked": year_result["banked_allowances"],
+                        "shortfall": year_result["shortfall"],
+                        "penalty_due": year_result["penalty_due"],
+                    }
+                )
+        year_auctions = [
+            {
+                "auction_id": a["auction_id"],
+                "clearing_price": a["clearing_price"],
+                "status": a["status"],
+            }
+            for a in state["auctions"]
+            if a["year"] == year
+        ]
+        year_summaries.append(
+            {
+                "year": year,
+                "companies": year_companies,
+                "auctions": year_auctions,
+            }
+        )
+
+    return {
+        "headline": (
+            f"Completed {state['current_year']} of {state['num_years']} years"
+            if state["phase"] == PHASE_COMPLETE
+            else f"Year {state['current_year']} of {state['num_years']} in progress ({PHASE_LABELS.get(state['phase'], state['phase'])})"
+        ),
+        "started_at": state.get("started_at"),
+        "completed_at": state.get("completed_at"),
+        "total_participants": state["participant_count"],
+        "total_penalties_across_all_companies": total_penalties,
+        "total_trades_completed": total_trades_completed,
+        "total_auctions_cleared": total_auctions_cleared,
+        "average_clearing_price": avg_clearing_price,
+        "rankings": rankings,
+        "year_summaries": year_summaries,
+        "facilitator_notes": _facilitator_notes(state),
+    }
+
+
+def _facilitator_notes(state: dict[str, Any]) -> list[str]:
+    notes = []
+    if state["phase"] == PHASE_COMPLETE:
+        notes.append(
+            "The session is complete. Use the rankings and year summaries for debriefing."
+        )
+        notes.append(
+            "Ask participants: What drove your abatement and offset decisions?"
+        )
+        notes.append(
+            "Ask participants: How did allowance scarcity affect your trading strategy?"
+        )
+    elif state["phase"] == PHASE_PAUSED:
+        notes.append("The session is paused. Use resume to continue.")
+    elif state["phase"] == PHASE_LOBBY:
+        notes.append("Waiting for participants to join. Press start when ready.")
+
+    if state["current_year"] > 0:
+        non_compliant = [c for c in state["companies"] if c["cumulative_penalties"] > 0]
+        if non_compliant:
+            notes.append(
+                f"{len(non_compliant)} company(ies) have incurred penalties so far. Discuss why during debrief."
+            )
+
+        total_abatement = sum(
+            len(c["active_abatement_ids"]) for c in state["companies"]
+        )
+        if total_abatement == 0:
+            notes.append(
+                "No companies have activated abatement measures yet. Consider whether price signals are strong enough."
+            )
+
+    return notes
+
+
+def apply_shock(
+    state: dict[str, Any],
+    *,
+    shock_type: str,
+    magnitude: float = 0.1,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    if now is None:
+        now = datetime.now(timezone.utc)
+    current_time = _normalize_time(now)
+
+    if state["phase"] not in {PHASE_DECISION_WINDOW, PHASE_YEAR_START}:
+        return state
+
+    if shock_type == "emissions_spike":
+        for company in state["companies"]:
+            increase = round(company["projected_emissions"] * magnitude, 2)
+            company["projected_emissions"] = round(
+                company["projected_emissions"] + increase, 2
+            )
+            company["compliance_gap"] = round(
+                company["projected_emissions"]
+                - company["allowances"]
+                - company["offset_holdings"],
+                2,
+            )
+        _append_event(
+            state,
+            "shock_emissions_spike",
+            current_time,
+            {"year": state["current_year"], "magnitude": magnitude},
+        )
+
+    elif shock_type == "allowance_withdrawal":
+        for company in state["companies"]:
+            withdrawal = round(company["allowances"] * magnitude, 2)
+            company["allowances"] = round(
+                max(0.0, company["allowances"] - withdrawal), 2
+            )
+            company["compliance_gap"] = round(
+                company["projected_emissions"]
+                - company["allowances"]
+                - company["offset_holdings"],
+                2,
+            )
+        _append_event(
+            state,
+            "shock_allowance_withdrawal",
+            current_time,
+            {"year": state["current_year"], "magnitude": magnitude},
+        )
+
+    elif shock_type == "cost_shock":
+        for company in state["companies"]:
+            reduction = round(company["cash"] * magnitude, 2)
+            company["cash"] = round(max(0.0, company["cash"] - reduction), 2)
+        _append_event(
+            state,
+            "shock_cost_shock",
+            current_time,
+            {"year": state["current_year"], "magnitude": magnitude},
+        )
+
+    elif shock_type == "offset_supply_change":
+        old_cap = state["offset_usage_cap"]
+        state["offset_usage_cap"] = round(old_cap * (1.0 + magnitude), 4)
+        for company in state["companies"]:
+            company["compliance_gap"] = round(
+                company["projected_emissions"]
+                - company["allowances"]
+                - min(
+                    company["offset_holdings"],
+                    company["projected_emissions"] * state["offset_usage_cap"],
+                ),
+                2,
+            )
+        _append_event(
+            state,
+            "shock_offset_supply_change",
+            current_time,
+            {
+                "year": state["current_year"],
+                "old_cap": old_cap,
+                "new_cap": state["offset_usage_cap"],
+            },
+        )
+    else:
+        return state
+
+    shock_record = {
+        "shock_id": f"S{len(state.get('active_shocks', [])) + 1:03d}",
+        "shock_type": shock_type,
+        "magnitude": magnitude,
+        "year": state["current_year"],
+        "applied_at": _serialize_time(current_time),
+    }
+    state.setdefault("active_shocks", []).append(shock_record)
+    return state
+
+
+def run_bot_turns(
+    state: dict[str, Any], *, now: datetime | None = None
+) -> dict[str, Any]:
+    if now is None:
+        now = datetime.now(timezone.utc)
+    if state["phase"] != PHASE_DECISION_WINDOW:
+        return state
+
+    bot_companies = [c for c in state["companies"] if c.get("is_bot")]
+    for company in bot_companies:
+        strategy_key = company.get("bot_strategy", BOT_STRATEGY_MODERATE)
+        strategy = BOT_STRATEGIES.get(
+            strategy_key, BOT_STRATEGIES[BOT_STRATEGY_MODERATE]
+        )
+
+        for measure in company["abatement_menu"]:
+            if measure["measure_id"] in company["active_abatement_ids"]:
+                continue
+            if measure["measure_id"] in company["pending_abatement_ids"]:
+                continue
+            cost_ratio = measure["cost"] / max(company["projected_emissions"], 1.0)
+            if (
+                measure["activation_timing"] == "immediate"
+                and cost_ratio <= strategy["abatement_threshold_fraction"] * 1000
+            ):
+                if company["cash"] >= measure["cost"]:
+                    state = apply_company_decision(
+                        state,
+                        company_id=company["company_id"],
+                        action="activate_abatement",
+                        payload={"measure_id": measure["measure_id"]},
+                        now=now,
+                    )
+                    company = _get_company(state, company["company_id"])
+                    break
+            elif strategy["abatement_threshold_fraction"] >= 1.0:
+                if company["cash"] >= measure["cost"]:
+                    state = apply_company_decision(
+                        state,
+                        company_id=company["company_id"],
+                        action="activate_abatement",
+                        payload={"measure_id": measure["measure_id"]},
+                        now=now,
+                    )
+                    company = _get_company(state, company["company_id"])
+
+        company = _get_company(state, company["company_id"])
+        if company["compliance_gap"] > 0:
+            max_affordable = min(
+                company["cash"]
+                / max(state.get("offset_price", DEFAULT_OFFSET_PRICE), 1.0),
+                company["compliance_gap"],
+            )
+            desired = round(
+                company["compliance_gap"] * strategy["offset_gap_fraction"], 2
+            )
+            quantity = round(min(desired, max_affordable), 2)
+            if quantity > 0:
+                state = apply_company_decision(
+                    state,
+                    company_id=company["company_id"],
+                    action="buy_offsets",
+                    payload={
+                        "quantity": quantity,
+                        "price_per_unit": state.get(
+                            "offset_price", DEFAULT_OFFSET_PRICE
+                        ),
+                    },
+                    now=now,
+                )
+                company = _get_company(state, company["company_id"])
+
+        for auction in state["auctions"]:
+            if auction["year"] != state["current_year"] or auction["status"] != "open":
+                continue
+            if company["compliance_gap"] > 0:
+                bid_quantity = round(
+                    min(
+                        company["compliance_gap"] * strategy["auction_bid_fraction"],
+                        auction["supply"] / max(len(state["companies"]), 1),
+                    ),
+                    2,
+                )
+                if bid_quantity > 0:
+                    mid_price = round(
+                        (state["auction_price_floor"] + state["auction_price_ceiling"])
+                        / 2,
+                        2,
+                    )
+                    bid_price = round(mid_price * strategy["auction_bid_fraction"], 2)
+                    bid_price = max(
+                        state["auction_price_floor"],
+                        min(bid_price, state["auction_price_ceiling"]),
+                    )
+                    total_cost = round(bid_quantity * bid_price, 2)
+                    if total_cost <= company["cash"] and bid_quantity > 0:
+                        try:
+                            state = submit_auction_bid(
+                                state,
+                                company_id=company["company_id"],
+                                auction_id=auction["auction_id"],
+                                quantity=bid_quantity,
+                                price=bid_price,
+                                now=now,
+                            )
+                        except ValueError:
+                            pass
+                        company = _get_company(state, company["company_id"])
+            break
+
+    return state
 
 
 def _company_snapshot(state: dict[str, Any], company: dict[str, Any]) -> dict[str, Any]:
@@ -725,6 +1674,7 @@ def _company_snapshot(state: dict[str, Any], company: dict[str, Any]) -> dict[st
             for measure in company["abatement_menu"]
         ],
         "decision_summary": decision_summary,
+        "is_bot": company.get("is_bot", False),
     }
 
 
@@ -736,7 +1686,11 @@ def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
         _activate_pending_abatements(company)
         projected_emissions = _projected_emissions(company, year)
         allocation = round(
-            projected_emissions * YEARLY_ALLOCATION_FACTORS.get(year, 0.80), 2
+            projected_emissions
+            * state.get("allocation_factors", YEARLY_ALLOCATION_FACTORS).get(
+                year, 0.80
+            ),
+            2,
         )
         company["projected_emissions"] = projected_emissions
         company["current_year_allocation"] = allocation
@@ -750,6 +1704,8 @@ def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
 
     state["current_cap"] = round(current_cap, 2)
     state["auctions"] = _build_year_auctions(state)
+    for cid in state.get("participant_status", {}):
+        state["participant_status"][cid]["decision_count_this_year"] = 0
     _set_phase(state, PHASE_YEAR_START, now)
     _append_event(
         state,
@@ -863,10 +1819,26 @@ def _event_summary(event_type: str, details: dict[str, Any]) -> str:
         return f"Trade {details['trade_id']} expired without a response"
     if event_type == "session_completed":
         return f"All {details['year']} simulation years are complete"
+    if event_type == "session_paused":
+        return f"Session paused during year {details['year']}"
+    if event_type == "session_resumed":
+        return f"Session resumed for year {details['year']}"
+    if event_type == "phase_force_advanced":
+        return f"Facilitator forced advance from {details.get('from_phase', '?')} during year {details['year']}"
+    if event_type == "shock_emissions_spike":
+        return f"Emissions spike shock: all projected emissions increased by {details['magnitude'] * 100:.0f}% in year {details['year']}"
+    if event_type == "shock_allowance_withdrawal":
+        return f"Allowance withdrawal shock: all allowances reduced by {details['magnitude'] * 100:.0f}% in year {details['year']}"
+    if event_type == "shock_cost_shock":
+        return f"Cost shock: all company cash reduced by {details['magnitude'] * 100:.0f}% in year {details['year']}"
+    if event_type == "shock_offset_supply_change":
+        return f"Offset supply change: offset usage cap changed from {details.get('old_cap', '?')} to {details.get('new_cap', '?')} in year {details['year']}"
     return event_type.replace("_", " ")
 
 
 def _status_text(state: dict[str, Any]) -> str:
+    if state["phase"] == PHASE_PAUSED:
+        return "The session is paused. The facilitator can resume when ready."
     if state["phase"] == PHASE_LOBBY:
         return "Participants are joining the workshop. The facilitator can start the first virtual year when everyone is ready."
     if state["phase"] == PHASE_YEAR_START:

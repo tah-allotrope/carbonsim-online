@@ -76,9 +76,16 @@ CarbonSim Workshop Hub
         <h2 style="margin: 0 0 8px 0;">{{ company_name }} <span class="carbonsim-subtle">/ {{ sector_label }}</span></h2>
         <p id="status-text" style="margin: 0 0 16px 0; color: #365061;">{{ initial_snapshot.status_text }}</p>
         {{ if is_facilitator }}
-        <button id="start-button" class="carbonsim-button" type="button">Start simulation</button>
-        <span class="carbonsim-subtle" style="margin-left: 12px;">The facilitator controls the first year launch from this page while the built-in oTree admin controls room and session creation.</span>
-        {{ endif }}
+<button id="start-button" class="carbonsim-button" type="button">Start simulation</button>
+            <span class="carbonsim-subtle" style="margin-left: 12px;">The facilitator controls the first year launch from this page while the built-in oTree admin controls room and session creation.</span>
+            {{ endif }}
+            {{ if is_facilitator }}
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                <button id="pause-button" class="carbonsim-button" type="button" style="background:#b33a3a;">Pause</button>
+                <button id="resume-button" class="carbonsim-button" type="button" style="background:#4a6e8a;">Resume</button>
+                <button id="advance-button" class="carbonsim-button" type="button" style="background:#4a6e8a;">Advance phase</button>
+            </div>
+            {{ endif }}
     </div>
 
     <div class="carbonsim-grid">
@@ -212,6 +219,18 @@ CarbonSim Workshop Hub
         const startButton = document.getElementById('start-button');
         if (startButton) {
             startButton.disabled = !snapshot.can_start;
+        }
+        const pauseButton = document.getElementById('pause-button');
+        if (pauseButton) {
+            pauseButton.disabled = !snapshot.can_pause;
+        }
+        const resumeButton = document.getElementById('resume-button');
+        if (resumeButton) {
+            resumeButton.disabled = !snapshot.can_resume;
+        }
+        const advanceButton = document.getElementById('advance-button');
+        if (advanceButton) {
+            advanceButton.disabled = !snapshot.can_advance_phase;
         }
 
         const company = snapshot.company;
@@ -457,6 +476,19 @@ CarbonSim Workshop Hub
                 const pricePerAllowance = Number(document.getElementById('trade-price').value || '0');
                 liveSend({action: 'propose_trade', buyer_company_id: buyerCompanyId, quantity, price_per_allowance: pricePerAllowance});
             });
+        }
+
+        const pauseButton = document.getElementById('pause-button');
+        if (pauseButton) {
+            pauseButton.addEventListener('click', () => liveSend({action: 'pause_session'}));
+        }
+        const resumeButton = document.getElementById('resume-button');
+        if (resumeButton) {
+            resumeButton.addEventListener('click', () => liveSend({action: 'resume_session'}));
+        }
+        const advanceButton = document.getElementById('advance-button');
+        if (advanceButton) {
+            advanceButton.addEventListener('click', () => liveSend({action: 'force_advance_phase'}));
         }
     });
 </script>

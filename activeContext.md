@@ -31,6 +31,27 @@
 - [x] Implement the phase 5 trading engine with server-side validation, audit history, and a public trade feed
 - [x] Update the live workshop dashboard with trade proposal and trade response controls
 - [x] Run verification for phase 5, generate the phase 5 report artifact, create the requested git commit, and push to origin
+- [x] Extend the implementation plan to cover phase 6 facilitator tools, analytics, and session exports
+- [x] Add facilitator session control actions (pause, resume, force_advance_phase) to the engine with audit logging
+- [x] Add participant status tracking (last action, decisions per year, last seen) to the engine
+- [x] Implement session data export (companies, auctions, trades, rankings, full audit log)
+- [x] Implement session summary generation (headline, year-by-year compliance, facilitator notes, market metrics)
+- [x] Build a dedicated facilitator control panel page with participant status view, auction log, export button, and session summary
+- [x] Add pause, resume, and advance-phase controls to the workshop hub for facilitators
+- [x] Write and run tests for facilitator controls, participant status, export completeness, and session summary
+- [x] Run verification for phase 6 and generate the phase 6 report artifact
+- [x] Extend the implementation plan to cover phase 7 scenario packs, bot participants, and shock events
+- [x] Add scenario packs (vietnam_pilot, high_pressure, generous) with tuned allocation factors, abatement catalogs, and penalty rates
+- [x] Add shock catalog (emissions_spike, allowance_withdrawal, cost_shock, offset_supply_change) with magnitude scaling
+- [x] Add bot strategies (conservative, moderate, aggressive) with per-strategy abatement, offset, and auction decision logic
+- [x] Refactor create_initial_state to accept scenario, bot_count, and bot_strategy parameters with back-compat defaults
+- [x] Implement apply_shock for facilitator-triggered shock events that modify company state and log audit events
+- [x] Implement run_bot_turns for automated bot decision-making during the decision window
+- [x] Update __init__.py to pass scenario/bot config from session config, and add shock/bot handlers to the facilitator live method
+- [x] Update FacilitatorPanel.html with shock controls and bot turn button
+- [x] Add three session configs (vietnam_pilot, high_pressure, generous) to settings.py
+- [x] Write and run 20 new tests for scenarios, bots, and shocks (all 62 tests now pass)
+- [x] Run verification for phase 7 and generate the phase 7 report artifact
 
 ## Review / Results
 
@@ -59,3 +80,12 @@
 - Extended the live workshop dashboard with a trade proposal form, company trade inbox, accept and reject controls for buyers, and a public trade feed to make post-auction rebalancing visible and explainable.
 - Expanded the unit suite to 20 tests and verified trade proposal, acceptance, rejection, expiry, and insufficient holdings or cash handling on top of the earlier compliance, abatement, and auction rules.
 - Generated the phase 5 HTML artifact in `reports/2026-04-17-phase-five-secondary-trading.html` and prepared the repo for the requested commit and push to `origin`.
+- Implemented phase 6 as a facilitator tools, analytics, and session exports layer in the shared engine with pause/resume/force-advance session controls, participant status tracking (last seen, last action, decisions per year), a dedicated facilitator control panel page, session data export covering companies, auctions, trades, rankings, and audit log, and a session summary generator with year-by-year compliance outcomes, facilitator notes, and market metrics.
+- Added `pause_session`, `resume_session`, `force_advance_phase`, and `update_participant_status` to the engine, extending `PHASE_PAUSED` as a new phase state with deadline extension on resume and proper audit logging for all facilitator actions.
+- Built a `FacilitatorPanel` HTML page with live snapshot updates, participant status table, auction log, session summary renderer, and a JSON export button that delivers the full session dataset for post-workshop analysis.
+- Added pause, resume, and advance-phase buttons to the existing `WorkshopHub` dashboard so the facilitator can control session flow without switching pages.
+- Extended the player snapshot with `can_pause`, `can_resume`, and `can_advance_phase` flags for clean UI state management.
+- Implemented `export_session_data` for raw structured export of companies, auctions, trades, rankings, and audit log, and `build_session_summary` for a debrief-friendly summary with headlines, year outcomes, rankings, market metrics, and contextual facilitator notes.
+- Expanded the unit suite to 41 tests covering facilitator controls (pause/resume/advance), participant status tracking, export completeness, rankings sorting, session summary generation, and facilitator snapshot accuracy.
+- All 41 tests pass, confirming the engine, facilitator controls, participant tracking, export, and summary features work end to end.
+- Implemented phase 7 as scenario packs, bot participants, and shock events. Added `SCENARIO_PACKS` with vietnam_pilot (default), high_pressure, and generous configurations each with tuned allocation factors, abatement catalogs, penalty rates, offset caps, and offset prices. Added `SHOCK_CATALOG` with four shock types (emissions_spike, allowance_withdrawal, cost_shock, offset_supply_change) and magnitude-proportional formulas. Added `BOT_STRATEGIES` with conservative, moderate, and aggressive decision profiles. Refactored `create_initial_state` to accept `scenario`, `bot_count`, and `bot_strategy` parameters with back-compatible defaults. Added `apply_shock` for facilitator-triggered mid-session shocks and `run_bot_turns` for automated bot decision-making. Updated the facilitator live method and FacilitatorPanel HTML with shock controls and a bot turn trigger. Added three session configs to settings.py. Fixed one test assertion that compared allocation against baseline instead of projected_emissions. All 62 tests pass.

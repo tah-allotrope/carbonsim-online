@@ -3,11 +3,36 @@ from os import environ
 SESSION_CONFIGS = [
     dict(
         name="carbonsim_workshop_phase12",
-        display_name="CarbonSim Workshop Prototype (Phases 1 and 2)",
+        display_name="CarbonSim Workshop (Vietnam Pilot)",
         app_sequence=["carbonsim_phase12"],
         num_demo_participants=6,
         phase_durations=dict(year_start=5, decision_window=20, compliance=5),
-        doc="Phase 1 and 2 prototype: room join, facilitator start, live dashboard, and deterministic compliance engine.",
+        scenario="vietnam_pilot",
+        bot_count=0,
+        bot_strategy="moderate",
+        doc="Phase 1-7 prototype with scenario packs, bots, shocks, facilitator tools, and full trading.",
+    ),
+    dict(
+        name="carbonsim_high_pressure",
+        display_name="CarbonSim Workshop (High Pressure)",
+        app_sequence=["carbonsim_phase12"],
+        num_demo_participants=6,
+        phase_durations=dict(year_start=5, decision_window=20, compliance=5),
+        scenario="high_pressure",
+        bot_count=0,
+        bot_strategy="moderate",
+        doc="High pressure scenario with sharper cap decline and higher penalties.",
+    ),
+    dict(
+        name="carbonsim_generous",
+        display_name="CarbonSim Workshop (Generous Allocation)",
+        app_sequence=["carbonsim_phase12"],
+        num_demo_participants=6,
+        phase_durations=dict(year_start=5, decision_window=25, compliance=5),
+        scenario="generous",
+        bot_count=0,
+        bot_strategy="moderate",
+        doc="Introductory scenario with gentler cap decline and lower penalties.",
     ),
 ]
 
