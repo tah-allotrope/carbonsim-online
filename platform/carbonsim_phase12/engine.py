@@ -616,6 +616,7 @@ def propose_trade(
     created_at = _normalize_time(now)
     trade = {
         "trade_id": f"T{len(state['trades']) + 1:03d}",
+        "year": state["current_year"],
         "seller_company_id": seller_company_id,
         "buyer_company_id": buyer_company_id,
         "quantity": quantity,
@@ -1190,6 +1191,10 @@ def build_facilitator_snapshot(
             }
         )
 
+    analytics = build_session_analytics(state)
+    replay = build_session_replay(state)
+    summary = build_session_summary(state)
+
     return {
         "phase": state["phase"],
         "phase_label": PHASE_LABELS[state["phase"]],
@@ -1210,6 +1215,225 @@ def build_facilitator_snapshot(
         "auction_log": auction_log,
         "trade_count": len(state["trades"]),
         "audit_log_length": len(state["audit_log"]),
+        "session_analytics": analytics,
+        "session_replay": replay,
+        "session_summary": summary,
+    }
+
+
+def build_session_replay(state: dict[str, Any]) -> dict[str, Any]:
+    timeline = [
+        {
+            "step": index,
+            "timestamp": event["timestamp"],
+            "year": event.get("year", 0),
+            "event_type": event["event_type"],
+            "summary": event["summary"],
+        }
+        for index, event in enumerate(state["audit_log"], start=1)
+    ]
+
+    company_paths = [
+        {
+            "company_id": company["company_id"],
+            "company_name": company["company_name"],
+            "sector": company["sector"],
+            "year_results": deepcopy(company["year_results"]),
+        }
+        for company in state["companies"]
+    ]
+    market_path = [
+        {
+            "auction_id": auction["auction_id"],
+            "year": auction["year"],
+            "status": auction["status"],
+            "clearing_price": auction["clearing_price"],
+            "supply": auction["supply"],
+        }
+        for auction in state["auctions"]
+    ]
+    return {
+        "timeline": timeline,
+        "year_markers": _build_year_markers(state),
+        "market_path": market_path,
+        "company_paths": company_paths,
+    }
+
+
+def build_session_analytics(state: dict[str, Any]) -> dict[str, Any]:
+    decision_counts = {}
+    for event in state["audit_log"]:
+        decision_counts[event["event_type"]] = (
+            decision_counts.get(event["event_type"], 0) + 1
+        )
+
+    sector_breakdown = []
+    for sector in sorted({company["sector"] for company in state["companies"]}):
+        companies = [company for company in state["companies"] if company["sector"] == sector]
+        sector_breakdown.append(
+            {
+                "sector": sector,
+                "company_count": len(companies),
+                "projected_emissions": round(
+                    sum(company["projected_emissions"] for company in companies), 2
+                ),
+                "allowances": round(
+                    sum(company["allowances"] for company in companies), 2
+                ),
+                "banked_allowances": round(
+                    sum(company["banked_allowances"] for company in companies), 2
+                ),
+                "offset_holdings": round(
+                    sum(company["offset_holdings"] for company in companies), 2
+                ),
+                "cumulative_penalties": round(
+                    sum(company["cumulative_penalties"] for company in companies), 2
+                ),
+                "active_abatement_count": sum(
+                    len(company["active_abatement_ids"]) for company in companies
+                ),
+            }
+        )
+
+    year_metrics = []
+    for marker in _build_year_markers(state):
+        year = marker["year"]
+        year_results = []
+        for company in state["companies"]:
+            year_result = next(
+                (result for result in company["year_results"] if result["year"] == year),
+                None,
+            )
+            if year_result:
+                year_results.append(year_result)
+        year_metrics.append(
+            {
+                "year": year,
+                "total_projected_emissions": round(
+                    sum(result["projected_emissions"] for result in year_results), 2
+                ),
+                "total_allocation": round(
+                    sum(result["allocation"] for result in year_results), 2
+                ),
+                "total_offsets_used": marker["total_offsets_used"],
+                "total_banked_allowances": marker["total_banked_allowances"],
+                "total_penalties": marker["total_penalties"],
+                "average_clearing_price": marker["average_clearing_price"],
+                "trade_volume": marker["trade_volume"],
+                "shock_count": marker["shock_count"],
+            }
+        )
+
+    company_costs = []
+    for company in state["companies"]:
+        company_id = company["company_id"]
+        offset_spend = round(
+            sum(
+                event["details"]["quantity"] * state["offset_price"]
+                for event in state["audit_log"]
+                if event["event_type"] == "offsets_purchased"
+                and event["details"]["company_id"] == company_id
+            ),
+            2,
+        )
+        auction_spend = round(
+            sum(
+                result["payment_due"]
+                for auction in state["auctions"]
+                for result in auction.get("results", [])
+                if result["company_id"] == company_id
+            ),
+            2,
+        )
+        trade_purchases = round(
+            sum(
+                trade["total_value"]
+                for trade in state["trades"]
+                if trade["status"] == "accepted"
+                and trade["buyer_company_id"] == company_id
+            ),
+            2,
+        )
+        trade_sales = round(
+            sum(
+                trade["total_value"]
+                for trade in state["trades"]
+                if trade["status"] == "accepted"
+                and trade["seller_company_id"] == company_id
+            ),
+            2,
+        )
+        company_costs.append(
+            {
+                "company_id": company_id,
+                "company_name": company["company_name"],
+                "sector": company["sector"],
+                "abatement_cost": company["abatement_cost_committed"],
+                "offset_spend": offset_spend,
+                "auction_spend": auction_spend,
+                "trade_purchases": trade_purchases,
+                "trade_sales": trade_sales,
+                "penalties": company["cumulative_penalties"],
+                "net_compliance_cost": round(
+                    company["abatement_cost_committed"]
+                    + offset_spend
+                    + auction_spend
+                    + trade_purchases
+                    + company["cumulative_penalties"]
+                    - trade_sales,
+                    2,
+                ),
+            }
+        )
+
+    cleared_auctions = [
+        auction
+        for auction in state["auctions"]
+        if auction["status"] == "cleared" and auction["clearing_price"] > 0
+    ]
+    accepted_trades = [
+        trade for trade in state["trades"] if trade["status"] == "accepted"
+    ]
+    market_metrics = {
+        "total_auction_volume": round(
+            sum(
+                result["awarded_quantity"]
+                for auction in state["auctions"]
+                for result in auction.get("results", [])
+            ),
+            2,
+        ),
+        "total_trade_volume": round(
+            sum(trade["quantity"] for trade in accepted_trades), 2
+        ),
+        "total_trade_value": round(
+            sum(trade["total_value"] for trade in accepted_trades), 2
+        ),
+        "average_clearing_price": round(
+            sum(auction["clearing_price"] for auction in cleared_auctions)
+            / len(cleared_auctions),
+            2,
+        )
+        if cleared_auctions
+        else 0.0,
+        "total_offsets_purchased": round(
+            sum(
+                event["details"]["quantity"]
+                for event in state["audit_log"]
+                if event["event_type"] == "offsets_purchased"
+            ),
+            2,
+        ),
+        "total_abatement_actions": decision_counts.get("abatement_activated", 0),
+        "shock_count": len(state.get("active_shocks", [])),
+    }
+
+    return {
+        "decision_counts": decision_counts,
+        "market_metrics": market_metrics,
+        "sector_breakdown": sector_breakdown,
+        "year_metrics": year_metrics,
+        "company_costs": company_costs,
     }
 
 
@@ -1262,6 +1486,7 @@ def export_session_data(state: dict[str, Any]) -> dict[str, Any]:
         trades_export.append(
             {
                 "trade_id": trade["trade_id"],
+                "year": trade.get("year"),
                 "seller_company_id": trade["seller_company_id"],
                 "buyer_company_id": trade["buyer_company_id"],
                 "quantity": trade["quantity"],
@@ -1270,37 +1495,6 @@ def export_session_data(state: dict[str, Any]) -> dict[str, Any]:
                 "status": trade["status"],
                 "created_at": trade["created_at"],
                 "responded_at": trade.get("responded_at"),
-            }
-        )
-
-    rankings_export = []
-    for rank_index, company in enumerate(
-        sorted(
-            state["companies"],
-            key=lambda c: (
-                c["cumulative_penalties"],
-                c["penalty_due"],
-                -c["banked_allowances"],
-            ),
-        ),
-        start=1,
-    ):
-        total_abatement = sum(
-            m["abatement_amount"]
-            for m in company["abatement_menu"]
-            if m["measure_id"] in company["active_abatement_ids"]
-        )
-        rankings_export.append(
-            {
-                "rank": rank_index,
-                "company_id": company["company_id"],
-                "company_name": company["company_name"],
-                "sector": company["sector"],
-                "cumulative_penalties": company["cumulative_penalties"],
-                "banked_allowances": company["banked_allowances"],
-                "cash_remaining": company["cash"],
-                "total_abatement": total_abatement,
-                "year_results": company["year_results"],
             }
         )
 
@@ -1316,14 +1510,15 @@ def export_session_data(state: dict[str, Any]) -> dict[str, Any]:
         "companies": companies_export,
         "auctions": auctions_export,
         "trades": trades_export,
-        "rankings": rankings_export,
+        "rankings": _build_rankings(state),
         "audit_log": state["audit_log"],
+        "replay": build_session_replay(state),
+        "analytics": build_session_analytics(state),
     }
 
 
 def build_session_summary(state: dict[str, Any]) -> dict[str, Any]:
-    export = export_session_data(state)
-    rankings = export["rankings"]
+    rankings = _build_rankings(state)
 
     total_penalties = sum(c["cumulative_penalties"] for c in state["companies"])
     total_trades_completed = len(
@@ -1433,6 +1628,105 @@ def _facilitator_notes(state: dict[str, Any]) -> list[str]:
             )
 
     return notes
+
+
+def _build_rankings(state: dict[str, Any]) -> list[dict[str, Any]]:
+    rankings = []
+    for rank_index, company in enumerate(
+        sorted(
+            state["companies"],
+            key=lambda c: (
+                c["cumulative_penalties"],
+                c["penalty_due"],
+                -c["banked_allowances"],
+            ),
+        ),
+        start=1,
+    ):
+        total_abatement = sum(
+            measure["abatement_amount"]
+            for measure in company["abatement_menu"]
+            if measure["measure_id"] in company["active_abatement_ids"]
+        )
+        rankings.append(
+            {
+                "rank": rank_index,
+                "company_id": company["company_id"],
+                "company_name": company["company_name"],
+                "sector": company["sector"],
+                "cumulative_penalties": company["cumulative_penalties"],
+                "banked_allowances": company["banked_allowances"],
+                "cash_remaining": company["cash"],
+                "total_abatement": total_abatement,
+                "year_results": company["year_results"],
+            }
+        )
+    return rankings
+
+
+def _tracked_years(state: dict[str, Any]) -> list[int]:
+    years = {
+        result["year"]
+        for company in state["companies"]
+        for result in company.get("year_results", [])
+    }
+    if state.get("current_year", 0) > 0:
+        years.add(state["current_year"])
+    return sorted(years)
+
+
+def _build_year_markers(state: dict[str, Any]) -> list[dict[str, Any]]:
+    year_markers = []
+    for year in _tracked_years(state):
+        year_results = [
+            next((result for result in company["year_results"] if result["year"] == year), None)
+            for company in state["companies"]
+        ]
+        year_results = [result for result in year_results if result is not None]
+        auctions = [auction for auction in state["auctions"] if auction["year"] == year]
+        accepted_trades = [
+            trade
+            for trade in state["trades"]
+            if trade.get("year") == year and trade["status"] == "accepted"
+        ]
+        shocks = [
+            shock for shock in state.get("active_shocks", []) if shock["year"] == year
+        ]
+        cleared_prices = [
+            auction["clearing_price"]
+            for auction in auctions
+            if auction["status"] == "cleared" and auction["clearing_price"] > 0
+        ]
+        year_markers.append(
+            {
+                "year": year,
+                "event_count": len(
+                    [event for event in state["audit_log"] if event.get("year") == year]
+                ),
+                "auction_count": len(auctions),
+                "accepted_trade_count": len(accepted_trades),
+                "trade_volume": round(
+                    sum(trade["quantity"] for trade in accepted_trades), 2
+                ),
+                "total_penalties": round(
+                    sum(result["penalty_due"] for result in year_results), 2
+                ),
+                "total_banked_allowances": round(
+                    sum(result["banked_allowances"] for result in year_results), 2
+                ),
+                "total_offsets_used": round(
+                    sum(result["offsets_used_for_compliance"] for result in year_results),
+                    2,
+                ),
+                "average_clearing_price": round(
+                    sum(cleared_prices) / len(cleared_prices), 2
+                )
+                if cleared_prices
+                else 0.0,
+                "shock_count": len(shocks),
+            }
+        )
+    return year_markers
 
 
 def apply_shock(
