@@ -840,6 +840,7 @@ class ExportAndSummaryTests(unittest.TestCase):
         self.assertGreater(len(export["replay"]["timeline"]), 0)
         self.assertIn("market_metrics", export["analytics"])
         self.assertEqual(export["trades"][0]["year"], 1)
+        self.assertTrue(all("year" in trade for trade in export["trades"]))
 
     def test_session_summary_has_headline_and_facilitator_notes(self):
         state = self._completed_session()
