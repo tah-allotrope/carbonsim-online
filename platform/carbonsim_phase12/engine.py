@@ -1486,7 +1486,7 @@ def export_session_data(state: dict[str, Any]) -> dict[str, Any]:
         trades_export.append(
             {
                 "trade_id": trade["trade_id"],
-                "year": trade.get("year"),
+                "year": trade.get("year", 0),
                 "seller_company_id": trade["seller_company_id"],
                 "buyer_company_id": trade["buyer_company_id"],
                 "quantity": trade["quantity"],
