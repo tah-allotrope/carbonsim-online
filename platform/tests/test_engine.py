@@ -743,6 +743,63 @@ class ExportAndSummaryTests(unittest.TestCase):
 
         return state
 
+    def _analytics_rich_state(self):
+        state = engine.create_initial_state(participant_count=3)
+        state = engine.start_simulation(state, utc())
+        state = engine.force_advance_phase(state, utc(second=1))
+
+        company_one = state["companies"][0]
+        company_two = state["companies"][1]
+        auction_id = state["auctions"][0]["auction_id"]
+
+        immediate_measure_id = next(
+            measure["measure_id"]
+            for measure in company_one["abatement_menu"]
+            if measure["activation_timing"] == "immediate"
+        )
+        state = engine.apply_company_decision(
+            state,
+            company_id=company_one["company_id"],
+            action="activate_abatement",
+            payload={"measure_id": immediate_measure_id},
+            now=utc(second=2),
+        )
+        state = engine.apply_company_decision(
+            state,
+            company_id=company_one["company_id"],
+            action="buy_offsets",
+            payload={"quantity": 6},
+            now=utc(second=3),
+        )
+        state = engine.open_auction(state, auction_id=auction_id, now=utc(second=4))
+        state = engine.submit_auction_bid(
+            state,
+            company_id=company_one["company_id"],
+            auction_id=auction_id,
+            quantity=5,
+            price=120,
+            now=utc(second=5),
+        )
+        state = engine.close_auction(state, auction_id=auction_id, now=utc(second=6))
+        state = engine.propose_trade(
+            state,
+            seller_company_id=company_one["company_id"],
+            buyer_company_id=company_two["company_id"],
+            quantity=2,
+            price_per_allowance=115,
+            now=utc(second=7),
+        )
+        state = engine.respond_to_trade(
+            state,
+            trade_id=state["trades"][0]["trade_id"],
+            responder_company_id=company_two["company_id"],
+            response="accept",
+            now=utc(second=8),
+        )
+        return engine.apply_shock(
+            state, shock_type="cost_shock", magnitude=0.05, now=utc(second=9)
+        )
+
     def test_export_session_data_contains_companies_trades_and_rankings(self):
         state = self._completed_session()
         export = engine.export_session_data(state)
@@ -773,6 +830,18 @@ class ExportAndSummaryTests(unittest.TestCase):
         for company in export["companies"]:
             self.assertIn("year_results", company)
             self.assertEqual(len(company["year_results"]), 3)
+
+    def test_export_includes_replay_and_analytics(self):
+        state = self._analytics_rich_state()
+        export = engine.export_session_data(state)
+
+        self.assertIn("replay", export)
+        self.assertIn("analytics", export)
+        self.assertGreater(len(export["replay"]["timeline"]), 0)
+        self.assertIn("market_metrics", export["analytics"])
+        self.assertGreater(len(export["trades"]), 0)
+        self.assertEqual(export["trades"][0]["year"], 1)
+        self.assertTrue(all("year" in trade for trade in export["trades"]))
 
     def test_session_summary_has_headline_and_facilitator_notes(self):
         state = self._completed_session()
@@ -813,6 +882,43 @@ class ExportAndSummaryTests(unittest.TestCase):
         snap = engine.build_facilitator_snapshot(state, now=utc(second=1))
         self.assertGreaterEqual(len(snap["auction_log"]), 1)
         self.assertEqual(snap["auction_log"][0]["status"], "scheduled")
+
+    def test_session_replay_tracks_market_and_shock_events(self):
+        state = self._analytics_rich_state()
+        replay = engine.build_session_replay(state)
+
+        event_types = [event["event_type"] for event in replay["timeline"]]
+        self.assertIn("auction_cleared", event_types)
+        self.assertIn("trade_accepted", event_types)
+        self.assertIn("shock_cost_shock", event_types)
+        self.assertEqual(replay["year_markers"][0]["accepted_trade_count"], 1)
+        self.assertGreater(replay["year_markers"][0]["trade_volume"], 0)
+
+    def test_session_analytics_aggregates_market_activity_and_costs(self):
+        state = self._analytics_rich_state()
+        analytics = engine.build_session_analytics(state)
+
+        self.assertGreater(analytics["market_metrics"]["total_auction_volume"], 0)
+        self.assertGreater(analytics["market_metrics"]["total_trade_value"], 0)
+        self.assertEqual(analytics["market_metrics"]["shock_count"], 1)
+        self.assertGreaterEqual(len(analytics["sector_breakdown"]), 3)
+        self.assertEqual(analytics["year_metrics"][0]["year"], 1)
+        self.assertTrue(
+            any(
+                cost["net_compliance_cost"] > 0
+                for cost in analytics["company_costs"]
+            )
+        )
+
+    def test_facilitator_snapshot_includes_summary_replay_and_analytics(self):
+        state = self._analytics_rich_state()
+        snap = engine.build_facilitator_snapshot(state, now=utc(second=10))
+
+        self.assertIn("session_summary", snap)
+        self.assertIn("session_replay", snap)
+        self.assertIn("session_analytics", snap)
+        self.assertGreater(len(snap["session_replay"]["timeline"]), 0)
+        self.assertIn("market_metrics", snap["session_analytics"])
 
 
 class ScenarioAndBotTests(unittest.TestCase):

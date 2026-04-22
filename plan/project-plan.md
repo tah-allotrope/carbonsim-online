@@ -317,23 +317,76 @@ Turn the prototype into a repeatable pilot service for real sessions.
 
 - The team can host a live pilot session with acceptable operational confidence
 
-## Phase 9 - Post-Pilot Refinement And V2 Expansion
+## Phase 9 - Session Replay And Visualization
 
 ### Objective
 
-Use pilot evidence to decide whether to deepen realism, widen pedagogical scope, or keep the tool intentionally simple.
+Turn completed workshop sessions into legible replay artifacts that facilitators can use during debriefs without exporting raw JSON into another tool first.
 
-### Candidate V2 Tracks
+### Deliverables
+
+- Replay timeline for audit events
+- Year-by-year replay markers for penalties, banking, trades, and auction outcomes
+- Facilitator-facing replay view
+- Export payload that includes replay data
+
+### Tasks
+
+- Build a server-side replay dataset from the auditable event log
+- Summarize each simulated year into a small set of debrief-friendly markers
+- Surface replay data in the facilitator panel
+- Keep the replay exportable for offline review
+
+### Test And Verification
+
+- Tests for replay timeline completeness
+- Tests for year marker accuracy after auction, trade, and shock events
+- Manual facilitator check that the replay is understandable during a live debrief
+
+### Exit Criteria
+
+- A facilitator can reconstruct the important events of a session in order without inspecting raw logs
+
+## Phase 10 - Expanded Facilitator Analytics
+
+### Objective
+
+Give facilitators a stronger post-session analytics surface so they can compare sectors, year outcomes, and participant cost drivers inside the product.
+
+### Deliverables
+
+- Market analytics summary
+- Sector-level breakdowns
+- Year-level metrics table
+- Company cost analytics
+- Export payload that includes analytics data
+
+### Tasks
+
+- Aggregate auction, trade, abatement, offset, and penalty activity into facilitator metrics
+- Add sector and year summaries that support workshop discussion
+- Surface analytics in the facilitator panel and export payload
+- Preserve the current simple market structure while improving interpretability
+
+### Test And Verification
+
+- Tests for analytics aggregation after representative market actions
+- Tests that facilitator snapshots expose analytics data
+- Manual facilitator check that the analytics are useful for debriefing
+
+### Exit Criteria
+
+- A facilitator can explain who incurred costs, how the market evolved, and where compliance pressure concentrated without leaving the simulator
+
+## Future V2 Candidate Tracks
 
 - Richer secondary market, possibly a simple order book
 - More sectors and scenario variants
 - Stronger bot behaviors
-- Better visualization and replay tools
 - Multi-language support
-- Expanded facilitator analytics
 - Deeper registry or settlement simulation if needed for training goals
 
-### Decision Gate
+## Decision Gate
 
 Only add exchange-style complexity if pilot results show the current auction plus simple trading model fails to create the learning outcomes you need.
 

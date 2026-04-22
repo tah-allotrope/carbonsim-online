@@ -172,6 +172,16 @@ CarbonSim Facilitator Panel
         <div id="fac-session-summary" class="fac-subtle">Run the simulation to completion and export session data to see a full summary here.</div>
     </div>
 
+    <div class="fac-card">
+        <div class="fac-kicker">Session Analytics</div>
+        <div id="fac-analytics" class="fac-subtle">Waiting for analytics...</div>
+    </div>
+
+    <div class="fac-card">
+        <div class="fac-kicker">Replay Timeline</div>
+        <div id="fac-replay" class="fac-subtle">Waiting for replay data...</div>
+    </div>
+
     <div class="fac-card" id="fac-export-output-card" style="display:none;">
         <div class="fac-kicker">Exported Data</div>
         <pre id="fac-export-output" style="max-height:400px; overflow:auto; font-size:12px; background:#f4f8fa; padding:12px; border-radius:8px;"></pre>
@@ -180,6 +190,93 @@ CarbonSim Facilitator Panel
 
 <script>
     const initialSnapshot = js_vars.initial_facilitator_snapshot;
+
+    function renderActiveShocks(shocks) {
+        const shocksDiv = document.getElementById('fac-shocks');
+        shocksDiv.innerHTML = '';
+        if (!shocks || !shocks.length) {
+            shocksDiv.textContent = 'No shocks applied yet.';
+            return;
+        }
+
+        shocks.forEach((shock) => {
+            const div = document.createElement('div');
+            div.style.padding = '8px 0';
+            div.style.borderBottom = '1px solid #e7eef4';
+            div.innerHTML = `<strong>${shock.shock_type.replace(/_/g, ' ')}</strong> / year ${shock.year} / magnitude ${shock.magnitude} / ${shock.applied_at}`;
+            shocksDiv.appendChild(div);
+        });
+    }
+
+    function renderSessionSummary(summary) {
+        const summaryDiv = document.getElementById('fac-session-summary');
+        summaryDiv.innerHTML = '';
+        if (!summary) {
+            summaryDiv.textContent = 'No summary available yet.';
+            return;
+        }
+
+        const block = document.createElement('div');
+        block.innerHTML = `
+            <h3 style="margin:0 0 8px 0;">${summary.headline}</h3>
+            <p><strong>Total penalties:</strong> ${summary.total_penalties_across_all_companies}</p>
+            <p><strong>Trades completed:</strong> ${summary.total_trades_completed} / <strong>Auctions cleared:</strong> ${summary.total_auctions_cleared} / <strong>Avg clearing price:</strong> ${summary.average_clearing_price}</p>
+            <p><strong>Facilitator notes:</strong></p>
+            <ul>${summary.facilitator_notes.map(note => `<li>${note}</li>`).join('')}</ul>
+            <h4 style="margin:12px 0 4px 0;">Rankings</h4>
+            <table class="fac-table"><thead><tr><th>Rank</th><th>Company</th><th>Sector</th><th>Penalties</th><th>Banked</th><th>Cash left</th><th>Abatement</th></tr></thead><tbody>
+            ${summary.rankings.map(rank => `<tr><td>${rank.rank}</td><td>${rank.company_name}</td><td>${rank.sector}</td><td>${rank.cumulative_penalties}</td><td>${rank.banked_allowances}</td><td>${rank.cash_remaining}</td><td>${rank.total_abatement}</td></tr>`).join('')}
+            </tbody></table>
+        `;
+        summaryDiv.appendChild(block);
+    }
+
+    function renderAnalytics(analytics) {
+        const analyticsDiv = document.getElementById('fac-analytics');
+        analyticsDiv.innerHTML = '';
+        if (!analytics) {
+            analyticsDiv.textContent = 'No analytics available yet.';
+            return;
+        }
+
+        const metrics = analytics.market_metrics || {};
+        const sectors = analytics.sector_breakdown || [];
+        const years = analytics.year_metrics || [];
+        analyticsDiv.innerHTML = `
+            <p><strong>Auction volume:</strong> ${metrics.total_auction_volume || 0} / <strong>Trade value:</strong> ${metrics.total_trade_value || 0} / <strong>Offsets purchased:</strong> ${metrics.total_offsets_purchased || 0}</p>
+            <p><strong>Abatement actions:</strong> ${metrics.total_abatement_actions || 0} / <strong>Shocks applied:</strong> ${metrics.shock_count || 0}</p>
+            <h4 style="margin:12px 0 4px 0;">Sector breakdown</h4>
+            <table class="fac-table"><thead><tr><th>Sector</th><th>Companies</th><th>Projected emissions</th><th>Allowances</th><th>Banked</th><th>Penalties</th></tr></thead><tbody>
+            ${sectors.map(sector => `<tr><td>${sector.sector.replace(/_/g, ' ')}</td><td>${sector.company_count}</td><td>${sector.projected_emissions}</td><td>${sector.allowances}</td><td>${sector.banked_allowances}</td><td>${sector.cumulative_penalties}</td></tr>`).join('')}
+            </tbody></table>
+            <h4 style="margin:12px 0 4px 0;">Year metrics</h4>
+            <table class="fac-table"><thead><tr><th>Year</th><th>Emissions</th><th>Allocation</th><th>Penalties</th><th>Avg price</th><th>Trade volume</th><th>Shocks</th></tr></thead><tbody>
+            ${years.map(year => `<tr><td>${year.year}</td><td>${year.total_projected_emissions}</td><td>${year.total_allocation}</td><td>${year.total_penalties}</td><td>${year.average_clearing_price}</td><td>${year.trade_volume}</td><td>${year.shock_count}</td></tr>`).join('')}
+            </tbody></table>
+        `;
+    }
+
+    function renderReplay(replay) {
+        const replayDiv = document.getElementById('fac-replay');
+        replayDiv.innerHTML = '';
+        if (!replay) {
+            replayDiv.textContent = 'No replay data available yet.';
+            return;
+        }
+
+        const yearMarkers = replay.year_markers || [];
+        const timeline = (replay.timeline || []).slice().reverse();
+        replayDiv.innerHTML = `
+            <h4 style="margin:0 0 4px 0;">Year markers</h4>
+            <table class="fac-table"><thead><tr><th>Year</th><th>Events</th><th>Trades</th><th>Penalties</th><th>Banked</th><th>Avg price</th></tr></thead><tbody>
+            ${yearMarkers.map(marker => `<tr><td>${marker.year}</td><td>${marker.event_count}</td><td>${marker.trade_volume}</td><td>${marker.total_penalties}</td><td>${marker.total_banked_allowances}</td><td>${marker.average_clearing_price}</td></tr>`).join('')}
+            </tbody></table>
+            <h4 style="margin:12px 0 4px 0;">Recent events (most recent first)</h4>
+            <table class="fac-table"><thead><tr><th>Step</th><th>Year</th><th>Event</th><th>Summary</th></tr></thead><tbody>
+            ${timeline.map(event => `<tr><td>${event.step}</td><td>${event.year}</td><td>${event.event_type.replace(/_/g, ' ')}</td><td>${event.summary}</td></tr>`).join('')}
+            </tbody></table>
+        `;
+    }
 
     function renderFacilitatorState(snapshot) {
         document.getElementById('fac-phase-label').textContent = snapshot.phase_label;
@@ -239,6 +336,11 @@ CarbonSim Facilitator Panel
             table.appendChild(tBody);
             auctionLog.appendChild(table);
         }
+
+        renderActiveShocks(snapshot.active_shocks);
+        renderSessionSummary(snapshot.session_summary);
+        renderAnalytics(snapshot.session_analytics);
+        renderReplay(snapshot.session_replay);
     }
 
     function liveRecv(data) {
@@ -251,36 +353,7 @@ CarbonSim Facilitator Panel
             output.textContent = JSON.stringify(data.payload, null, 2);
 
             if (data.summary) {
-                const shocksDiv = document.getElementById('fac-shocks');
-        shocksDiv.innerHTML = '';
-        if (!snapshot.active_shocks || !snapshot.active_shocks.length) {
-            shocksDiv.textContent = 'No shocks applied yet.';
-        } else {
-            snapshot.active_shocks.forEach((shock) => {
-                const div = document.createElement('div');
-                div.style.padding = '8px 0';
-                div.style.borderBottom = '1px solid #e7eef4';
-                div.innerHTML = `<strong>${shock.shock_type.replace(/_/g, ' ')}</strong> / year ${shock.year} / magnitude ${shock.magnitude} / ${shock.applied_at}`;
-                shocksDiv.appendChild(div);
-            });
-        }
-
-        const summaryDiv = document.getElementById('fac-session-summary');
-                summaryDiv.innerHTML = '';
-                const s = data.summary;
-                const block = document.createElement('div');
-                block.innerHTML = `
-                    <h3 style="margin:0 0 8px 0;">${s.headline}</h3>
-                    <p><strong>Total penalties:</strong> ${s.total_penalties_across_all_companies}</p>
-                    <p><strong>Trades completed:</strong> ${s.total_trades_completed} / <strong>Auctions cleared:</strong> ${s.total_auctions_cleared} / <strong>Avg clearing price:</strong> ${s.average_clearing_price}</p>
-                    <p><strong>Facilitator notes:</strong></p>
-                    <ul>${s.facilitator_notes.map(n => `<li>${n}</li>`).join('')}</ul>
-                    <h4 style="margin:12px 0 4px 0;">Rankings</h4>
-                    <table class="fac-table"><thead><tr><th>Rank</th><th>Company</th><th>Sector</th><th>Penalties</th><th>Banked</th><th>Cash left</th><th>Abatement</th></tr></thead><tbody>
-                    ${s.rankings.map(r => `<tr><td>${r.rank}</td><td>${r.company_name}</td><td>${r.sector}</td><td>${r.cumulative_penalties}</td><td>${r.banked_allowances}</td><td>${r.cash_remaining}</td><td>${r.total_abatement}</td></tr>`).join('')}
-                    </tbody></table>
-                `;
-                summaryDiv.appendChild(block);
+                renderSessionSummary(data.summary);
             }
         }
     }
