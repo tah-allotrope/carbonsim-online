@@ -190,7 +190,6 @@ CarbonSim Facilitator Panel
 
 <script>
     const initialSnapshot = js_vars.initial_facilitator_snapshot;
-    const maxRecentEvents = 12;
 
     function renderActiveShocks(shocks) {
         const shocksDiv = document.getElementById('fac-shocks');
@@ -266,7 +265,7 @@ CarbonSim Facilitator Panel
         }
 
         const yearMarkers = replay.year_markers || [];
-        const timeline = (replay.timeline || []).slice(-maxRecentEvents).reverse();
+        const timeline = (replay.timeline || []).slice().reverse();
         replayDiv.innerHTML = `
             <h4 style="margin:0 0 4px 0;">Year markers</h4>
             <table class="fac-table"><thead><tr><th>Year</th><th>Events</th><th>Trades</th><th>Penalties</th><th>Banked</th><th>Avg price</th></tr></thead><tbody>
