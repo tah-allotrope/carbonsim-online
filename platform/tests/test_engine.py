@@ -839,6 +839,7 @@ class ExportAndSummaryTests(unittest.TestCase):
         self.assertIn("analytics", export)
         self.assertGreater(len(export["replay"]["timeline"]), 0)
         self.assertIn("market_metrics", export["analytics"])
+        self.assertGreater(len(export["trades"]), 0)
         self.assertEqual(export["trades"][0]["year"], 1)
         self.assertTrue(all("year" in trade for trade in export["trades"]))
 
