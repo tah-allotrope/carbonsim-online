@@ -1232,56 +1232,6 @@ def build_session_replay(state: dict[str, Any]) -> dict[str, Any]:
         }
         for index, event in enumerate(state["audit_log"], start=1)
     ]
-    year_markers = []
-    for year in _tracked_years(state):
-        year_results = [
-            next((r for r in company["year_results"] if r["year"] == year), None)
-            for company in state["companies"]
-        ]
-        year_results = [result for result in year_results if result is not None]
-        auctions = [auction for auction in state["auctions"] if auction["year"] == year]
-        accepted_trades = [
-            trade
-            for trade in state["trades"]
-            if trade.get("year") == year and trade["status"] == "accepted"
-        ]
-        shocks = [
-            shock for shock in state.get("active_shocks", []) if shock["year"] == year
-        ]
-        cleared_prices = [
-            auction["clearing_price"]
-            for auction in auctions
-            if auction["status"] == "cleared" and auction["clearing_price"] > 0
-        ]
-        year_markers.append(
-            {
-                "year": year,
-                "event_count": len(
-                    [event for event in state["audit_log"] if event.get("year") == year]
-                ),
-                "auction_count": len(auctions),
-                "accepted_trade_count": len(accepted_trades),
-                "trade_volume": round(
-                    sum(trade["quantity"] for trade in accepted_trades), 2
-                ),
-                "total_penalties": round(
-                    sum(result["penalty_due"] for result in year_results), 2
-                ),
-                "total_banked_allowances": round(
-                    sum(result["banked_allowances"] for result in year_results), 2
-                ),
-                "total_offsets_used": round(
-                    sum(result["offsets_used_for_compliance"] for result in year_results),
-                    2,
-                ),
-                "average_clearing_price": round(
-                    sum(cleared_prices) / len(cleared_prices), 2
-                )
-                if cleared_prices
-                else 0.0,
-                "shock_count": len(shocks),
-            }
-        )
 
     company_paths = [
         {
@@ -1304,7 +1254,7 @@ def build_session_replay(state: dict[str, Any]) -> dict[str, Any]:
     ]
     return {
         "timeline": timeline,
-        "year_markers": year_markers,
+        "year_markers": _build_year_markers(state),
         "market_path": market_path,
         "company_paths": company_paths,
     }
@@ -1346,7 +1296,7 @@ def build_session_analytics(state: dict[str, Any]) -> dict[str, Any]:
         )
 
     year_metrics = []
-    for marker in build_session_replay(state)["year_markers"]:
+    for marker in _build_year_markers(state):
         year = marker["year"]
         year_results = []
         for company in state["companies"]:
@@ -1723,6 +1673,60 @@ def _tracked_years(state: dict[str, Any]) -> list[int]:
     if state.get("current_year", 0) > 0:
         years.add(state["current_year"])
     return sorted(years)
+
+
+def _build_year_markers(state: dict[str, Any]) -> list[dict[str, Any]]:
+    year_markers = []
+    for year in _tracked_years(state):
+        year_results = [
+            next((result for result in company["year_results"] if result["year"] == year), None)
+            for company in state["companies"]
+        ]
+        year_results = [result for result in year_results if result is not None]
+        auctions = [auction for auction in state["auctions"] if auction["year"] == year]
+        accepted_trades = [
+            trade
+            for trade in state["trades"]
+            if trade.get("year") == year and trade["status"] == "accepted"
+        ]
+        shocks = [
+            shock for shock in state.get("active_shocks", []) if shock["year"] == year
+        ]
+        cleared_prices = [
+            auction["clearing_price"]
+            for auction in auctions
+            if auction["status"] == "cleared" and auction["clearing_price"] > 0
+        ]
+        year_markers.append(
+            {
+                "year": year,
+                "event_count": len(
+                    [event for event in state["audit_log"] if event.get("year") == year]
+                ),
+                "auction_count": len(auctions),
+                "accepted_trade_count": len(accepted_trades),
+                "trade_volume": round(
+                    sum(trade["quantity"] for trade in accepted_trades), 2
+                ),
+                "total_penalties": round(
+                    sum(result["penalty_due"] for result in year_results), 2
+                ),
+                "total_banked_allowances": round(
+                    sum(result["banked_allowances"] for result in year_results), 2
+                ),
+                "total_offsets_used": round(
+                    sum(result["offsets_used_for_compliance"] for result in year_results),
+                    2,
+                ),
+                "average_clearing_price": round(
+                    sum(cleared_prices) / len(cleared_prices), 2
+                )
+                if cleared_prices
+                else 0.0,
+                "shock_count": len(shocks),
+            }
+        )
+    return year_markers
 
 
 def apply_shock(
