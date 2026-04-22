@@ -14,6 +14,8 @@ A Vietnam-aligned, workshop-ready online CarbonSim platform for ETS training, bu
 - **Phase 6**: Facilitator tools (pause/resume/advance), participant status tracking, session data export, and session summary for debriefing.
 - **Phase 7**: Three scenario packs (vietnam_pilot, high_pressure, generous), bot strategies (conservative, moderate, aggressive), and four shock event types.
 - **Phase 8**: Deployment hardening (Docker, env-based configuration, production settings), health checks, session recovery/reconnection, structured audit logging, facilitator runbook.
+- **Phase 9**: Session replay and visualization data for facilitator debriefs, including audit-event timelines, year markers, and market path exports.
+- **Phase 10**: Expanded facilitator analytics with sector breakdowns, year metrics, and company cost summaries surfaced in both the facilitator panel and exports.
 
 ## Project layout
 
