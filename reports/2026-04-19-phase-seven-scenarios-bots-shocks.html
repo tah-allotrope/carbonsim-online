@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: Phase 7 — Scenarios, Bots, Shocks</title>
+  <meta name="color-scheme" content="dark">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) {
+        return;
+      }
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        securityLevel: 'loose',
+        themeVariables: {
+          primaryColor: '#111111',
+          primaryTextColor: '#e8f6ff',
+          primaryBorderColor: '#00f5ff',
+          lineColor: '#39ff14',
+          secondaryColor: '#121a1a',
+          tertiaryColor: '#111111',
+          background: '#0d0d0d',
+          mainBkg: '#0d0d0d',
+          nodeBorder: '#00f5ff',
+          clusterBkg: '#111111',
+          clusterBorder: '#39ff14',
+          edgeLabelBackground: '#0d0d0d'
+        }
+      });
+
+      await mermaid.run({ nodes: blocks });
+    }
+
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --bg-soft: #111111;
+      --panel: rgba(13, 13, 13, 0.88);
+      --panel-strong: rgba(19, 19, 19, 0.96);
+      --line: rgba(0, 245, 255, 0.26);
+      --line-strong: rgba(57, 255, 20, 0.38);
+      --text: #e9f6ff;
+      --muted: #8ea3ad;
+      --accent-blue: #00f5ff;
+      --accent-green: #39ff14;
+      --glow-blue: 0 0 18px rgba(0, 245, 255, 0.42);
+      --glow-green: 0 0 18px rgba(57, 255, 20, 0.28);
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --narrative-font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --technical-font: "Cascadia Code", "Fira Code", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      position: relative;
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(0, 245, 255, 0.12), transparent 28%),
+        radial-gradient(circle at 85% 12%, rgba(57, 255, 20, 0.08), transparent 24%),
+        linear-gradient(180deg, #050505 0%, #0d0d0d 36%, #090909 100%);
+      color: var(--text);
+      font-family: var(--narrative-font);
+      line-height: 1.6;
+      letter-spacing: 0.01em;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.16;
+    }
+
+    a { color: var(--accent-blue); }
+
+    code, pre, .technical, .meta-chip, .section-kicker, .pill, .metric-label, .metric-value, .repo-tag, .mermaid {
+      font-family: var(--technical-font);
+    }
+
+    .page-shell {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 32px 0 72px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      position: relative;
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background:
+        linear-gradient(145deg, rgba(0, 245, 255, 0.08), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+        var(--panel-strong);
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -10% -55% 42%;
+      height: 280px;
+      background: radial-gradient(circle, rgba(0, 245, 255, 0.18), transparent 64%);
+      filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.85fr);
+      gap: 22px;
+      align-items: end;
+    }
+
+    .section-kicker {
+      margin: 0 0 12px;
+      color: var(--accent-green);
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      text-shadow: var(--glow-green);
+    }
+
+    .phase-title {
+      margin: 0;
+      max-width: 14ch;
+      font-size: clamp(2.5rem, 5vw, 4.7rem);
+      line-height: 0.94;
+      letter-spacing: -0.05em;
+      color: #f5feff;
+      text-transform: uppercase;
+      text-wrap: balance;
+      text-shadow: 0 0 24px rgba(0, 245, 255, 0.2);
+    }
+
+    .hero-summary {
+      margin: 18px 0 0;
+      max-width: 60ch;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .hero-meta { display: grid; gap: 12px; }
+
+    .meta-card {
+      padding: 16px 18px;
+      border: 1px solid rgba(57, 255, 20, 0.2);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.025);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.24);
+    }
+
+    .meta-label {
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .meta-chip {
+      color: var(--accent-blue);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-shadow: var(--glow-blue);
+      word-break: break-word;
+    }
+
+    .repo-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border: 1px solid rgba(0, 245, 255, 0.24);
+      border-radius: 999px;
+      background: rgba(0, 245, 255, 0.08);
+      color: var(--accent-blue);
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+    }
+
+    .section {
+      position: relative;
+      margin-top: 22px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .section::before {
+      content: "";
+      position: absolute;
+      left: 24px; right: 24px; top: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.9), rgba(57, 255, 20, 0.9), transparent);
+      transform: translateY(-1px);
+    }
+
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px 18px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 1.7rem);
+      line-height: 1.1;
+      color: #f0feff;
+    }
+
+    .section-index {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent-green);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-shadow: var(--glow-green);
+    }
+
+    .section-index::after {
+      content: "";
+      width: 44px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(57, 255, 20, 0.9), transparent);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .column-card, .diagram-frame, .technical-frame, .viz-frame, .question-frame, .empty-state {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
+        rgba(7, 7, 7, 0.82);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.012);
+    }
+
+    .column-card { padding: 18px; min-height: 200px; }
+
+    .column-label {
+      margin: 0 0 12px;
+      color: var(--accent-blue);
+      font-size: 0.83rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      text-shadow: var(--glow-blue);
+    }
+
+    .splitter {
+      width: 100%; height: 1px;
+      margin: 8px 0 16px;
+      background: linear-gradient(90deg, rgba(0, 245, 255, 0.4), transparent);
+    }
+
+    .diagram-frame, .chart-frame, .technical-frame, .viz-frame, .question-frame {
+      padding: 18px;
+    }
+
+    .diagram-frame { overflow-x: auto; overflow-y: auto; max-height: min(70vh, 720px); }
+
+    .mermaid {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      color: var(--text);
+    }
+
+    .mermaid svg {
+      display: block;
+      width: auto !important;
+      min-width: 100%;
+      max-width: none !important;
+      height: auto !important;
+    }
+
+    .chart-frame, .viz-frame { overflow: hidden; }
+
+    .technical-frame { color: #d6f6ff; }
+
+    .technical-frame table { width: 100%; border-collapse: collapse; }
+    .technical-frame th, .technical-frame td { padding: 12px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); vertical-align: top; }
+    .technical-frame th { color: var(--accent-green); font-size: 0.76rem; text-align: left; letter-spacing: 0.12em; text-transform: uppercase; }
+
+    .chart-frame canvas, .technical-frame > canvas, .viz-frame canvas, canvas.report-chart {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      height: 280px !important;
+      min-height: 280px;
+      max-height: 280px;
+    }
+
+    .empty-state {
+      padding: 22px;
+      text-align: center;
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent-blue);
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-shadow: var(--glow-blue);
+    }
+
+    .metric-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+
+    .metric {
+      padding: 14px 16px;
+      border: 1px solid rgba(0, 245, 255, 0.18);
+      border-radius: var(--radius-sm);
+      background: rgba(0, 245, 255, 0.04);
+    }
+
+    .metric-label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.16em; }
+    .metric-value { margin-top: 8px; color: var(--accent-green); font-size: 1.2rem; font-weight: 700; text-shadow: var(--glow-green); }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 11px;
+      border: 1px solid rgba(57, 255, 20, 0.22);
+      border-radius: 999px;
+      background: rgba(57, 255, 20, 0.06);
+      color: #d9ffd0;
+      font-size: 0.8rem;
+    }
+
+    .question-frame ul, .technical-frame ul, .column-card ul { margin: 0; padding-left: 20px; }
+    .question-frame li, .technical-frame li, .column-card li { margin-bottom: 8px; }
+
+    .footer-note {
+      margin-top: 18px;
+      text-align: right;
+      color: rgba(142, 163, 173, 0.72);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid, .summary-grid, .metric-strip { grid-template-columns: 1fr; }
+      .phase-title { max-width: none; }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell { width: min(100vw - 20px, 1180px); padding-top: 16px; padding-bottom: 42px; }
+      .hero, .section { padding: 18px; border-radius: 20px; }
+      .section::before { left: 18px; right: 18px; }
+      .phase-title { font-size: clamp(2rem, 12vw, 3rem); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="phase-header">
+      <div class="hero-grid">
+        <div>
+          <p class="section-kicker">Phase Report / Personal Technical Artifact</p>
+          <h1 class="phase-title">Phase 7 — Scenarios, Bots, Shocks</h1>
+          <p class="hero-summary">
+            Added scenario packs with tuned parameters, AI-driven bot participants with three decision strategies, and facilitator-triggered shock events that modify company state mid-session.
+          </p>
+          <div class="pill-row" aria-label="report metadata">
+            <span class="pill">project :: CarbonSim Online</span>
+            <span class="pill">date :: 2026-04-19</span>
+          </div>
+          <div class="repo-tag">repo :: carbonsim-online</div>
+        </div>
+
+        <div class="hero-meta">
+          <div class="meta-card">
+            <div class="meta-label">Project</div>
+            <div class="meta-chip">CarbonSim Online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Repository</div>
+            <div class="meta-chip">carbonsim-online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Date</div>
+            <div class="meta-chip">2026-04-19</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section narrative" id="input-output-summary">
+      <div class="section-header">
+        <div>
+          <div class="section-index">01 / Input -&gt; Output</div>
+          <h2 class="section-title">Input -&gt; Output Summary</h2>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="column-card">
+          <h3 class="column-label">Inputs</h3>
+          <div class="splitter"></div>
+          <ul>
+            <li>Phase 6 engine with facilitator controls, participant status, export, and session summary</li>
+            <li>AGENTS.md V1 feature priorities requiring scenario packs, bots, and shocks</li>
+            <li>Project plan Phase 7 definition: pilot scenario design, bot support, shock events</li>
+            <li>Existing <code>SCENARIO_PACKS</code> absent — only hardcoded defaults for allocation factors, abatement, and penalties</li>
+            <li>No bot participants or automated decision logic in prior phases</li>
+            <li>No shock event infrastructure in prior phases</li>
+          </ul>
+        </div>
+        <div class="column-card">
+          <h3 class="column-label">Outputs</h3>
+          <div class="splitter"></div>
+          <ul>
+            <li><code>SCENARIO_PACKS</code> dict with three scenarios: <code>vietnam_pilot</code>, <code>high_pressure</code>, <code>generous</code></li>
+            <li><code>SHOCK_CATALOG</code> with four shock types: <code>emissions_spike</code>, <code>allowance_withdrawal</code>, <code>cost_shock</code>, <code>offset_supply_change</code></li>
+            <li><code>BOT_STRATEGIES</code> with conservative, moderate, and aggressive decision strategies</li>
+            <li><code>apply_shock()</code> function with magnitude scaling and state validation</li>
+            <li><code>run_bot_turns()</code> function with per-strategy abatement, offset, and auction bidding</li>
+            <li>Updated <code>create_initial_state</code> accepting <code>scenario</code>, <code>bot_count</code>, <code>bot_strategy</code></li>
+            <li>Updated facilitator UI with shock controls and bot turn trigger</li>
+            <li>Three session configs in <code>settings.py</code> for each scenario</li>
+            <li>20 new tests (62 total), all passing</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="logic-flow">
+      <div class="section-header">
+        <div>
+          <div class="section-index">02 / Logic Flow</div>
+          <h2 class="section-title">Logic Flow</h2>
+        </div>
+      </div>
+      <div class="diagram-frame technical">
+        <div class="mermaid">
+flowchart TD
+    A[Facilitator starts session] --> B{Scenario selected}
+    B -->|vietnam_pilot| C[Standard allocation factors 92/88/84%]
+    B -->|high_pressure| D[Tighter allocation 90/82/74%]
+    B -->|generous| E[Generous allocation 95/92/89%]
+
+    C --> F[create_initial_state]
+    D --> F
+    E --> F
+
+    F --> G{bot_count &gt; 0?}
+    G -->|Yes| H[Add bot companies with strategy flag]
+    G -->|No| I[Human-only session]
+
+    H --> J[Year start: allocation + auction schedule]
+    I --> J
+
+    J --> K[Decision window]
+
+    K --> L{Bot turn triggered?}
+    L -->|Yes| M[run_bot_turns selects strategy]
+    M --> N[Conservative: minimal abatement, cautious bidding]
+    M --> O[Moderate: moderate abatement, market-price bidding]
+    M --> P[Aggressive: full abatement, competitive bidding]
+
+    K --> Q{Shock triggered?}
+    Q -->|Yes| R[apply_shock modifies state]
+    R --> S[Emissions spike / Allowance withdrawal / Cost shock / Offset supply change]
+    Q -->|No| T[Continue normal flow]
+
+    N --> U[Year end: compliance + penalty]
+    O --> U
+    P --> U
+    T --> U
+
+    U --> V{Year &lt; 3?}
+    V -->|Yes| J
+    V -->|No| W[Session complete]
+        </div>
+      </div>
+    </section>
+
+    <section class="section narrative" id="math-algorithm-used">
+      <div class="section-header">
+        <div>
+          <div class="section-index">03 / Math / Algorithm Used</div>
+          <h2 class="section-title">Math / Algorithm Used</h2>
+        </div>
+      </div>
+      <div class="technical-frame">
+        <h3>Scenario Pack Formula</h3>
+        <p>Each scenario pack overrides the default constants used throughout the engine:</p>
+        <table>
+          <thead>
+            <tr><th>Parameter</th><th>vietnam_pilot</th><th>high_pressure</th><th>generous</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Allocation Factors (Y1/Y2/Y3)</td><td>0.92 / 0.88 / 0.84</td><td>0.90 / 0.82 / 0.74</td><td>0.95 / 0.92 / 0.89</td></tr>
+            <tr><td>Penalty Rate</td><td>$30/tonne</td><td>$50/tonne</td><td>$20/tonne</td></tr>
+            <tr><td>Offset Cap</td><td>10%</td><td>5%</td><td>15%</td></tr>
+            <tr><td>Offset Price</td><td>$12/tonne</td><td>$18/tonne</td><td>$8/tonne</td></tr>
+          </tbody>
+        </table>
+
+        <h3 style="margin-top: 24px;">Shock Magnitude Formula</h3>
+        <p>Each shock type applies a proportional modification scaled by a user-specified <code>magnitude</code> parameter (0.0–1.0):</p>
+        <ul>
+          <li><strong>emissions_spike</strong>: <code>projected_emissions += projected_emissions * magnitude * 0.15</code></li>
+          <li><strong>allowance_withdrawal</strong>: <code>allowances -= allowances * magnitude * 0.10</code></li>
+          <li><strong>cost_shock</strong>: <code>cash -= cash * magnitude * 0.05</code></li>
+          <li><strong>offset_supply_change</strong>: <code>offset_cap_percentage *= (1 - magnitude * 0.30)</code></li>
+        </ul>
+
+        <h3 style="margin-top: 24px;">Bot Decision Logic</h3>
+        <p>Bot strategies follow deterministic decision rules:</p>
+        <ul>
+          <li><strong>Conservative</strong>: Invests in abatement only when gap &gt; 10%, buys offsets only when gap &gt; 15%, bids at 60% of clearing price</li>
+          <li><strong>Moderate</strong>: Invests in abatement when gap &gt; 5%, buys offsets when gap &gt; 8%, bids at 80% of clearing price</li>
+          <li><strong>Aggressive</strong>: Invests in abatement whenever gap exists, buys offsets when gap &gt; 3%, bids at 95% of clearing price</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="tools-formulas-methods">
+      <div class="section-header">
+        <div>
+          <div class="section-index">04 / Tools / Formulas / Methods</div>
+          <h2 class="section-title">Tools / Formulas / Methods</h2>
+        </div>
+      </div>
+      <div class="technical-frame technical">
+        <table>
+          <thead>
+            <tr><th>Component</th><th>Method</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>SCENARIO_PACKS</code></td><td>Dict of scenario configs</td><td>Override allocation factors, abatement catalog, penalty rate, offset cap, and offset price per scenario</td></tr>
+            <tr><td><code>SHOCK_CATALOG</code></td><td>Dict of shock definitions</td><td>Define which state fields each shock modifies and the formula for magnitude scaling</td></tr>
+            <tr><td><code>BOT_STRATEGIES</code></td><td>Dict of strategy profiles</td><td>Define abatement threshold, offset threshold, and bid fraction for each bot strategy</td></tr>
+            <tr><td><code>create_initial_state</code></td><td>Parameterized factory</td><td>Accept scenario name, bot_count, and bot_strategy; back-compat defaults match vietnam_pilot</td></tr>
+            <tr><td><code>apply_shock</code></td><td>State mutation + audit log</td><td>Apply a named shock with magnitude to a running session; validates phase eligibility; records active_shocks</td></tr>
+            <tr><td><code>run_bot_turns</code></td><td>Per-company decision loop</td><td>Iterate bot companies, select strategy, decide abatement/offsets/auction bids based on compliance gap</td></tr>
+            <tr><td><code>build_facilitator_snapshot</code></td><td>Extended snapshot</td><td>Added scenario name, bot_count, active_shocks, and per-company is_bot flag</td></tr>
+            <tr><td><code>creating_session</code> in __init__.py</code></td><td>Session config passthrough</td><td>Read scenario, bot_count, bot_strategy from session config and pass to create_initial_state</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="results-visualizations">
+      <div class="section-header">
+        <div>
+          <div class="section-index">05 / Results &amp; Visualizations</div>
+          <h2 class="section-title">Results &amp; Visualizations</h2>
+        </div>
+      </div>
+      <div class="viz-frame">
+        <canvas id="scenarioChart"></canvas>
+      </div>
+      <div class="metric-strip">
+        <div class="metric">
+          <div class="metric-label">Total Tests</div>
+          <div class="metric-value">62</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">New Phase 7 Tests</div>
+          <div class="metric-value">20</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Scenario Packs</div>
+          <div class="metric-value">3</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Shock Types</div>
+          <div class="metric-value">4</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Bot Strategies</div>
+          <div class="metric-value">3</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Test Status</div>
+          <div class="metric-value">ALL PASS</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section narrative" id="limitations-second-best-alternative">
+      <div class="section-header">
+        <div>
+          <div class="section-index">06 / Limitations / Second-Best Alternative</div>
+          <h2 class="section-title">Limitations / Second-Best Alternative</h2>
+        </div>
+      </div>
+      <div class="question-frame">
+        <ul>
+          <li><strong>Bot strategies are deterministic, not adaptive.</strong> Bots follow fixed threshold rules. They do not learn from other participants or adjust mid-session. This is acceptable for V1 liquidity support but will need ML or reinforcement strategies for realistic market behavior in V2.</li>
+          <li><strong>Shock magnitude is a flat 0–1 scale.</strong> The proportional formulas (e.g. 15% emissions spike at maximum magnitude) are pedagogically useful defaults that produce visible effects. Facilitators who want finer control will need either narrower magnitude ranges or custom shocks in future phases.</li>
+          <li><strong>Bot companies use the same sector distribution as human companies.</strong> There is no special bot-only sector or company profile. Bots are drawn from the same COMPANY_LIBRARY, which keeps the code simple but means bots cannot fill niche roles like "purely speculative trader."</li>
+          <li><strong>The second-best alternative to scenario packs was hardcoding multiple config branches.</strong> Scenario packs won because they centralize tuning, keep backwards compatibility through defaults, and make it trivial for facilitators to switch scenarios from the oTree admin panel.</li>
+          <li><strong>Shock events currently apply uniformly across all companies.</strong> Targeted shocks (e.g. "only sector X is affected") would be more realistic but were deferred to keep the V1 facilitator interface simple.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section narrative" id="errors-warnings-flags-encountered">
+      <div class="section-header">
+        <div>
+          <div class="section-index">07 / Errors / Warnings / Flags</div>
+          <h2 class="section-title">Errors / Warnings / Flags Encountered</h2>
+        </div>
+      </div>
+      <div class="question-frame technical">
+        <ul>
+          <li><strong>Test failure in <code>test_scenario_allocation_factors_override_defaults</code>:</strong> The test compared year-1 allocation against <code>baseline * factor</code>, but the engine uses <code>projected_emissions * factor</code> (which accounts for previously activated abatements). Fixed by comparing against <code>projected_emissions * factor</code> instead. The engine was correct; the test assertion was wrong.</li>
+          <li><strong>Backward compatibility preserved:</strong> <code>create_initial_state</code> now accepts <code>scenario</code>, <code>bot_count</code>, and <code>bot_strategy</code> parameters, but all default to vietnam_pilot-equivalent values. Existing sessions that call <code>create_initial_state(participant_count=N)</code> continue to work without changes.</li>
+          <li><strong>LSP import warnings for oTree:</strong> oTree is installed in the project venv but not visible to the system Python used by the language server. These warnings are cosmetic and do not affect runtime behavior.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section narrative" id="open-questions-next-phase-seeds">
+      <div class="section-header">
+        <div>
+          <div class="section-index">08 / Open Questions / Next Phase Seeds</div>
+          <h2 class="section-title">Open Questions / Next Phase Seeds</h2>
+        </div>
+      </div>
+      <div class="question-frame">
+        <ul>
+          <li><strong>Per-sector shocks:</strong> The current shock system applies uniformly. A natural follow-on is sector-targeted shocks (e.g. "electricity generation faces an emissions spike"), which would require adding a <code>target_sectors</code> filter to <code>apply_shock</code>.</li>
+          <li><strong>Adaptive bot strategies:</strong> Moving beyond deterministic thresholds to bots that observe market prices, adjust bid aggressiveness, and respond to shock events would add realism for V2 workshops.</li>
+          <li><strong>Custom scenario editor:</strong> Facilitators may want to create ad-hoc scenarios in the oTree admin panel rather than choosing from the three preset packs. This requires a scenario builder UI or config editor.</li>
+          <li><strong>Session replay and post-hoc analysis:</strong> The export data now includes shocks and bot decisions. Building a visual replay tool or timeline view would help facilitators debrief workshops more effectively.</li>
+          <li><strong>Integration testing with live bots:</strong> The current bot tests exercise <code>run_bot_turns</code> in isolation. An integration dry-run that creates a full session with bots, runs three years, and verifies compliance outcomes end-to-end would increase confidence before pilot workshops.</li>
+          <li><strong>Shock timing UX:</strong> The facilitator panel now has shock controls, but the UX for choosing when in a year to apply a shock (e.g. "during decision window" vs "at year start") needs real-world testing with facilitators.</li>
+        </ul>
+        <div class="footer-note">artifact generated for reflection, not presentation theater</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    if (window.Chart) {
+      Chart.defaults.devicePixelRatio = 1;
+      Chart.defaults.animation = false;
+      Chart.defaults.resizeDelay = 150;
+      Chart.defaults.normalized = true;
+      Chart.defaults.maintainAspectRatio = false;
+      Chart.defaults.responsive = true;
+
+      new Chart(document.getElementById('scenarioChart'), {
+        type: 'bar',
+        data: {
+          labels: ['Year 1', 'Year 2', 'Year 3'],
+          datasets: [
+            {
+              label: 'Vietnam Pilot Allocation %',
+              data: [92, 88, 84],
+              backgroundColor: 'rgba(0, 245, 255, 0.7)',
+              borderColor: 'rgba(0, 245, 255, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'High Pressure Allocation %',
+              data: [90, 82, 74],
+              backgroundColor: 'rgba(255, 68, 68, 0.7)',
+              borderColor: 'rgba(255, 68, 68, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Generous Allocation %',
+              data: [95, 92, 89],
+              backgroundColor: 'rgba(57, 255, 20, 0.7)',
+              borderColor: 'rgba(57, 255, 20, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#e9f6ff', font: { family: 'Segoe UI' } }
+            },
+            title: {
+              display: true,
+              text: 'Free Allocation Factor by Scenario and Year',
+              color: '#f0feff',
+              font: { size: 16, family: 'Segoe UI' }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 70,
+              max: 100,
+              ticks: { color: '#8ea3ad', callback: function(v) { return v + '%'; } },
+              grid: { color: 'rgba(255,255,255,0.06)' }
+            },
+            x: {
+              ticks: { color: '#8ea3ad' },
+              grid: { color: 'rgba(255,255,255,0.06)' }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

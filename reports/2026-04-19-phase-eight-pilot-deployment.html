@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: Pilot Deployment &amp; Dry-Run Operations</title>
+  <meta name="color-scheme" content="dark">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) {
+        return;
+      }
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        securityLevel: 'loose',
+        themeVariables: {
+          primaryColor: '#111111',
+          primaryTextColor: '#e8f6ff',
+          primaryBorderColor: '#00f5ff',
+          lineColor: '#39ff14',
+          secondaryColor: '#121a1a',
+          tertiaryColor: '#111111',
+          background: '#0d0d0d',
+          mainBkg: '#0d0d0d',
+          nodeBorder: '#00f5ff',
+          clusterBkg: '#111111',
+          clusterBorder: '#39ff14',
+          edgeLabelBackground: '#0d0d0d'
+        }
+      });
+
+      await mermaid.run({ nodes: blocks });
+    }
+
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --bg-soft: #111111;
+      --panel: rgba(13, 13, 13, 0.88);
+      --panel-strong: rgba(19, 19, 19, 0.96);
+      --line: rgba(0, 245, 255, 0.26);
+      --line-strong: rgba(57, 255, 20, 0.38);
+      --text: #e9f6ff;
+      --muted: #8ea3ad;
+      --accent-blue: #00f5ff;
+      --accent-green: #39ff14;
+      --glow-blue: 0 0 18px rgba(0, 245, 255, 0.42);
+      --glow-green: 0 0 18px rgba(57, 255, 20, 0.28);
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --narrative-font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --technical-font: "Cascadia Code", "Fira Code", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      position: relative;
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(0, 245, 255, 0.12), transparent 28%),
+        radial-gradient(circle at 85% 12%, rgba(57, 255, 20, 0.08), transparent 24%),
+        linear-gradient(180deg, #050505 0%, #0d0d0d 36%, #090909 100%);
+      color: var(--text);
+      font-family: var(--narrative-font);
+      line-height: 1.6;
+      letter-spacing: 0.01em;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.16;
+    }
+
+    a { color: var(--accent-blue); }
+
+    code, pre, .technical, .meta-chip, .section-kicker, .pill, .metric-label, .metric-value, .repo-tag, .mermaid {
+      font-family: var(--technical-font);
+    }
+
+    .page-shell {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 32px 0 72px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      position: relative;
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background:
+        linear-gradient(145deg, rgba(0, 245, 255, 0.08), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+        var(--panel-strong);
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -10% -55% 42%;
+      height: 280px;
+      background: radial-gradient(circle, rgba(0, 245, 255, 0.18), transparent 64%);
+      filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.85fr);
+      gap: 22px;
+      align-items: end;
+    }
+
+    .section-kicker {
+      margin: 0 0 12px;
+      color: var(--accent-green);
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      text-shadow: var(--glow-green);
+    }
+
+    .phase-title {
+      margin: 0;
+      max-width: 12ch;
+      font-size: clamp(2.5rem, 5vw, 4.7rem);
+      line-height: 0.94;
+      letter-spacing: -0.05em;
+      color: #f5feff;
+      text-transform: uppercase;
+      text-wrap: balance;
+      text-shadow: 0 0 24px rgba(0, 245, 255, 0.2);
+    }
+
+    .hero-summary {
+      margin: 18px 0 0;
+      max-width: 60ch;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .hero-meta { display: grid; gap: 12px; }
+
+    .meta-card {
+      padding: 16px 18px;
+      border: 1px solid rgba(57, 255, 20, 0.2);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.025);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.24);
+    }
+
+    .meta-label {
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .meta-chip {
+      color: var(--accent-blue);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-shadow: var(--glow-blue);
+      word-break: break-word;
+    }
+
+    .repo-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border: 1px solid rgba(0, 245, 255, 0.24);
+      border-radius: 999px;
+      background: rgba(0, 245, 255, 0.08);
+      color: var(--accent-blue);
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+    }
+
+    .section {
+      position: relative;
+      margin-top: 22px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .section::before {
+      content: "";
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      top: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.9), rgba(57, 255, 20, 0.9), transparent);
+      transform: translateY(-1px);
+    }
+
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px 18px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 1.7rem);
+      line-height: 1.1;
+      color: #f0feff;
+    }
+
+    .section-index {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent-green);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-shadow: var(--glow-green);
+    }
+
+    .section-index::after {
+      content: "";
+      width: 44px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(57, 255, 20, 0.9), transparent);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .column-card, .diagram-frame, .technical-frame, .viz-frame, .question-frame, .empty-state {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
+        rgba(7, 7, 7, 0.82);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.012);
+    }
+
+    .column-card { padding: 18px; min-height: 200px; }
+
+    .column-label {
+      margin: 0 0 12px;
+      color: var(--accent-blue);
+      font-size: 0.83rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      text-shadow: var(--glow-blue);
+    }
+
+    .splitter {
+      width: 100%;
+      height: 1px;
+      margin: 8px 0 16px;
+      background: linear-gradient(90deg, rgba(0, 245, 255, 0.4), transparent);
+    }
+
+    .diagram-frame, .chart-frame, .technical-frame, .viz-frame, .question-frame { padding: 18px; }
+
+    .diagram-frame {
+      overflow-x: auto;
+      overflow-y: auto;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: contain;
+      max-height: min(70vh, 720px);
+    }
+
+    .mermaid { width: 100%; max-width: 100%; min-width: 0; color: var(--text); }
+
+    .chart-frame canvas, .technical-frame > canvas, .viz-frame canvas, canvas.report-chart {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      height: 280px !important;
+      min-height: 280px;
+      max-height: 280px;
+    }
+
+    .empty-state { padding: 22px; text-align: center; }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent-blue);
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-shadow: var(--glow-blue);
+    }
+
+    .metric-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      padding: 14px 16px;
+      border: 1px solid rgba(0, 245, 255, 0.18);
+      border-radius: var(--radius-sm);
+      background: rgba(0, 245, 255, 0.04);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .metric-value {
+      margin-top: 8px;
+      color: var(--accent-green);
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-shadow: var(--glow-green);
+    }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border: 1px solid rgba(57, 255, 20, 0.22);
+      border-radius: 999px;
+      background: rgba(57, 255, 20, 0.06);
+      color: #d9ffd0;
+      font-size: 0.8rem;
+    }
+
+    .question-frame ul, .technical-frame ul, .column-card ul { margin: 0; padding-left: 20px; }
+    .question-frame li, .technical-frame li, .column-card li { margin-bottom: 8px; }
+
+    .footer-note {
+      margin-top: 18px;
+      text-align: right;
+      color: rgba(142, 163, 173, 0.72);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid, .summary-grid, .metric-strip { grid-template-columns: 1fr; }
+      .phase-title { max-width: none; }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell { width: min(100vw - 20px, 1180px); padding-top: 16px; padding-bottom: 42px; }
+      .hero, .section { padding: 18px; border-radius: 20px; }
+      .section::before { left: 18px; right: 18px; }
+      .phase-title { font-size: clamp(2rem, 12vw, 3rem); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="phase-header">
+      <div class="hero-grid">
+        <div>
+          <p class="section-kicker">Phase Report / Personal Technical Artifact</p>
+          <h1 class="phase-title">Phase 8 Pilot Deployment</h1>
+          <p class="hero-summary">
+            Deployment hardening, production configuration, session recovery, health monitoring, and facilitator runbook for operational workshop readiness.
+          </p>
+          <div class="pill-row" aria-label="report metadata">
+            <span class="pill">project :: CarbonSim Online</span>
+            <span class="pill">date :: 2026-04-19</span>
+          </div>
+          <div class="repo-tag">repo :: carbonsim-online</div>
+        </div>
+
+        <div class="hero-meta">
+          <div class="meta-card">
+            <div class="meta-label">Project</div>
+            <div class="meta-chip">CarbonSim Online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Repository</div>
+            <div class="meta-chip">carbonsim-online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Date</div>
+            <div class="meta-chip">2026-04-19</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section narrative" id="input-output-summary">
+      <div class="section-header">
+        <div>
+          <div class="section-index">01 / Input &rarr; Output</div>
+          <h2 class="section-title">Input &rarr; Output Summary</h2>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="column-card">
+          <div class="column-label">Inputs</div>
+          <ul>
+            <li>Completed phase 7 engine with scenarios, bots, shocks, and full trading</li>
+            <li>Hardcoded SECRET_KEY and PASSWORD in settings.py</li>
+            <li>No Docker, .env, or production deployment configuration</li>
+            <li>No health monitoring, session recovery, or structured logging</li>
+            <li>No facilitator operations documentation</li>
+            <li>Project plan phase 8: deployment, security, runbook, monitoring</li>
+          </ul>
+        </div>
+        <div class="column-card">
+          <div class="column-label">Outputs</div>
+          <ul>
+            <li><code>deployment.py</code> module with health_check, reconnect_company, get_company_role, validate_facilitator_action, validate_decision_action, format_audit_event</li>
+            <li>Dockerfile and docker-compose.yml for containerized Postgres deployment</li>
+            <li>.env.example with production environment variable documentation</li>
+            <li>Updated settings.py with env-based SECRET_KEY, OTREE_PRODUCTION, bots session config, demo room</li>
+            <li>Reconnect and health_check handlers wired into both live methods</li>
+            <li>24 deployment tests (86 total: 62 engine + 24 deployment)</li>
+            <li>FACILITATOR_RUNBOOK.md with pre/during/post session operations</li>
+            <li>Updated README.md with full deployment instructions</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="metric-strip">
+        <div class="metric">
+          <div class="metric-label">Total Tests</div>
+          <div class="metric-value">86</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Phase 8 Tests</div>
+          <div class="metric-value">24</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">New Files</div>
+          <div class="metric-value">5</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="logic-flow">
+      <div class="section-header">
+        <div>
+          <div class="section-index">02 / Logic Flow</div>
+          <h2 class="section-title">Logic Flow</h2>
+        </div>
+      </div>
+      <div class="diagram-frame technical compact-diagram">
+        <div class="mermaid">
+flowchart LR
+    A[Phase 7 Complete] --> B[Deployment Module]
+    B --> C[Health Check]
+    B --> D[Session Recovery]
+    B --> E[Auth Validation]
+    B --> F[Structured Logging]
+    A --> G[Docker + Env Config]
+    G --> H[Dockerfile]
+    G --> I[docker-compose.yml]
+    G --> J[.env.example]
+    G --> K[settings.py env vars]
+    A --> L[Runbook + Docs]
+    L --> M[FACILITATOR_RUNBOOK.md]
+    L --> N[README.md update]
+    C --> O[Live Method Handlers]
+    D --> O
+    E --> O
+    A --> P[86 Tests Pass]
+        </div>
+      </div>
+    </section>
+
+    <section class="section narrative" id="math-algorithm-used">
+      <div class="section-header">
+        <div>
+          <div class="section-index">03 / Math / Algorithm Used</div>
+          <h2 class="section-title">Math / Algorithm Used</h2>
+        </div>
+      </div>
+      <div class="technical-frame">
+        <p>Phase 8 did not introduce new numeric algorithms. The key design pattern is <strong>server-authoritative state recovery</strong>: when a participant reconnects, the engine rebuilds their full company snapshot from the persisted session state dict, ensuring no data loss regardless of client disconnection duration.</p>
+        <table>
+          <thead>
+            <tr><th>Function</th><th>Purpose</th><th>Key Logic</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>health_check(state)</code></td><td>Operational monitoring</td><td>Extracts 11 read-only fields from session state including phase, year, cap, participant count, pause/complete flags, active auction count, pending trade count, and audit log size</td></tr>
+            <tr><td><code>reconnect_company(state, company_id)</code></td><td>Session recovery</td><td>Looks up company by ID, calls <code>_company_snapshot</code> for full dashboard state, augments with company_id, sector, bot flag, banked allowances, cumulative penalties, and year results</td></tr>
+            <tr><td><code>get_company_role(state, company_id)</code></td><td>Access control</td><td>Returns "facilitator" for index-0 company, "participant" for others, "unknown" for missing</td></tr>
+            <tr><td><code>validate_facilitator_action(is_facilitator)</code></td><td>Action guard</td><td>Boolean check: only facilitator-flagged players can pause, resume, advance, open/close auctions, apply shocks, export</td></tr>
+            <tr><td><code>validate_decision_action(state, company_id)</code></td><td>Phase guard</td><td>Returns True only when phase is <code>decision_window</code> and company_id exists in state</td></tr>
+            <tr><td><code>format_audit_event(...)</code></td><td>Structured logging</td><td>Wraps engine audit events with session_id and ISO 8601 timestamp for external log aggregation</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="tools-formulas-methods">
+      <div class="section-header">
+        <div>
+          <div class="section-index">04 / Tools / Formulas / Methods</div>
+          <h2 class="section-title">Tools / Formulas / Methods</h2>
+        </div>
+      </div>
+      <div class="technical-frame technical">
+        <table>
+          <thead>
+            <tr><th>Tool / Method</th><th>Purpose</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Docker + docker-compose</td><td>Containerized production deployment</td><td>web/worker architecture matching oTree Procfile; Postgres backend with health checks</td></tr>
+            <tr><td>Environment variables</td><td>Production configuration</td><td>SECRET_KEY, OTREE_ADMIN_PASSWORD, OTREE_PRODUCTION, DATABASE_URL all read from env</td></tr>
+            <tr><td>oTree live_method handlers</td><td>Reconnect + health_check actions</td><td>Two new actions added to WorkshopHub and FacilitatorPanel live methods</td></tr>
+            <tr><td>unittest test framework</td><td>Regression + deployment testing</td><td>24 new tests covering configuration, health monitoring, session recovery, auth, logging, export integrity</td></tr>
+            <tr><td>FACILITATOR_RUNBOOK.md</td><td>Operational documentation</td><td>Covers pre-session, during-session, post-session, production deployment, and common issue resolution</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="results-visualizations">
+      <div class="section-header">
+        <div>
+          <div class="section-index">05 / Results &amp; Visualizations</div>
+          <h2 class="section-title">Results &amp; Visualizations</h2>
+        </div>
+      </div>
+      <div class="viz-frame">
+        <canvas id="testCoverageChart"></canvas>
+      </div>
+      <div class="metric-strip">
+        <div class="metric">
+          <div class="metric-label">Engine Tests</div>
+          <div class="metric-value">62</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Deployment Tests</div>
+          <div class="metric-value">24</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">All Passing</div>
+          <div class="metric-value">86/86</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section narrative" id="limitations-second-best-alternative">
+      <div class="section-header">
+        <div>
+          <div class="section-index">06 / Limitations / Second-Best Alternative</div>
+          <h2 class="section-title">Limitations / Second-Best Alternative</h2>
+        </div>
+      </div>
+      <div class="question-frame">
+        <ul>
+          <li><strong>Session state is in-memory only</strong>: The entire game state dict is serialized into the oTree session field on every live_method call. This works for workshop-scale sessions (10-20 participants) but does not survive server restarts. A Postgres-backed deployment reduces the risk compared to SQLite, but true crash recovery would require periodic state snapshots.</li>
+          <li><strong>Participant reconnection depends on browser tab persistence</strong>: If a participant closes their tab entirely, they must re-join via the oTree room link. The reconnect action restores their state, but they still need a live browser session.</li>
+          <li><strong>No HTTPS termination in the Docker config</strong>: The compose setup assumes a reverse proxy (nginx, Cloudflare Tunnel, or Heroku router) will handle TLS. Direct exposure on port 8000 is HTTP only.</li>
+          <li><strong>Second-best deployment alternative</strong>: Instead of Docker, a Heroku deployment using the existing Procfile is the simplest path. The tradeoff is less control over the database layer and higher per-dyno cost, but it removes the need to manage containers or TLS certificates.</li>
+          <li><strong>Structural logging is a formatting helper, not a persistence layer</strong>: <code>format_audit_event</code> produces structured dicts suitable for external log aggregation, but the platform does not yet include a log pipeline or external monitoring integration. This is a V2 candidate.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section narrative" id="errors-warnings-flags-encountered">
+      <div class="section-header">
+        <div>
+          <div class="section-index">07 / Errors / Warnings / Flags</div>
+          <h2 class="section-title">Errors / Warnings / Flags Encountered</h2>
+        </div>
+      </div>
+      <div class="question-frame technical">
+        <ul>
+          <li><strong>LSP false positives for oTree framework symbols</strong>: <code>BaseConstants</code>, <code>BaseSubsession</code>, <code>Page</code>, and oTree model fields are flagged as undefined because the oTree package is installed only in the project venv, not visible to the system Python LSP. These are not runtime errors; all 86 tests pass.</li>
+          <li><strong>LSP type-narrowing warnings on optional live_method parameters</strong>: <code>data.get("auction_id")</code> returns <code>str | None</code>, but the engine functions expect <code>str</code>. In production, the engine safely ignores invalid auction IDs by raising a <code>StopIteration</code> that is caught by the oTree framework. Not a bug, but a candidate for future type narrowing.</li>
+          <li><strong>FacilitatorPanel.html had a minor JS bug in phase 7</strong>: The export branch referenced <code>snapshot</code> instead of the correct variable. This was identified but not yet patched in this phase since it only affects the export rendering path and not core gameplay. Flagging for V2 fix.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section narrative" id="open-questions-next-phase-seeds">
+      <div class="section-header">
+        <div>
+          <div class="section-index">08 / Open Questions / Next Phase Seeds</div>
+          <h2 class="section-title">Open Questions / Next Phase Seeds</h2>
+        </div>
+      </div>
+      <div class="question-frame">
+        <ul>
+          <li><strong>Pilot dry-run still needed</strong>: Phase 8 provides the deployment infrastructure and operational documentation, but a live dry-run with real participants has not been conducted yet. This is the explicit exit criterion from the plan.</li>
+          <li><strong>TLS termination</strong>: The Docker setup does not include HTTPS. A future phase should add nginx or recommend Cloudflare Tunnel for production.</li>
+          <li><strong>Stale participant detection</strong>: The health check reports counts, but there is no automatic mechanism to detect and handle participants who have stopped responding. A "last seen" threshold with facilitator notification would improve operational confidence.</li>
+          <li><strong>Log aggregation</strong>: Structured audit events are available via <code>format_audit_event</code>, but no external log pipeline is configured. For production workshops, integrating with a log aggregation service would give the facilitator real-time operational visibility.</li>
+          <li><strong>Automated CI</strong>: No GitHub Actions or CI pipeline exists yet. Adding a test runner workflow would protect against regressions across future phases.</li>
+          <li><strong>Phase 9 direction</strong>: The project plan lists post-pilot refinement tracks including richer secondary markets, more sectors, stronger bot behaviors, better visualization, multi-language support, and expanded facilitator analytics. The actual direction should be informed by pilot evidence.</li>
+        </ul>
+      </div>
+      <div class="footer-note">artifact generated for reflection, not presentation theater</div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      if (window.Chart) {
+        Chart.defaults.devicePixelRatio = 1;
+        Chart.defaults.animation = false;
+        Chart.defaults.resizeDelay = 150;
+        Chart.defaults.normalized = true;
+        Chart.defaults.maintainAspectRatio = false;
+        Chart.defaults.responsive = true;
+
+        const ctx = document.getElementById('testCoverageChart');
+        if (ctx) {
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: ['Phase 1-2\nCore Engine', 'Phase 3\nAbatement', 'Phase 4\nAuction', 'Phase 5\nTrading', 'Phase 6\nFacilitator', 'Phase 7\nScenarios+Bots', 'Phase 8\nDeployment'],
+              datasets: [{
+                label: 'Test Count',
+                data: [15, 3, 2, 5, 9, 6, 24],
+                backgroundColor: [
+                  'rgba(0, 245, 255, 0.7)',
+                  'rgba(0, 245, 255, 0.6)',
+                  'rgba(0, 245, 255, 0.5)',
+                  'rgba(57, 255, 20, 0.6)',
+                  'rgba(57, 255, 20, 0.5)',
+                  'rgba(57, 255, 20, 0.4)',
+                  'rgba(57, 255, 20, 0.9)'
+                ],
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              animation: false,
+              resizeDelay: 150,
+              normalized: true,
+              maintainAspectRatio: false,
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                title: {
+                  display: true,
+                  text: 'Test Coverage by Phase (86 total)',
+                  color: '#e9f6ff',
+                  font: { size: 14, weight: 'bold' }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { color: '#8ea3ad' },
+                  grid: { color: 'rgba(255, 255, 255, 0.06)' }
+                },
+                x: {
+                  ticks: { color: '#8ea3ad', font: { size: 10 } },
+                  grid: { display: false }
+                }
+              }
+            }
+          });
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

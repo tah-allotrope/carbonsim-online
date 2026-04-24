@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: carbonsim-online-v1-final</title>
+  <meta name="color-scheme" content="dark light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) {
+        return;
+      }
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'base',
+        securityLevel: 'loose',
+        themeVariables: {
+          primaryColor: '#f3ead9',
+          primaryTextColor: '#1f1912',
+          primaryBorderColor: '#9d6b37',
+          lineColor: '#3b6f76',
+          secondaryColor: '#efe4d0',
+          tertiaryColor: '#ffffff',
+          background: '#fbf7f1',
+          mainBkg: '#fbf7f1',
+          nodeBorder: '#9d6b37',
+          clusterBkg: '#f7efdf',
+          clusterBorder: '#3b6f76',
+          edgeLabelBackground: '#fbf7f1'
+        }
+      });
+
+      await mermaid.run({ nodes: blocks });
+    }
+
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  </script>
+  <style>
+    :root {
+      --paper: #fbf7f1;
+      --paper-strong: #fffdf9;
+      --ink: #1f1912;
+      --ink-soft: #5f564c;
+      --line: #dccdb6;
+      --line-strong: #bfa37d;
+      --accent: #9d6b37;
+      --accent-soft: #efe4d0;
+      --accent-2: #3b6f76;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08);
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --page-width: 1040px;
+      --display-font: Georgia, "Times New Roman", serif;
+      --body-font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono-font: "Cascadia Code", Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(157, 107, 55, 0.09), transparent 26%),
+        radial-gradient(circle at 88% 10%, rgba(59, 111, 118, 0.08), transparent 22%),
+        linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%);
+      font-family: var(--body-font);
+      line-height: 1.65;
+      letter-spacing: 0.01em;
+    }
+
+    a {
+      color: var(--accent-2);
+    }
+
+    code,
+    pre,
+    .technical,
+    .meta-chip,
+    .section-index,
+    .eyebrow,
+    .stat-label,
+    .stat-value,
+    .mermaid {
+      font-family: var(--mono-font);
+    }
+
+    .page-shell {
+      width: min(var(--page-width), calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid rgba(159, 123, 79, 0.28);
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(157, 107, 55, 0.1), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.86)),
+        var(--paper-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.85fr);
+      gap: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin: 0;
+      max-width: 12ch;
+      font-family: var(--display-font);
+      font-size: clamp(2.8rem, 5vw, 4.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin: 18px 0 0;
+      max-width: 60ch;
+      color: var(--ink-soft);
+      font-size: 1rem;
+    }
+
+    .takeaway {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: rgba(59, 111, 118, 0.08);
+      color: #20373a;
+      font-size: 1.02rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .meta-card,
+    .section,
+    .subcard,
+    .empty-state {
+      border: 1px solid rgba(95, 72, 46, 0.12);
+      background: rgba(255, 253, 249, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .meta-card {
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+    }
+
+    .meta-label {
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .meta-chip {
+      margin-top: 8px;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .section {
+      margin-top: 22px;
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px 18px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-index {
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: var(--display-font);
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      line-height: 1.05;
+    }
+
+    .summary-grid,
+    .dual-grid,
+    .phase-grid,
+    .stat-grid,
+    .appendix-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .summary-grid,
+    .dual-grid,
+    .phase-grid,
+    .appendix-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .subcard {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .subcard h3,
+    .subcard h4 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .subcard p:first-child,
+    .subcard ul:first-child,
+    .subcard ol:first-child {
+      margin-top: 0;
+    }
+
+    .stat-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 16px;
+    }
+
+    .stat {
+      padding: 14px 16px;
+      border: 1px solid rgba(59, 111, 118, 0.16);
+      border-radius: var(--radius-sm);
+      background: rgba(59, 111, 118, 0.06);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .stat-label {
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      color: var(--accent-2);
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    .narrative,
+    .chart-frame,
+    .technical-frame,
+    .diagram-frame,
+    .viz-frame {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.54);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .diagram-frame {
+      overflow-x: auto;
+      overflow-y: auto;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: contain;
+      max-height: min(70vh, 720px);
+    }
+
+    .chart-frame,
+    .viz-frame {
+      overflow: hidden;
+    }
+
+    .mermaid {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      color: var(--ink);
+    }
+
+    .mermaid svg {
+      display: block;
+      width: auto !important;
+      min-width: 100%;
+      max-width: none !important;
+      height: auto !important;
+    }
+
+    .diagram-frame.compact-diagram {
+      padding: 12px;
+      max-height: min(62vh, 560px);
+    }
+
+    .diagram-frame.compact-diagram .mermaid {
+      min-width: 900px;
+    }
+
+    .chart-frame canvas,
+    .technical-frame > canvas,
+    .viz-frame canvas,
+    canvas.report-chart {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      height: 300px !important;
+      min-height: 300px;
+      max-height: 300px;
+    }
+
+    .technical-frame table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .technical-frame th,
+    .technical-frame td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .technical-frame th {
+      color: var(--accent);
+      font-size: 0.76rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .empty-state {
+      padding: 20px;
+      border-radius: var(--radius-md);
+      text-align: center;
+      color: var(--ink-soft);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+      font-size: 0.84rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    p:last-child,
+    li:last-child {
+      margin-bottom: 0;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: rgba(95, 86, 76, 0.74);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: right;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid,
+      .summary-grid,
+      .dual-grid,
+      .phase-grid,
+      .stat-grid,
+      .appendix-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .title {
+        max-width: none;
+      }
+
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        width: min(100vw - 20px, var(--page-width));
+        padding-top: 16px;
+        padding-bottom: 36px;
+      }
+
+      .hero,
+      .section {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      .title {
+        font-size: clamp(2.1rem, 12vw, 3.2rem);
+      }
+
+    }
+
+    @media print {
+      :root {
+        --paper: #ffffff;
+        --paper-strong: #ffffff;
+        --ink: #111111;
+        --ink-soft: #444444;
+        --line: #d6d1c8;
+      }
+
+      @page {
+        size: A4;
+        margin: 14mm;
+      }
+
+      body {
+        background: #ffffff;
+      }
+
+      .page-shell {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      .meta-card,
+      .section,
+      .subcard,
+      .narrative,
+      .chart-frame,
+      .technical-frame,
+      .diagram-frame,
+      .viz-frame,
+      .empty-state,
+      .stat {
+        background: #ffffff;
+        box-shadow: none;
+      }
+
+      .hero,
+      .section {
+        margin-top: 0;
+        margin-bottom: 10mm;
+      }
+
+      .diagram-frame {
+        overflow: visible;
+        max-height: none;
+      }
+
+      .diagram-frame.compact-diagram .mermaid {
+        min-width: 0;
+      }
+
+      .section-header,
+      .takeaway {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="title-hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Final Report / Shareable Analysis Artifact</p>
+          <h1 class="title">carbonsim-online-v1-final</h1>
+          <p class="lede">
+            A presentation-ready synthesis of a multi-phase analysis, written for readers who need context, judgment, and a clear path forward.
+          </p>
+          <div class="takeaway">The repository now delivers a workshop-ready Vietnam-aligned ETS simulator through phases 1 to 10, with replay and analytics built into the facilitator workflow rather than left to external analysis.</div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">Project</div>
+            <div class="meta-chip">CarbonSim Online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Repository</div>
+            <div class="meta-chip">carbonsim-online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Date</div>
+            <div class="meta-chip">2026-04-24</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="executive-summary">
+      <div class="section-header">
+        <div>
+          <div class="section-index">01 / Executive Summary</div>
+          <h2 class="section-title">Executive Summary</h2>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-grid"><div class="subcard"><h3>What was built</h3><p>The project progressed from research framing and an oTree multiplayer skeleton to a full compliance-market simulator with abatement, offsets, auctions, bilateral trading, facilitator controls, deployment hardening, replay, and analytics.</p></div><div class="subcard"><h3>What matters now</h3><p>The simulator is usable for facilitator-led workshops because session operation, recovery, export, replay, and debrief analytics are all available inside the product.</p></div><div class="subcard"><h3>Recommended direction</h3><p>Use this build for pilot workshops, collect facilitator feedback on replay and analytics usability, and only then decide whether V2 should invest in richer market microstructure or richer debrief tooling.</p></div><div class="subcard"><h3>Evidence</h3><p>The platform passes 92 automated tests covering the engine, deployment, replay, analytics, exports, and facilitator snapshot payloads.</p></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="background-objective">
+      <div class="section-header">
+        <div>
+          <div class="section-index">02 / Background &amp; Objective</div>
+          <h2 class="section-title">Background &amp; Objective</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <div class="narrative"><p>CarbonSim Online was scoped as a Vietnam-focused ETS training platform, not a generic trading game. The central objective was to build a compliance-first simulator that helps participants understand allocations, emissions growth, abatement, offsets, allowance scarcity, trading, banking, surrender, and penalties across a compressed three-year workshop flow.</p><p>The product strategy favored oTree because it already provides multiplayer sessions, admin surfaces, and synchronized interactions. That made it possible to keep the implementation focused on the rules engine and facilitator experience rather than infrastructure reinvention.</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="inputs-scope">
+      <div class="section-header">
+        <div>
+          <div class="section-index">03 / Inputs &amp; Scope</div>
+          <h2 class="section-title">Inputs &amp; Scope</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="dual-grid"><div class="subcard"><h3>Primary inputs</h3><ul><li>`plan/project-plan.md` as the execution roadmap.</li><li>`research/` reports as the Vietnam ETS source-of-truth corpus.</li><li>`AGENTS.md` as the project operating guide and scope constraint.</li><li>The active implementation and test suite in `platform/`.</li></ul></div><div class="subcard"><h3>In scope</h3><ul><li>Workshop session flow for 10-20 participants.</li><li>Compliance engine, abatement, offsets, auctions, and bilateral trades.</li><li>Facilitator controls, export, deployment hardening, replay, and analytics.</li></ul><h3>Out of scope</h3><ul><li>Continuous order-book exchange behavior.</li><li>Derivatives or speculative financial products.</li><li>Large-scale production infrastructure beyond pilot readiness.</li></ul></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="assumptions-constraints">
+      <div class="section-header">
+        <div>
+          <div class="section-index">04 / Assumptions &amp; Constraints</div>
+          <h2 class="section-title">Assumptions &amp; Constraints</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="dual-grid"><div class="subcard"><h3>Assumptions</h3><ul><li>V1 remains compliance-first and facilitator-led.</li><li>Server-authoritative logic is the right default for fairness and auditability.</li><li>Three compressed years are enough to teach scarcity, banking, and penalties.</li></ul></div><div class="subcard"><h3>Constraints</h3><ul><li>`oTree` compatibility required Python 3.12 rather than the machine default Python 3.14.</li><li>Workshop usability favored explainable mechanics over realistic exchange complexity.</li><li>Facilitator debrief surfaces had to work inside the product, not through separate analyst tooling.</li></ul></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="methodology">
+      <div class="section-header">
+        <div>
+          <div class="section-index">05 / Methodology</div>
+          <h2 class="section-title">Methodology</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <div class="phase-grid"><div class="subcard"><h3>Build order</h3><p>The implementation followed the roadmap: multiplayer skeleton first, then the compliance engine, then strategic decisions, market mechanics, facilitator operations, deployment readiness, replay, and analytics.</p></div><div class="subcard"><h3>Verification style</h3><p>New logic was added under regression coverage, with the engine kept in plain Python to make deterministic testing straightforward. The current suite covers 92 tests across engine and deployment paths.</p></div><div class="subcard"><h3>Design principle</h3><p>The core rule was to make trading support compliance learning, not dominate it. That kept the simulator legible for workshops and avoided premature exchange-like complexity.</p></div><div class="subcard"><h3>Operational method</h3><p>Facilitator functionality was treated as a first-class product surface, resulting in built-in controls, recovery paths, replay, analytics, and export rather than relegating workshop operations to manual workarounds.</p></div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Orientation</div>
+          <div class="stat-value">multi-phase</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Audience</div>
+          <div class="stat-value">stakeholder-safe</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Evidence Rule</div>
+          <div class="stat-value">no invented data</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="phase-analysis">
+      <div class="section-header">
+        <div>
+          <div class="section-index">06 / Phase-by-Phase Analysis</div>
+          <h2 class="section-title">Phase-by-Phase Analysis</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="narrative"><p>Phases 1 and 2 established the product spine: a live oTree workshop flow and a deterministic compliance engine with auditable state transitions. Phases 3 through 5 layered the decision and market mechanics participants need to learn from: abatement, offsets, auctions, and simple bilateral trades.</p><p>Phase 6 shifted focus to facilitator operations with pause, resume, export, participant visibility, and summary generation. Phase 7 improved workshop robustness through scenarios, bots, and shocks, while phase 8 hardened the system for pilot deployment with Docker, operational checks, and reconnection support.</p><p>Phases 9 and 10 completed the post-session workflow. Replay now reconstructs session events, market path, and company histories from the audit trail, and analytics now summarize market activity, sector pressure, year outcomes, and company cost drivers directly inside the facilitator panel.</p></div>
+      </div>
+      <div class="diagram-frame"><div class="mermaid">flowchart LR
+Research[Research and product framing] --> Skeleton[Session scaffold]
+Skeleton --> Engine[Compliance engine]
+Engine --> Decisions[Abatement and offsets]
+Decisions --> Market[Auctions and bilateral trades]
+Market --> Ops[Facilitator controls and deployment]
+Ops --> Debrief[Replay and analytics]
+Debrief --> Pilot[Pilot-ready workshop service]</div></div>
+    </section>
+
+    <section class="section" id="findings-recommendation">
+      <div class="section-header">
+        <div>
+          <div class="section-index">07 / Findings &amp; Recommendation</div>
+          <h2 class="section-title">Findings &amp; Recommendation</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <div class="dual-grid"><div class="subcard"><h3>Findings</h3><ul><li>The compliance-first architecture holds together across the full three-year simulation.</li><li>Facilitator workflow is now operationally credible because control, recovery, replay, analytics, and export are all present.</li><li>The project avoided unnecessary exchange complexity while still delivering meaningful market behavior through auctions and bilateral trading.</li></ul></div><div class="subcard"><h3>Recommendation</h3><p>Move into pilot workshops with the current build, use facilitator feedback to evaluate whether replay and analytics are sufficient in practice, and delay any order-book or heavier market features until that evidence shows a clear need.</p></div></div>
+      </div>
+      <div class="chart-frame"><div class="viz-frame" style="height:320px;"><canvas id="finalPhaseChart"></canvas></div></div><script>Chart.defaults.devicePixelRatio = 1; Chart.defaults.animation = false; Chart.defaults.resizeDelay = 150; Chart.defaults.normalized = true; Chart.defaults.maintainAspectRatio = false; const finalCtx = document.getElementById('finalPhaseChart'); if (finalCtx) { new Chart(finalCtx, { type: 'bar', data: { labels: ['Ph1-2 Core', 'Ph3-5 Market', 'Ph6-8 Operations', 'Ph9 Replay', 'Ph10 Analytics'], datasets: [{ label: 'Delivered phase groups', data: [1, 1, 1, 1, 1], backgroundColor: ['#9d6b37', '#3b6f76', '#9d6b37', '#3b6f76', '#9d6b37'] }] }, options: { animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Delivered capability groups across the roadmap' } }, scales: { y: { beginAtZero: true, max: 1.2, ticks: { stepSize: 1 } } } } }); }</script>
+    </section>
+
+    <section class="section" id="implementation-path">
+      <div class="section-header">
+        <div>
+          <div class="section-index">08 / Implementation Path</div>
+          <h2 class="section-title">Implementation Path</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="dual-grid"><div class="subcard"><h3>Immediate path</h3><ol><li>Run pilot sessions using the existing scenario configs and facilitator runbook.</li><li>Capture qualitative facilitator feedback on replay readability and analytics usefulness.</li><li>Review exports and audit trails after completed sessions to identify recurring blind spots.</li></ol></div><div class="subcard"><h3>Likely next build options</h3><ol><li>Refine replay UX if facilitators need more guided debrief flow.</li><li>Expand analytics only if pilot feedback shows missing sector, year, or company views.</li><li>Consider richer market mechanics only if current auctions plus bilateral trades fail to create the intended learning outcomes.</li></ol></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="risks-open-questions">
+      <div class="section-header">
+        <div>
+          <div class="section-index">09 / Risks / Open Questions</div>
+          <h2 class="section-title">Risks / Open Questions</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="dual-grid"><div class="subcard"><h3>Risks</h3><ul><li>Replay and analytics are still workshop-scale surfaces and may need refinement after real facilitator usage.</li><li>Market behavior remains intentionally simple; some advanced ETS training needs may eventually exceed the current design.</li><li>Operational quality now depends on following the runbook and deployment setup correctly in live sessions.</li></ul></div><div class="subcard"><h3>Open questions</h3><ul><li>Are the current replay tables sufficient, or should the debrief move toward a more visual timeline?</li><li>Should analytics evolve toward cross-session comparison after the first pilot wave?</li><li>Will pilot workshops justify deeper scenario breadth before deeper market complexity?</li></ul></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="appendices-evidence">
+      <div class="section-header">
+        <div>
+          <div class="section-index">10 / Appendices / Evidence Notes</div>
+          <h2 class="section-title">Appendices / Evidence Notes</h2>
+        </div>
+      </div>
+      <div class="appendix-grid">
+        <div class="appendix-grid"><div class="subcard"><h3>Key evidence</h3><ul><li>92 automated tests pass across engine and deployment modules.</li><li>Replay is included in facilitator snapshots and session export payloads.</li><li>Analytics is included in facilitator snapshots and session export payloads.</li><li>Deployment guidance and operations runbook are documented in `platform/FACILITATOR_RUNBOOK.md` and `README.md`.</li></ul></div><div class="subcard"><h3>Glossary</h3><ul><li><strong>Allocation:</strong> free allowances assigned at the start of a year.</li><li><strong>Banking:</strong> carrying unused allowances into future years.</li><li><strong>Offset cap:</strong> limit on how much compliance can be met with offsets.</li><li><strong>Replay:</strong> ordered reconstruction of workshop events for debriefing.</li><li><strong>Analytics:</strong> facilitator-oriented summaries of market, sector, year, and company outcomes.</li></ul></div></div>
+      </div>
+      <div class="footer-note">designed for html first, printable without reconstruction</div>
+    </section>
+  </main>
+  <script>
+    (function() {
+      const chartCanvases = document.querySelectorAll('canvas');
+      chartCanvases.forEach((canvas) => {
+        canvas.classList.add('report-chart');
+        const parent = canvas.parentElement;
+        if (parent && parent.classList.contains('technical-frame') && !parent.classList.contains('chart-frame')) {
+          parent.classList.add('chart-frame');
+        }
+      });
+    })();
+
+    if (window.Chart) {
+      Chart.defaults.devicePixelRatio = 1;
+      Chart.defaults.animation = false;
+      Chart.defaults.resizeDelay = 150;
+      Chart.defaults.normalized = true;
+      Chart.defaults.maintainAspectRatio = false;
+      Chart.defaults.responsive = true;
+      window.__REPORT_CHART_DEFAULTS__ = {
+        animation: false,
+        resizeDelay: 150,
+        normalized: true,
+        maintainAspectRatio: false,
+        responsive: true
+      };
+    }
+  </script>
+</body>
+</html>

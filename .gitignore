@@ -4,7 +4,7 @@
 **/__pycache__/
 *.pyc
 platform/db.sqlite3
-reports/
+# reports/  # unignored for committed artifacts
 
 # Environment and deployment secrets
 .env
