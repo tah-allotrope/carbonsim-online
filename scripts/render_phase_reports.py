@@ -14,6 +14,15 @@ TEMPLATE_PATH = (
     / "assets"
     / "report-template.html"
 )
+FINAL_TEMPLATE_PATH = (
+    Path.home()
+    / ".config"
+    / "opencode"
+    / "skills"
+    / "report"
+    / "assets"
+    / "final-report-template.html"
+)
 REPORTS_DIR = ROOT / "reports"
 
 
@@ -29,6 +38,18 @@ def render_report(phase_name: str, replacements: dict[str, str]) -> str:
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
     content = template
     content = content.replace("{{PHASE_NAME}}", phase_name)
+    content = content.replace("{{PROJECT}}", "CarbonSim Online")
+    content = content.replace("{{REPO}}", "carbonsim-online")
+    content = content.replace("{{DATE}}", str(date.today()))
+    for token, value in replacements.items():
+        content = content.replace("{{" + token + "}}", value)
+    return content
+
+
+def render_final_report(report_title: str, replacements: dict[str, str]) -> str:
+    template = FINAL_TEMPLATE_PATH.read_text(encoding="utf-8")
+    content = template
+    content = content.replace("{{REPORT_TITLE}}", report_title)
     content = content.replace("{{PROJECT}}", "CarbonSim Online")
     content = content.replace("{{REPO}}", "carbonsim-online")
     content = content.replace("{{DATE}}", str(date.today()))
@@ -409,6 +430,215 @@ Settle --> Feed[Publish trade feed update]""",
     )
 
 
+def phase_nine_report() -> str:
+    return render_report(
+        "phase-nine-session-replay",
+        {
+            "INPUT_OUTPUT_CONTENT": "".join(
+                [
+                    summary_card(
+                        "Input",
+                        "Phase 9 requirements for facilitator-facing replay artifacts: ordered audit timelines, year markers, market-path reconstruction, and export-ready replay payloads.",
+                    ),
+                    summary_card(
+                        "Output",
+                        "A server-side replay dataset plus facilitator-panel replay views that show year markers, market path, company replay histories, and recent audit events without requiring raw JSON inspection.",
+                    ),
+                    summary_card(
+                        "Key Files",
+                        "`platform/carbonsim_phase12/engine.py`, `platform/carbonsim_phase12/FacilitatorPanel.html`, and `platform/tests/test_engine.py`",
+                    ),
+                    summary_card(
+                        "Verification",
+                        "Replay-specific regression coverage now verifies timeline completeness, year marker accuracy, market-path payloads, company replay histories, facilitator snapshots, and enriched export payloads inside the 92-test suite.",
+                    ),
+                ]
+            ),
+            "MERMAID_DIAGRAM": """flowchart LR
+Audit[Audit log and year results] --> Replay[Build replay timeline]
+Replay --> Markers[Aggregate year markers]
+Replay --> Market[Extract auction market path]
+Replay --> Companies[Collect company replay histories]
+Markers --> Panel[Render facilitator replay tables]
+Market --> Panel
+Companies --> Panel
+Panel --> Export[Ship replay in session export]""",
+            "MATH_ALGORITHM_SECTION": unordered(
+                [
+                    "Replay timeline order is deterministic because it uses the existing audit log sequence and assigns a monotonic `step` counter during export generation.",
+                    "Year markers aggregate accepted trades, penalties, banked allowances, offset usage, clearing prices, and shocks by tracked simulation year rather than by UI state.",
+                    "Market path reconstruction reads the authoritative auction records already persisted in engine state, avoiding any client-derived replay assumptions.",
+                    "Company replay paths reuse stored `year_results` so debrief data matches the same surrender, banking, and penalty calculations already proven by earlier phases.",
+                ]
+            ),
+            "TOOLS_METHODS": unordered(
+                [
+                    "Replay generation stays server-side in `engine.py`, which keeps debrief artifacts consistent with the authoritative audit trail.",
+                    "Facilitator rendering uses tables and summary cards in `FacilitatorPanel.html` so the replay remains readable in-browser during live debriefs.",
+                    "Export method: `export_session_data` now includes the full replay payload for offline review and downstream analysis.",
+                    "Verification method: extend `unittest` coverage for replay timelines, year markers, market paths, company histories, and facilitator snapshot payloads.",
+                ]
+            ),
+            "CHARTS_SECTION": """<div class="empty-state"><strong>No chart included.</strong><p>Phase 9 is primarily about ordered reconstruction and facilitator readability, so the meaningful artifact is the replay dataset and panel presentation rather than a quantitative chart.</p></div>""",
+            "LIMITATIONS_ALTERNATIVES": unordered(
+                [
+                    "Replay is table-based and export-friendly rather than an animated scrubber UI, which keeps the debrief surface simple for workshop facilitators.",
+                    "The timeline summarizes events with server-provided text instead of richer natural-language narration; that keeps the output auditable but less story-like.",
+                    "Second-best alternative: require facilitators to inspect raw export JSON in external tools, but that would undermine the goal of in-product debriefing.",
+                ]
+            ),
+            "ERRORS_WARNINGS_FLAGS": unordered(
+                [
+                    "The main phase-9 gap was not missing replay generation logic but incomplete facilitator surfacing of market path and company replay views.",
+                    "That gap was closed by extending the facilitator panel to render both payloads directly from the replay snapshot instead of leaving them export-only.",
+                    "Replay coverage now sits inside the full platform suite, so regressions in later phases should be caught without a separate manual replay harness.",
+                ]
+            ),
+            "OPEN_QUESTIONS": unordered(
+                [
+                    "Should a later version add a visual scrubber or chart-based replay once real facilitator feedback shows the tables are not enough?",
+                    "Should replay events be grouped into facilitator-curated narrative chapters for larger workshops with more audit noise?",
+                    "Next phase seed: deepen post-session analytics so facilitators can explain not just what happened, but where costs and pressure concentrated.",
+                ]
+            ),
+        },
+    )
+
+
+def phase_ten_report() -> str:
+    return render_report(
+        "phase-ten-facilitator-analytics",
+        {
+            "INPUT_OUTPUT_CONTENT": "".join(
+                [
+                    summary_card(
+                        "Input",
+                        "Phase 10 requirements for stronger facilitator analytics: market summaries, sector breakdowns, year metrics, company cost drivers, and export-ready analytics payloads.",
+                    ),
+                    summary_card(
+                        "Output",
+                        "Expanded analytics generation plus facilitator-panel views that surface market stat cards, sector and year tables, company cost analytics, and decision-count summaries directly inside the simulator.",
+                    ),
+                    summary_card(
+                        "Key Files",
+                        "`platform/carbonsim_phase12/engine.py`, `platform/carbonsim_phase12/FacilitatorPanel.html`, and `platform/tests/test_engine.py`",
+                    ),
+                    summary_card(
+                        "Verification",
+                        "Analytics-specific regression coverage now checks market metrics, sector breakdowns, year metrics, company cost rows, decision-count payloads, facilitator snapshots, and export enrichment inside the 92-test suite.",
+                    ),
+                ]
+            ),
+            "MERMAID_DIAGRAM": """flowchart LR
+State[Authoritative engine state] --> Metrics[Aggregate market metrics]
+State --> Sector[Aggregate sector breakdown]
+State --> Years[Aggregate year metrics]
+State --> Costs[Aggregate company cost drivers]
+State --> Decisions[Count decision events]
+Metrics --> Snapshot[Build facilitator snapshot]
+Sector --> Snapshot
+Years --> Snapshot
+Costs --> Snapshot
+Decisions --> Snapshot
+Snapshot --> Panel[Render analytics cards and tables]
+Snapshot --> Export[Ship analytics in export payload]""",
+            "MATH_ALGORITHM_SECTION": unordered(
+                [
+                    "Market metrics aggregate auction awards, accepted trade quantities and values, average clearing price across cleared auctions, offsets purchased, abatement actions, and applied shocks.",
+                    "Sector breakdown rolls up current company state by sector, including projected emissions, allowances, banked allowances, offset holdings, penalties, and active abatement counts.",
+                    "Year metrics combine replay year markers with stored company `year_results`, which keeps annual totals aligned with already-tested compliance calculations.",
+                    "Net company compliance cost is computed as abatement cost plus offset spend plus auction spend plus trade purchases plus penalties minus trade sales.",
+                ]
+            ),
+            "TOOLS_METHODS": unordered(
+                [
+                    "Analytics generation lives in `build_session_analytics` so the facilitator view and export payload share one calculation path.",
+                    "Facilitator rendering uses compact stat cards plus structured tables to keep debrief discussion usable on a single page.",
+                    "Decision-count summaries are derived from the audit log rather than page interactions, which makes the analytics resilient to future UI changes.",
+                    "Verification method: add regression tests for analytics aggregation and payload structure, then rerun the full engine and deployment suite.",
+                ]
+            ),
+            "CHARTS_SECTION": """<div class="chart-frame"><div class="viz-frame" style="height:320px;"><canvas id="phase10Chart"></canvas></div></div>
+<script>
+Chart.defaults.devicePixelRatio = 1;
+Chart.defaults.animation = false;
+Chart.defaults.resizeDelay = 150;
+Chart.defaults.normalized = true;
+Chart.defaults.maintainAspectRatio = false;
+const phase10Ctx = document.getElementById('phase10Chart');
+if (phase10Ctx) {
+  new Chart(phase10Ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Market metrics', 'Sector breakdown', 'Year metrics', 'Company costs', 'Decision counts'],
+      datasets: [{
+        label: 'Phase 10 analytics surfaces',
+        data: [1, 1, 1, 1, 1],
+        backgroundColor: ['#00f5ff', '#39ff14', '#00f5ff', '#39ff14', '#00f5ff']
+      }]
+    },
+    options: {
+      animation: false,
+      resizeDelay: 150,
+      normalized: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: 'Implemented analytics views delivered in phase 10' }
+      },
+      scales: {
+        y: { beginAtZero: true, max: 1.2, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+}
+</script>""",
+            "LIMITATIONS_ALTERNATIVES": unordered(
+                [
+                    "Analytics remain descriptive and workshop-focused rather than predictive; there is no comparative benchmarking across many sessions yet.",
+                    "The facilitator view emphasizes tables for traceability instead of denser dashboard visualizations, which favors clarity over visual richness.",
+                    "Second-best alternative: leave analytics in exported JSON only, but that would force facilitators into external tooling during debriefs.",
+                ]
+            ),
+            "ERRORS_WARNINGS_FLAGS": unordered(
+                [
+                    "The only implementation failure came from a new regression asserting an event type that the analytics-rich fixture never emits because it begins after simulation start.",
+                    "Fixing that test to assert on actual emitted events kept the production analytics code unchanged and clarified the fixture lifecycle.",
+                    "The expanded analytics surface now depends on payload size staying manageable, which is acceptable for the workshop-scale participant counts targeted by V1.",
+                ]
+            ),
+            "OPEN_QUESTIONS": unordered(
+                [
+                    "Should future iterations compare multiple sessions or scenarios side by side for facilitator calibration across workshops?",
+                    "Do facilitators need chart-heavy visuals, or are the current tables and summary cards sufficient for live debriefs?",
+                    "Next phase seed: use pilot feedback to decide whether to deepen facilitator analysis, improve replay UX, or move into broader V2 scenario and market expansion.",
+                ]
+            ),
+        },
+    )
+
+
+def final_report() -> str:
+    return render_final_report(
+        "carbonsim-online-v1-final",
+        {
+            "ONE_LINE_TAKEAWAY": "The repository now delivers a workshop-ready Vietnam-aligned ETS simulator through phases 1 to 10, with replay and analytics built into the facilitator workflow rather than left to external analysis.",
+            "EXECUTIVE_SUMMARY": '<div class="summary-grid"><div class="subcard"><h3>What was built</h3><p>The project progressed from research framing and an oTree multiplayer skeleton to a full compliance-market simulator with abatement, offsets, auctions, bilateral trading, facilitator controls, deployment hardening, replay, and analytics.</p></div><div class="subcard"><h3>What matters now</h3><p>The simulator is usable for facilitator-led workshops because session operation, recovery, export, replay, and debrief analytics are all available inside the product.</p></div><div class="subcard"><h3>Recommended direction</h3><p>Use this build for pilot workshops, collect facilitator feedback on replay and analytics usability, and only then decide whether V2 should invest in richer market microstructure or richer debrief tooling.</p></div><div class="subcard"><h3>Evidence</h3><p>The platform passes 92 automated tests covering the engine, deployment, replay, analytics, exports, and facilitator snapshot payloads.</p></div></div>',
+            "BACKGROUND_OBJECTIVE": '<div class="narrative"><p>CarbonSim Online was scoped as a Vietnam-focused ETS training platform, not a generic trading game. The central objective was to build a compliance-first simulator that helps participants understand allocations, emissions growth, abatement, offsets, allowance scarcity, trading, banking, surrender, and penalties across a compressed three-year workshop flow.</p><p>The product strategy favored oTree because it already provides multiplayer sessions, admin surfaces, and synchronized interactions. That made it possible to keep the implementation focused on the rules engine and facilitator experience rather than infrastructure reinvention.</p></div>',
+            "INPUTS_SCOPE": '<div class="dual-grid"><div class="subcard"><h3>Primary inputs</h3><ul><li>`plan/project-plan.md` as the execution roadmap.</li><li>`research/` reports as the Vietnam ETS source-of-truth corpus.</li><li>`AGENTS.md` as the project operating guide and scope constraint.</li><li>The active implementation and test suite in `platform/`.</li></ul></div><div class="subcard"><h3>In scope</h3><ul><li>Workshop session flow for 10-20 participants.</li><li>Compliance engine, abatement, offsets, auctions, and bilateral trades.</li><li>Facilitator controls, export, deployment hardening, replay, and analytics.</li></ul><h3>Out of scope</h3><ul><li>Continuous order-book exchange behavior.</li><li>Derivatives or speculative financial products.</li><li>Large-scale production infrastructure beyond pilot readiness.</li></ul></div></div>',
+            "ASSUMPTIONS_CONSTRAINTS": '<div class="dual-grid"><div class="subcard"><h3>Assumptions</h3><ul><li>V1 remains compliance-first and facilitator-led.</li><li>Server-authoritative logic is the right default for fairness and auditability.</li><li>Three compressed years are enough to teach scarcity, banking, and penalties.</li></ul></div><div class="subcard"><h3>Constraints</h3><ul><li>`oTree` compatibility required Python 3.12 rather than the machine default Python 3.14.</li><li>Workshop usability favored explainable mechanics over realistic exchange complexity.</li><li>Facilitator debrief surfaces had to work inside the product, not through separate analyst tooling.</li></ul></div></div>',
+            "METHODOLOGY": '<div class="phase-grid"><div class="subcard"><h3>Build order</h3><p>The implementation followed the roadmap: multiplayer skeleton first, then the compliance engine, then strategic decisions, market mechanics, facilitator operations, deployment readiness, replay, and analytics.</p></div><div class="subcard"><h3>Verification style</h3><p>New logic was added under regression coverage, with the engine kept in plain Python to make deterministic testing straightforward. The current suite covers 92 tests across engine and deployment paths.</p></div><div class="subcard"><h3>Design principle</h3><p>The core rule was to make trading support compliance learning, not dominate it. That kept the simulator legible for workshops and avoided premature exchange-like complexity.</p></div><div class="subcard"><h3>Operational method</h3><p>Facilitator functionality was treated as a first-class product surface, resulting in built-in controls, recovery paths, replay, analytics, and export rather than relegating workshop operations to manual workarounds.</p></div></div>',
+            "PHASE_ANALYSIS": '<div class="narrative"><p>Phases 1 and 2 established the product spine: a live oTree workshop flow and a deterministic compliance engine with auditable state transitions. Phases 3 through 5 layered the decision and market mechanics participants need to learn from: abatement, offsets, auctions, and simple bilateral trades.</p><p>Phase 6 shifted focus to facilitator operations with pause, resume, export, participant visibility, and summary generation. Phase 7 improved workshop robustness through scenarios, bots, and shocks, while phase 8 hardened the system for pilot deployment with Docker, operational checks, and reconnection support.</p><p>Phases 9 and 10 completed the post-session workflow. Replay now reconstructs session events, market path, and company histories from the audit trail, and analytics now summarize market activity, sector pressure, year outcomes, and company cost drivers directly inside the facilitator panel.</p></div>',
+            "FINDINGS_RECOMMENDATION": '<div class="dual-grid"><div class="subcard"><h3>Findings</h3><ul><li>The compliance-first architecture holds together across the full three-year simulation.</li><li>Facilitator workflow is now operationally credible because control, recovery, replay, analytics, and export are all present.</li><li>The project avoided unnecessary exchange complexity while still delivering meaningful market behavior through auctions and bilateral trading.</li></ul></div><div class="subcard"><h3>Recommendation</h3><p>Move into pilot workshops with the current build, use facilitator feedback to evaluate whether replay and analytics are sufficient in practice, and delay any order-book or heavier market features until that evidence shows a clear need.</p></div></div>',
+            "IMPLEMENTATION_PATH": '<div class="dual-grid"><div class="subcard"><h3>Immediate path</h3><ol><li>Run pilot sessions using the existing scenario configs and facilitator runbook.</li><li>Capture qualitative facilitator feedback on replay readability and analytics usefulness.</li><li>Review exports and audit trails after completed sessions to identify recurring blind spots.</li></ol></div><div class="subcard"><h3>Likely next build options</h3><ol><li>Refine replay UX if facilitators need more guided debrief flow.</li><li>Expand analytics only if pilot feedback shows missing sector, year, or company views.</li><li>Consider richer market mechanics only if current auctions plus bilateral trades fail to create the intended learning outcomes.</li></ol></div></div>',
+            "RISKS_OPEN_QUESTIONS": '<div class="dual-grid"><div class="subcard"><h3>Risks</h3><ul><li>Replay and analytics are still workshop-scale surfaces and may need refinement after real facilitator usage.</li><li>Market behavior remains intentionally simple; some advanced ETS training needs may eventually exceed the current design.</li><li>Operational quality now depends on following the runbook and deployment setup correctly in live sessions.</li></ul></div><div class="subcard"><h3>Open questions</h3><ul><li>Are the current replay tables sufficient, or should the debrief move toward a more visual timeline?</li><li>Should analytics evolve toward cross-session comparison after the first pilot wave?</li><li>Will pilot workshops justify deeper scenario breadth before deeper market complexity?</li></ul></div></div>',
+            "APPENDICES_EVIDENCE": '<div class="appendix-grid"><div class="subcard"><h3>Key evidence</h3><ul><li>92 automated tests pass across engine and deployment modules.</li><li>Replay is included in facilitator snapshots and session export payloads.</li><li>Analytics is included in facilitator snapshots and session export payloads.</li><li>Deployment guidance and operations runbook are documented in `platform/FACILITATOR_RUNBOOK.md` and `README.md`.</li></ul></div><div class="subcard"><h3>Glossary</h3><ul><li><strong>Allocation:</strong> free allowances assigned at the start of a year.</li><li><strong>Banking:</strong> carrying unused allowances into future years.</li><li><strong>Offset cap:</strong> limit on how much compliance can be met with offsets.</li><li><strong>Replay:</strong> ordered reconstruction of workshop events for debriefing.</li><li><strong>Analytics:</strong> facilitator-oriented summaries of market, sector, year, and company outcomes.</li></ul></div></div>',
+            "OPTIONAL_MERMAID_BLOCK": '<div class="diagram-frame"><div class="mermaid">flowchart LR\nResearch[Research and product framing] --> Skeleton[Session scaffold]\nSkeleton --> Engine[Compliance engine]\nEngine --> Decisions[Abatement and offsets]\nDecisions --> Market[Auctions and bilateral trades]\nMarket --> Ops[Facilitator controls and deployment]\nOps --> Debrief[Replay and analytics]\nDebrief --> Pilot[Pilot-ready workshop service]</div></div>',
+            "OPTIONAL_CHARTS_BLOCK": "<div class=\"chart-frame\"><div class=\"viz-frame\" style=\"height:320px;\"><canvas id=\"finalPhaseChart\"></canvas></div></div><script>Chart.defaults.devicePixelRatio = 1; Chart.defaults.animation = false; Chart.defaults.resizeDelay = 150; Chart.defaults.normalized = true; Chart.defaults.maintainAspectRatio = false; const finalCtx = document.getElementById('finalPhaseChart'); if (finalCtx) { new Chart(finalCtx, { type: 'bar', data: { labels: ['Ph1-2 Core', 'Ph3-5 Market', 'Ph6-8 Operations', 'Ph9 Replay', 'Ph10 Analytics'], datasets: [{ label: 'Delivered phase groups', data: [1, 1, 1, 1, 1], backgroundColor: ['#9d6b37', '#3b6f76', '#9d6b37', '#3b6f76', '#9d6b37'] }] }, options: { animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Delivered capability groups across the roadmap' } }, scales: { y: { beginAtZero: true, max: 1.2, ticks: { stepSize: 1 } } } } }); }</script>",
+        },
+    )
+
+
 def main() -> None:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     today = str(date.today())
@@ -419,6 +649,10 @@ def main() -> None:
         / f"{today}-phase-three-abatement-offsets.html": phase_three_report(),
         REPORTS_DIR / f"{today}-phase-four-auction-market.html": phase_four_report(),
         REPORTS_DIR / f"{today}-phase-five-secondary-trading.html": phase_five_report(),
+        REPORTS_DIR / f"{today}-phase-nine-session-replay.html": phase_nine_report(),
+        REPORTS_DIR
+        / f"{today}-phase-ten-facilitator-analytics.html": phase_ten_report(),
+        REPORTS_DIR / f"{today}-final-carbonsim-online-v1.html": final_report(),
     }
     for path, html in outputs.items():
         path.write_text(html, encoding="utf-8")

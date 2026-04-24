@@ -104,9 +104,17 @@
 
 ## 2026-04-22 Progress Audit And Next Phases
 
+- [x] Audit the repository for existing phase 9 replay and phase 10 analytics work
+- [x] Close any remaining gaps in replay generation, analytics aggregation, export payloads, and facilitator rendering
+- [x] Run focused regression tests for phase 9 and phase 10 behavior
+- [x] Generate phase reports for phases 9 and 10 plus a final report artifact
+- [ ] Commit and push the completed phase 9 and 10 work
+
 - Audited the repository state and confirmed the implementation is functionally complete through phase 8 even though some older progress notes mention artifacts that are not currently present in `reports/`.
 - Split the former broad phase 9 roadmap entry into two executable post-pilot phases: phase 9 for session replay/visualization and phase 10 for expanded facilitator analytics.
 - Added server-side replay generation so facilitator tooling can reconstruct ordered events, year markers, market path data, and company year histories from the audit trail.
 - Added analytics generation so facilitator tooling and exports now include market metrics, sector breakdowns, year metrics, and company cost summaries.
-- Updated the facilitator panel to render live session summary, analytics tables, and replay tables directly from facilitator snapshots instead of only showing the raw export JSON.
-- Added regression coverage for replay generation, analytics aggregation, facilitator snapshot payloads, and export payload enrichment.
+- Extended the facilitator panel replay surface to show market path and company replay-path tables in addition to year markers and recent events, completing the phase 9 debrief view inside the product.
+- Extended the facilitator panel analytics surface to show market stat cards, company cost analytics, and decision-count tables in addition to sector and year summaries, completing the phase 10 debrief view inside the product.
+- Added regression coverage for replay generation, replay market/company path payloads, analytics aggregation, analytics decision-count/company-cost payloads, facilitator snapshot payloads, and export payload enrichment.
+- Re-ran the full Python suite and confirmed all 92 tests pass after the phase 9 and 10 facilitator-surface refinements.

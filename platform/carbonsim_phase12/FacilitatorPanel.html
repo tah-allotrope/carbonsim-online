@@ -49,6 +49,32 @@ CarbonSim Facilitator Panel
         border-bottom: 1px solid #e7eef4;
         text-align: left;
         font-size: 14px;
+        vertical-align: top;
+    }
+    .fac-mini-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        margin-bottom: 12px;
+    }
+    .fac-stat {
+        background: #f6fafc;
+        border: 1px solid #e7eef4;
+        border-radius: 12px;
+        padding: 12px;
+    }
+    .fac-stat strong {
+        display: block;
+        color: #123447;
+        font-size: 22px;
+        margin-top: 4px;
+    }
+    .fac-stack {
+        display: grid;
+        gap: 14px;
+    }
+    .fac-table-wrap {
+        overflow-x: auto;
     }
     .fac-button {
         border: 0;
@@ -242,17 +268,37 @@ CarbonSim Facilitator Panel
         const metrics = analytics.market_metrics || {};
         const sectors = analytics.sector_breakdown || [];
         const years = analytics.year_metrics || [];
+        const companyCosts = analytics.company_costs || [];
+        const decisionCounts = analytics.decision_counts || {};
+        const decisionRows = Object.entries(decisionCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([eventType, count]) => `<tr><td>${eventType.replace(/_/g, ' ')}</td><td>${count}</td></tr>`)
+            .join('');
         analyticsDiv.innerHTML = `
-            <p><strong>Auction volume:</strong> ${metrics.total_auction_volume || 0} / <strong>Trade value:</strong> ${metrics.total_trade_value || 0} / <strong>Offsets purchased:</strong> ${metrics.total_offsets_purchased || 0}</p>
-            <p><strong>Abatement actions:</strong> ${metrics.total_abatement_actions || 0} / <strong>Shocks applied:</strong> ${metrics.shock_count || 0}</p>
+            <div class="fac-mini-grid">
+                <div class="fac-stat"><span class="fac-kicker">Auction volume</span><strong>${metrics.total_auction_volume || 0}</strong></div>
+                <div class="fac-stat"><span class="fac-kicker">Trade value</span><strong>${metrics.total_trade_value || 0}</strong></div>
+                <div class="fac-stat"><span class="fac-kicker">Offsets purchased</span><strong>${metrics.total_offsets_purchased || 0}</strong></div>
+                <div class="fac-stat"><span class="fac-kicker">Average clearing price</span><strong>${metrics.average_clearing_price || 0}</strong></div>
+                <div class="fac-stat"><span class="fac-kicker">Abatement actions</span><strong>${metrics.total_abatement_actions || 0}</strong></div>
+                <div class="fac-stat"><span class="fac-kicker">Shocks applied</span><strong>${metrics.shock_count || 0}</strong></div>
+            </div>
             <h4 style="margin:12px 0 4px 0;">Sector breakdown</h4>
-            <table class="fac-table"><thead><tr><th>Sector</th><th>Companies</th><th>Projected emissions</th><th>Allowances</th><th>Banked</th><th>Penalties</th></tr></thead><tbody>
+            <div class="fac-table-wrap"><table class="fac-table"><thead><tr><th>Sector</th><th>Companies</th><th>Projected emissions</th><th>Allowances</th><th>Banked</th><th>Penalties</th></tr></thead><tbody>
             ${sectors.map(sector => `<tr><td>${sector.sector.replace(/_/g, ' ')}</td><td>${sector.company_count}</td><td>${sector.projected_emissions}</td><td>${sector.allowances}</td><td>${sector.banked_allowances}</td><td>${sector.cumulative_penalties}</td></tr>`).join('')}
-            </tbody></table>
+            </tbody></table></div>
             <h4 style="margin:12px 0 4px 0;">Year metrics</h4>
-            <table class="fac-table"><thead><tr><th>Year</th><th>Emissions</th><th>Allocation</th><th>Penalties</th><th>Avg price</th><th>Trade volume</th><th>Shocks</th></tr></thead><tbody>
+            <div class="fac-table-wrap"><table class="fac-table"><thead><tr><th>Year</th><th>Emissions</th><th>Allocation</th><th>Penalties</th><th>Avg price</th><th>Trade volume</th><th>Shocks</th></tr></thead><tbody>
             ${years.map(year => `<tr><td>${year.year}</td><td>${year.total_projected_emissions}</td><td>${year.total_allocation}</td><td>${year.total_penalties}</td><td>${year.average_clearing_price}</td><td>${year.trade_volume}</td><td>${year.shock_count}</td></tr>`).join('')}
-            </tbody></table>
+            </tbody></table></div>
+            <h4 style="margin:12px 0 4px 0;">Company cost analytics</h4>
+            <div class="fac-table-wrap"><table class="fac-table"><thead><tr><th>Company</th><th>Sector</th><th>Abatement</th><th>Offsets</th><th>Auction spend</th><th>Trade purchases</th><th>Trade sales</th><th>Penalties</th><th>Net cost</th></tr></thead><tbody>
+            ${companyCosts.map(cost => `<tr><td>${cost.company_name}</td><td>${cost.sector.replace(/_/g, ' ')}</td><td>${cost.abatement_cost}</td><td>${cost.offset_spend}</td><td>${cost.auction_spend}</td><td>${cost.trade_purchases}</td><td>${cost.trade_sales}</td><td>${cost.penalties}</td><td>${cost.net_compliance_cost}</td></tr>`).join('')}
+            </tbody></table></div>
+            <h4 style="margin:12px 0 4px 0;">Decision counts</h4>
+            <div class="fac-table-wrap"><table class="fac-table"><thead><tr><th>Event type</th><th>Count</th></tr></thead><tbody>
+            ${decisionRows || '<tr><td colspan="2">No decisions recorded yet.</td></tr>'}
+            </tbody></table></div>
         `;
     }
 
@@ -266,15 +312,34 @@ CarbonSim Facilitator Panel
 
         const yearMarkers = replay.year_markers || [];
         const timeline = (replay.timeline || []).slice().reverse();
+        const marketPath = replay.market_path || [];
+        const companyPaths = replay.company_paths || [];
         replayDiv.innerHTML = `
+            <div class="fac-mini-grid">
+                <div class="fac-stat"><span class="fac-kicker">Tracked events</span><strong>${timeline.length}</strong></div>
+                <div class="fac-stat"><span class="fac-kicker">Year markers</span><strong>${yearMarkers.length}</strong></div>
+                <div class="fac-stat"><span class="fac-kicker">Auctions in path</span><strong>${marketPath.length}</strong></div>
+                <div class="fac-stat"><span class="fac-kicker">Company histories</span><strong>${companyPaths.length}</strong></div>
+            </div>
             <h4 style="margin:0 0 4px 0;">Year markers</h4>
-            <table class="fac-table"><thead><tr><th>Year</th><th>Events</th><th>Trades</th><th>Penalties</th><th>Banked</th><th>Avg price</th></tr></thead><tbody>
+            <div class="fac-table-wrap"><table class="fac-table"><thead><tr><th>Year</th><th>Events</th><th>Trades</th><th>Penalties</th><th>Banked</th><th>Avg price</th></tr></thead><tbody>
             ${yearMarkers.map(marker => `<tr><td>${marker.year}</td><td>${marker.event_count}</td><td>${marker.trade_volume}</td><td>${marker.total_penalties}</td><td>${marker.total_banked_allowances}</td><td>${marker.average_clearing_price}</td></tr>`).join('')}
-            </tbody></table>
+            </tbody></table></div>
+            <h4 style="margin:12px 0 4px 0;">Market path</h4>
+            <div class="fac-table-wrap"><table class="fac-table"><thead><tr><th>Auction</th><th>Year</th><th>Status</th><th>Supply</th><th>Clearing price</th></tr></thead><tbody>
+            ${marketPath.map(auction => `<tr><td>${auction.auction_id}</td><td>${auction.year}</td><td>${auction.status}</td><td>${auction.supply}</td><td>${auction.clearing_price || '-'}</td></tr>`).join('') || '<tr><td colspan="5">No auction path available yet.</td></tr>'}
+            </tbody></table></div>
+            <h4 style="margin:12px 0 4px 0;">Company replay paths</h4>
+            <div class="fac-table-wrap"><table class="fac-table"><thead><tr><th>Company</th><th>Sector</th><th>Tracked years</th><th>Latest banked</th><th>Latest penalty</th></tr></thead><tbody>
+            ${companyPaths.map(company => {
+                const latest = (company.year_results || [])[company.year_results.length - 1] || {};
+                return `<tr><td>${company.company_name}</td><td>${company.sector.replace(/_/g, ' ')}</td><td>${(company.year_results || []).length}</td><td>${latest.banked_allowances || 0}</td><td>${latest.penalty_due || 0}</td></tr>`;
+            }).join('') || '<tr><td colspan="5">No company replay path available yet.</td></tr>'}
+            </tbody></table></div>
             <h4 style="margin:12px 0 4px 0;">Recent events (most recent first)</h4>
-            <table class="fac-table"><thead><tr><th>Step</th><th>Year</th><th>Event</th><th>Summary</th></tr></thead><tbody>
+            <div class="fac-table-wrap"><table class="fac-table"><thead><tr><th>Step</th><th>Year</th><th>Event</th><th>Summary</th></tr></thead><tbody>
             ${timeline.map(event => `<tr><td>${event.step}</td><td>${event.year}</td><td>${event.event_type.replace(/_/g, ' ')}</td><td>${event.summary}</td></tr>`).join('')}
-            </tbody></table>
+            </tbody></table></div>
         `;
     }
 

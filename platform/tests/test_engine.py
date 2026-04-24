@@ -894,6 +894,16 @@ class ExportAndSummaryTests(unittest.TestCase):
         self.assertEqual(replay["year_markers"][0]["accepted_trade_count"], 1)
         self.assertGreater(replay["year_markers"][0]["trade_volume"], 0)
 
+    def test_session_replay_includes_market_path_and_company_histories(self):
+        state = self._completed_session()
+        replay = engine.build_session_replay(state)
+
+        self.assertGreaterEqual(len(replay["market_path"]), 1)
+        self.assertEqual(len(replay["company_paths"]), len(state["companies"]))
+        self.assertTrue(
+            all("year_results" in company for company in replay["company_paths"])
+        )
+
     def test_session_analytics_aggregates_market_activity_and_costs(self):
         state = self._analytics_rich_state()
         analytics = engine.build_session_analytics(state)
@@ -904,10 +914,18 @@ class ExportAndSummaryTests(unittest.TestCase):
         self.assertGreaterEqual(len(analytics["sector_breakdown"]), 3)
         self.assertEqual(analytics["year_metrics"][0]["year"], 1)
         self.assertTrue(
-            any(
-                cost["net_compliance_cost"] > 0
-                for cost in analytics["company_costs"]
-            )
+            any(cost["net_compliance_cost"] > 0 for cost in analytics["company_costs"])
+        )
+
+    def test_session_analytics_exposes_decision_counts_and_company_cost_rows(self):
+        state = self._analytics_rich_state()
+        analytics = engine.build_session_analytics(state)
+
+        self.assertIn("abatement_activated", analytics["decision_counts"])
+        self.assertIn("trade_accepted", analytics["decision_counts"])
+        self.assertEqual(len(analytics["company_costs"]), len(state["companies"]))
+        self.assertTrue(
+            all("company_name" in row for row in analytics["company_costs"])
         )
 
     def test_facilitator_snapshot_includes_summary_replay_and_analytics(self):
