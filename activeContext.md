@@ -108,7 +108,7 @@
 - [x] Close any remaining gaps in replay generation, analytics aggregation, export payloads, and facilitator rendering
 - [x] Run focused regression tests for phase 9 and phase 10 behavior
 - [x] Generate phase reports for phases 9 and 10 plus a final report artifact
-- [ ] Commit and push the completed phase 9 and 10 work
+- [x] Commit and push the completed phase 9 and 10 work
 
 - Audited the repository state and confirmed the implementation is functionally complete through phase 8 even though some older progress notes mention artifacts that are not currently present in `reports/`.
 - Split the former broad phase 9 roadmap entry into two executable post-pilot phases: phase 9 for session replay/visualization and phase 10 for expanded facilitator analytics.
