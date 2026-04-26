@@ -943,13 +943,13 @@ class ScenarioAndBotTests(unittest.TestCase):
     def test_scenario_pack_vietnam_pilot_loads(self):
         pack = engine.SCENARIO_PACKS["vietnam_pilot"]
         self.assertEqual(pack["num_years"], 3)
-        self.assertEqual(pack["penalty_rate"], 200.0)
+        self.assertEqual(pack["penalty_rate"], 301.0)
         self.assertEqual(len(pack["company_library"]), 3)
         self.assertIn("thermal_power", pack["abatement_catalog"])
 
     def test_scenario_pack_high_pressure_has_tighter_allocations(self):
         pack = engine.SCENARIO_PACKS["high_pressure"]
-        self.assertEqual(pack["penalty_rate"], 350.0)
+        self.assertEqual(pack["penalty_rate"], 401.0)
         self.assertLess(
             pack["allocation_factors"][3],
             engine.SCENARIO_PACKS["vietnam_pilot"]["allocation_factors"][3],
@@ -957,7 +957,7 @@ class ScenarioAndBotTests(unittest.TestCase):
 
     def test_scenario_pack_generous_has_higher_allocations(self):
         pack = engine.SCENARIO_PACKS["generous"]
-        self.assertEqual(pack["penalty_rate"], 120.0)
+        self.assertEqual(pack["penalty_rate"], 251.0)
         self.assertGreater(
             pack["allocation_factors"][1],
             engine.SCENARIO_PACKS["vietnam_pilot"]["allocation_factors"][1],
@@ -967,9 +967,17 @@ class ScenarioAndBotTests(unittest.TestCase):
         state = engine.create_initial_state(
             participant_count=3, scenario="high_pressure"
         )
-        self.assertEqual(state["penalty_rate"], 350.0)
+        self.assertEqual(state["penalty_rate"], 401.0)
         self.assertEqual(state["offset_usage_cap"], 0.05)
         self.assertEqual(state["scenario"], "high_pressure")
+
+    def test_all_scenarios_keep_penalty_above_auction_ceiling(self):
+        for scenario_name, pack in engine.SCENARIO_PACKS.items():
+            self.assertGreater(
+                pack["penalty_rate"],
+                pack["auction_price_ceiling"],
+                f"Scenario {scenario_name} should keep penalty above ceiling",
+            )
 
     def test_create_initial_state_with_bots(self):
         state = engine.create_initial_state(participant_count=2, bot_count=1)
@@ -1049,6 +1057,26 @@ class ScenarioAndBotTests(unittest.TestCase):
             len(bot_conservative["active_abatement_ids"]),
             len(bot_aggressive["active_abatement_ids"]),
         )
+
+    def test_all_three_scenarios_complete_bot_only_run(self):
+        for scenario in ["vietnam_pilot", "high_pressure", "generous"]:
+            state = engine.create_initial_state(
+                participant_count=0,
+                bot_count=6,
+                scenario=scenario,
+                phase_durations={"year_start": 1, "decision_window": 1, "compliance": 1},
+            )
+            state = engine.start_simulation(state, utc())
+
+            guard = 0
+            while state["phase"] != engine.PHASE_COMPLETE and guard < 20:
+                if state["phase"] == engine.PHASE_DECISION_WINDOW:
+                    state = engine.run_bot_turns(state, now=utc(second=guard + 1))
+                state = engine.advance_state(state, utc(second=(guard + 1) * 5))
+                guard += 1
+
+            self.assertEqual(state["phase"], engine.PHASE_COMPLETE)
+            self.assertTrue(all(len(company["year_results"]) == 3 for company in state["companies"]))
 
     def test_scenario_allocation_factors_override_defaults(self):
         state = engine.create_initial_state(
@@ -1162,6 +1190,20 @@ class ShockEventTests(unittest.TestCase):
         )
 
         self.assertEqual(len(unchanged.get("active_shocks", [])), 0)
+
+    def test_shock_can_be_applied_in_compliance_phase(self):
+        state = engine.create_initial_state(participant_count=3)
+        state = engine.start_simulation(state, utc())
+        state = engine.force_advance_phase(state, utc(second=1))
+        state = engine.force_advance_phase(state, utc(second=2))
+
+        self.assertEqual(state["phase"], engine.PHASE_COMPLIANCE)
+
+        changed = engine.apply_shock(
+            state, shock_type="cost_shock", magnitude=0.1, now=utc(second=3)
+        )
+
+        self.assertEqual(len(changed.get("active_shocks", [])), 1)
 
     def test_shock_events_are_recorded_in_audit_log(self):
         state = engine.create_initial_state(participant_count=3)

@@ -1,180 +1,203 @@
 # CarbonSim Facilitator Runbook
 
+## Hosting Decision
+
+### Recommended free-tier order
+
+1. Oracle Cloud Always Free Ampere A1 VM
+2. Fly.io fallback
+3. Render + Supabase for throwaway demos only
+
+Oracle is the primary recommendation because it is the only option in the current plan that gives a long-running Python process, working WebSockets, Postgres, and no mid-session sleep risk for a 90-minute workshop.
+
+### Deployment surfaces in this repo
+
+- `Dockerfile` runs `otree prodserver` in single-process mode for small workshops.
+- `docker-compose.yml` provides `web` and `db` services for local and VM deployments.
+- `.env.production.example` lists the production environment variables that must be filled in on the host.
+- `Caddyfile` is the reverse-proxy template for HTTPS on Oracle.
+- `fly.toml` is the fallback Fly.io app config.
+
 ## Pre-Session Checklist
 
-### 1. Environment Setup
+### 1. Environment setup
 
-- [ ] Confirm the oTree server is running and accessible at the expected URL
-- [ ] Verify `OTREE_ADMIN_PASSWORD` is set and the admin panel at `/otree-admin/` works
-- [ ] For Docker deployments: `docker compose up -d` then check logs with `docker compose logs web`
-- [ ] For local workshops: start the server from `platform/` with `otree devserver 8000`
-- [ ] Confirm the database is clean. If reusing a previous session, clear it from the admin panel or delete `db.sqlite3`
+- [ ] Confirm the oTree server is running and reachable at the expected URL.
+- [ ] Verify `OTREE_ADMIN_PASSWORD` is set and the admin panel works.
+- [ ] For Docker deployments run `docker compose up -d` and inspect `docker compose logs web`.
+- [ ] For local workshops start from `platform/` with `otree devserver 8000`.
+- [ ] Confirm the database is clean enough for a fresh workshop session.
 
-### 2. Session Configuration
+### 2. Session configuration
 
-- [ ] Choose a session config from the available options:
-  - **Vietnam Pilot (default)**: Three-year arc with tightening allocation, moderate penalty (200/tCO2), 10% offset cap. Best for first-time participants.
-  - **High Pressure**: Sharper cap decline, higher penalty (350/tCO2), 5% offset cap. Creates more trading urgency.
-  - **Generous Allocation**: Gentler decline, lower penalty (120/tCO2), 15% offset cap. Good for introductory sessions.
-  - **Vietnam Pilot + Bots**: Same as Vietnam Pilot but includes 3 bot participants for liquidity. Recommended when participant count is below 6.
-- [ ] Set `phase_durations` if you want non-default timings. Defaults are year_start=5s, decision_window=20s, compliance=5s (compressed for testing; use 300s/600s/180s for real workshops)
-- [ ] In the admin panel, create a session with the chosen config and the expected number of participants
-- [ ] Note the session URL and room URL for participant distribution
+- [ ] Choose a session config.
+- [ ] Set realistic `phase_durations` for a live workshop rather than the short test defaults.
+- [ ] Create a session in the admin panel for the expected participant count.
+- [ ] Record the room URL and share it with participants.
 
-### 3. Participant Preparation
+### 3. Participant preparation
 
-- [ ] Prepare browser tabs or a shared link for each participant
-- [ ] Brief participants on the simulation premise: they are companies in a capped ETS, must stay compliant by combining free allocation, abatement, offsets, and trading
-- [ ] Explain the three-year arc and compressed timing
-- [ ] Confirm each participant can access the Welcome page and sees their assigned company name and sector
+- [ ] Brief participants that they are covered companies in a compliance market simulator.
+- [ ] Explain the three-year compressed structure.
+- [ ] Confirm each participant can open the Welcome page and sees an assigned company.
 
 ## During-Session Operations
 
-### Starting the Simulation
+### Starting the simulation
 
-1. As the facilitator (Player 1), click **Start Session** on the dashboard to begin Year 1
-2. All participants will see the phase change from Lobby to Year Start
-3. The decision window timer will begin counting down after the year-start phase
+1. The facilitator starts the session from the workshop hub.
+2. Year 1 allocations are issued immediately.
+3. The year-start timer transitions into the decision window.
 
-### Year Flow
+### Year flow
 
 Each simulated year follows this sequence:
 
-1. **Year Start**: Allocations are issued, cap is announced, pending abatements activate
-2. **Decision Window**: Participants can:
-   - Activate abatement measures (costs deducted immediately, effect immediate or next year)
-   - Purchase offsets (within the offset usage cap)
-   - Submit bids in scheduled allowance auctions (facilitator must open and close each auction)
-   - Propose and respond to bilateral allowance trades
-3. **Compliance**: Year-end processing. Offsets are applied (up to cap), banked allowances carry forward, shortfalls incur penalties
+1. Year Start: allocations are issued, the cap is announced, and pending abatements activate.
+2. Decision Window: participants can activate abatement, buy offsets, bid in auctions, and propose bilateral trades.
+3. Compliance: surrender is processed, surplus is banked, and shortfalls incur penalties.
 
-### Facilitator Controls
+### Facilitator controls
 
-- **Pause**: Freezes all timers. Use when participants need a break or you need to explain something
-- **Resume**: Continues from where the pause occurred, extending the deadline by the pause duration
-- **Advance Phase**: Manually moves to the next phase. Use if timers are too fast/slow for your group
-- **Open/Close Auction**: Opens a scheduled auction for bids, then closes it to determine the clearing price and settle
+- Pause: freezes timers.
+- Resume: restores the previous phase and extends the deadline by the pause duration.
+- Advance phase: manually moves to the next phase.
+- Open / Clear auction: controls scheduled year auctions.
+- Run bot turn: executes all configured bot decisions in the current decision window.
+- Apply shock: injects a market or policy disruption into the current year.
 
-### Shock Events
-
-Shocks are facilitator-triggered disruptions that add teaching moments:
-
-- **Emissions Spike**: Increases all companies' projected emissions by a percentage. Demonstrates cap pressure.
-- **Allowance Withdrawal**: Reduces all companies' allowance holdings by a percentage. Demonstrates scarcity.
-- **Cost Shock**: Reduces all companies' cash by a percentage. Demonstrates financial pressure.
-- **Offset Supply Change**: Modifies the offset usage cap up or down. Demonstrates policy shifts.
-
-To apply a shock: select the type from the dropdown, set a magnitude (e.g., 0.1 for 10%), and click **Apply Shock**.
-
-### Bot Participants
-
-Click **Run Bot Turn** on the facilitator panel to let all bot participants make their decisions for the current decision window. Bots follow their assigned strategy (conservative, moderate, or aggressive).
-
-### Monitoring Participants
+### Monitoring participants
 
 The facilitator panel shows:
-- Phase, year, cap, and countdown timer
-- Each participant's company, decisions this year, cash, allowances, compliance gap, and last action
-- Active shocks and auction log
-- Session summary for debriefing
 
-### Handling Disconnections
+- phase, year, cap, and countdown
+- participant company, cash, allowances, compliance gap, penalties, and last action
+- auction log, active shocks, summary, replay, and analytics
 
-If a participant loses connection:
-1. Their state is fully preserved on the server
-2. When they rejoin, they will automatically receive the current snapshot
-3. The facilitator can check participant status in the panel to confirm they are reconnecting
-4. No data is lost during disconnections; the year continues for all other participants
+### Handling disconnections
 
-### Common Issues
+1. State is preserved on the server.
+2. The reconnect action restores the latest company snapshot.
+3. The facilitator panel exposes participant activity to confirm recovery.
 
-| Issue | Resolution |
-|-------|-------------|
-| Participant sees stale data | Ask them to refresh the page; auto-poll updates every 2 seconds |
-| Timer appears frozen | The session may be paused. Check the facilitator panel for pause state |
-| Auction won't open | Ensure the auction is in "scheduled" status and the session is in the decision window phase |
-| Participants can't trade | Trades require a positive allowance quantity and positive price per allowance |
+## Debrief Guidance
 
-## Post-Session Operations
+### Core debrief questions
 
-### Debriefing
+- What drove your abatement and offset choices?
+- How did scarcity affect your auction and trade behavior?
+- Did you bank allowances for future years?
+- How did shocks alter your strategy?
 
-1. Use the **Export** button on the facilitator panel to download the full session data as JSON
-2. The session summary provides:
-   - Headline (e.g., "Completed 3 of 3 years")
-   - Year-by-year compliance summaries per company
-   - Final rankings sorted by cumulative penalties (lowest wins)
-   - Market metrics (trades completed, auctions cleared, average clearing price)
-   - Facilitator notes for discussion prompts
-3. Key debrief questions:
-   - What drove your abatement and offset decisions?
-   - How did allowance scarcity affect your trading strategy?
-   - Did you bank allowances for future years? Why or why not?
-   - How did shock events (if any) change your behavior?
-   - What would you do differently with more companies in the market?
+### Role mapping
 
-### Data Export
+The simulator is a workshop abstraction of the Vietnam CTX, not a literal replica.
 
-The JSON export contains:
-- **companies**: Full state for each company (holdings, penalties, year results, abatement)
-- **auctions**: All auction bids, clearing prices, and settlement details
-- **trades**: Complete trade history with proposals, responses, and expiration
-- **rankings**: Companies ranked by cumulative penalties
-- **audit_log**: Timestamped record of every game event
+| Simulator role | Real-world analogue |
+|---|---|
+| Facilitator | Market operator / oversight analogue across MOF, HNX, and MAE roles |
+| Participants | Covered regulated entities |
+| Export / audit log | Simplified transaction and compliance reporting |
 
-### Session Cleanup
+### Vietnam policy and market caveats
 
-- For local deployments: stop the server with Ctrl+C
-- For Docker deployments: `docker compose down`
-- For persistent data: save the JSON export before shutting down
-- oTree stores session data in the database; old sessions can be cleared from `/otree-admin/`
+- Auctions in pilot: This simulator includes auctions to teach sealed-bid price discovery. Vietnam's 2025-2028 pilot is expected to rely on free allocation only, with auctioning later.
+- Price scale: Monetary values in the simulator are simulation units, not real VND/tCO2 prices.
+- Penalty design: Penalties are deliberately set above the auction ceiling so non-compliance is never the rational low-cost choice.
+- Growth rates: Growth assumptions are conservative relative to historical Vietnamese sector growth so introductory sessions remain legible.
+- Allocation method: The simulator uses a simplified percentage-of-projected-emissions allocation model, while real Vietnam implementation is expected to use sector benchmarking.
+- Banking: Banking is allowed and modelled without an entity-level holding limit.
+- Borrowing: Borrowing against future years is not allowed.
+- Make-good obligation: The simulator uses a cash penalty only. Real ETSs may also require surrender of the missing allowances later.
+- MRV gap: The simulator assumes perfect annual emissions knowledge. Real MRV involves verification risk and reporting delays.
+- NRS gap: The simulator does not model the National Registry System reconciliation layer.
+- Offset simplification: Offsets are treated as one pool, while real markets distinguish allowance and credit types.
+- MAC curve compression: Abatement costs are intentionally compressed to keep multiple options strategically relevant.
+- Omitted sectors: The simulator focuses on thermal power, steel, and cement rather than every sector in Vietnam's broader ETS scope.
 
-## Production Deployment Notes
+### Shock narratives for facilitators
 
-### Environment Variables
+- Emissions spike: a drought reduces hydropower output and forces more thermal dispatch.
+- Allowance withdrawal: the regulator corrects an over-allocation after review.
+- Cost shock: fuel and industrial input costs rise sharply.
+- Offset supply change: new domestic credits become eligible and alter offset availability.
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `OTREE_ADMIN_PASSWORD` | Admin panel access | None (required in production) |
-| `SECRET_KEY` | Session security | Dev default (must change in production) |
-| `OTREE_PRODUCTION` | Enables production mode | `0` |
-| `DATABASE_URL` | Postgres connection string | SQLite (local dev only) |
+## Export Contents
 
-### Docker Deployment
+The session export includes:
+
+- companies
+- auctions
+- trades
+- rankings
+- audit log
+- replay
+- analytics
+
+Use the export for workshop debriefing, offline analysis, and backup.
+
+## Deployment Operations
+
+### Docker deployment
 
 ```bash
 cd platform
-cp .env.example .env
-# Edit .env with production values
+copy .env.production.example .env
 docker compose up -d
-# Check logs
 docker compose logs -f web
 ```
 
-### Heroku Deployment
+### Oracle Cloud primary path
+
+1. Provision an Always Free Ampere A1 VM.
+2. Clone the repo to the host.
+3. Create `platform/.env` from `.env.production.example`.
+4. Set `OTREE_ADMIN_PASSWORD`, `SECRET_KEY`, `DATABASE_URL`, and Postgres credentials.
+5. Run `docker compose up -d`.
+6. Put Caddy in front of the app using `Caddyfile` and a real hostname.
+
+### Fly.io fallback
+
+1. Validate `fly.toml`.
+2. Create the app with `fly launch --no-deploy --copy-config`.
+3. Provision Postgres and attach it.
+4. Set `SECRET_KEY`, `OTREE_ADMIN_PASSWORD`, and `OTREE_PRODUCTION=1` as Fly secrets.
+5. Run `fly deploy`.
+
+### Backup and restore
+
+Example backup command on a Docker host:
 
 ```bash
-cd platform
-heroku create your-app-name
-heroku config:set OTREE_ADMIN_PASSWORD=your-strong-password
-heroku config:set SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
-heroku config:set OTREE_PRODUCTION=1
-git push heroku main
+docker compose exec -T db pg_dump -U carbonsim carbonsim > carbonsim.sql
 ```
 
-### Health Monitoring
+Example restore command:
 
-The `deployment.health_check()` function provides a snapshot of the current session state:
-- Phase, year, cap
-- Participant count and company count
-- Active auctions and pending trades
-- Whether the session is paused or complete
+```bash
+docker compose exec -T db psql -U carbonsim carbonsim < carbonsim.sql
+```
 
-This can be called programmatically via the `health_check` action in the live_method.
+### Health monitoring
 
-### Database Considerations
+The `health_check` live action returns:
 
-- For local workshops: SQLite is sufficient (oTree default)
-- For production: use Postgres via `DATABASE_URL` environment variable
-- The `psycopg2` package is included in `requirements.txt` for Postgres support
-- Backup strategy: export session data after each workshop and store the JSON externally
+- phase
+- year
+- current_cap
+- participant_count
+- total_companies
+- auction_count
+- trade_count
+- audit_log_size
+- paused/complete flags
+
+## Common Issues
+
+| Issue | Resolution |
+|---|---|
+| Participant sees stale data | Refresh the page; the live pages also poll for updates. |
+| Timer appears frozen | Confirm the session is not paused. |
+| Auction actions do nothing | Confirm the current phase is the decision window and the auction status is valid. |
+| Trade fails on acceptance | Holdings or buyer cash may have changed since proposal time. |
+| Production boot fails immediately | Check that `SECRET_KEY` is set when `OTREE_PRODUCTION=1`. |

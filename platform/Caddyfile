@@ -1,0 +1,3 @@
+{$CARBONSIM_HOST} {
+    reverse_proxy web:8000
+}

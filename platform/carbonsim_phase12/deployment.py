@@ -8,15 +8,15 @@ from . import engine
 
 HEALTH_CHECK_FIELDS = [
     "phase",
-    "current_year",
+    "year",
     "current_cap",
     "participant_count",
     "total_companies",
     "is_paused",
     "is_complete",
-    "active_auctions",
-    "pending_trades",
-    "audit_log_entries",
+    "auction_count",
+    "trade_count",
+    "audit_log_size",
     "started_at",
     "completed_at",
 ]
@@ -28,19 +28,19 @@ def health_check(state: dict[str, Any]) -> dict[str, Any]:
     phase = state.get("phase", engine.PHASE_LOBBY)
     return {
         "phase": phase,
-        "current_year": state.get("current_year", 0),
+        "year": state.get("current_year", 0),
         "current_cap": state.get("current_cap", 0.0),
         "participant_count": state.get("participant_count", 0),
         "total_companies": len(state.get("companies", [])),
         "is_paused": phase == engine.PHASE_PAUSED,
         "is_complete": phase == engine.PHASE_COMPLETE,
-        "active_auctions": len(
+        "auction_count": len(
             [a for a in state.get("auctions", []) if a.get("status") == "open"]
         ),
-        "pending_trades": len(
+        "trade_count": len(
             [t for t in state.get("trades", []) if t.get("status") == "proposed"]
         ),
-        "audit_log_entries": len(state.get("audit_log", [])),
+        "audit_log_size": len(state.get("audit_log", [])),
         "started_at": state.get("started_at"),
         "completed_at": state.get("completed_at"),
     }

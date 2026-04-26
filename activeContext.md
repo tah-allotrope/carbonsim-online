@@ -118,3 +118,26 @@
 - Extended the facilitator panel analytics surface to show market stat cards, company cost analytics, and decision-count tables in addition to sector and year summaries, completing the phase 10 debrief view inside the product.
 - Added regression coverage for replay generation, replay market/company path payloads, analytics aggregation, analytics decision-count/company-cost payloads, facilitator snapshot payloads, and export payload enrichment.
 - Re-ran the full Python suite and confirmed all 92 tests pass after the phase 9 and 10 facilitator-surface refinements.
+
+## 2026-04-26 Plan Alignment Remediation
+
+- [x] Audit current implementation against `plan/project-plan.md`, `plans/2026-04-25-free-tier-deployment-plan.md`, and `plans/2026-04-26-vietnam-market-testing-plan.md`
+- [x] Implement missing deployment hardening items from the free-tier deployment plan
+- [x] Update facilitator and deployment documentation to match the current hosting strategy and Vietnam policy/testing notes
+- [x] Add missing tests and code adjustments needed to satisfy the testing plan's concrete acceptance criteria where feasible in-repo
+- [x] Run the relevant automated test suite and record the results
+
+## 2026-04-26 Review / Results
+
+- Updated `platform/settings.py` so production mode now fails fast if `SECRET_KEY` is missing, while local development still keeps a dev fallback.
+- Switched the container and `Procfile` runtime from the older two-process `prodserver1of2`/`prodserver2of2` model to the single-process `otree prodserver` mode required by the free-tier deployment plan.
+- Simplified `platform/docker-compose.yml` to the single-web plus Postgres topology used by the current deployment plan.
+- Added the missing deployment artifacts referenced by the plan: `platform/.env.production.example`, `platform/Caddyfile`, and `platform/fly.toml`.
+- Rewrote `platform/FACILITATOR_RUNBOOK.md` to match the current free-tier deployment strategy and added the Vietnam policy/testing-plan notes that were previously missing.
+- Updated `README.md` to remove the outdated Heroku path, document the Oracle/Fly deployment posture, and refresh the test count.
+- Raised all scenario penalty rates above their auction ceilings to satisfy the non-rational-noncompliance rule from `AGENTS.md` and the Vietnam testing plan.
+- Extended `export_session_data()` with a `session_metadata` block to better match the testing-plan export shape.
+- Updated `deployment.health_check()` to expose the field names expected by the deployment/testing plan: `year`, `auction_count`, `trade_count`, and `audit_log_size`.
+- Allowed shocks during the compliance phase to satisfy the edge-case behavior called out in the Vietnam testing plan.
+- Added new regression tests for production secret enforcement, health-check field names, export metadata shape, penalty-above-ceiling validation, all-scenario bot-only completion, and compliance-phase shocks.
+- Re-ran the full Python suite and confirmed all 98 tests pass.

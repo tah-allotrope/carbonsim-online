@@ -1,5 +1,9 @@
 from os import environ
 
+
+def _env_flag(name):
+    return environ.get(name, "").strip().lower() in ("1", "true", "yes")
+
 SESSION_CONFIGS = [
     dict(
         name="carbonsim_workshop_phase12",
@@ -84,12 +88,12 @@ ROOMS = [
     ),
 ]
 
-# Secret key: use environment variable in production, fall back to dev default
-SECRET_KEY = environ.get("SECRET_KEY", "1314886002300")
-
 # Production setting: enables HTTPS-aware cookie handling and production optimizations
-OTREE_PRODUCTION = environ.get("OTREE_PRODUCTION", "").strip().lower() in (
-    "1",
-    "true",
-    "yes",
-)
+OTREE_PRODUCTION = _env_flag("OTREE_PRODUCTION")
+
+# Secret key: fail fast in production if not configured.
+SECRET_KEY = environ.get("SECRET_KEY")
+if OTREE_PRODUCTION and not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY must be set when OTREE_PRODUCTION is enabled")
+if not SECRET_KEY:
+    SECRET_KEY = "1314886002300"

@@ -18,4 +18,4 @@ ENV SECRET_KEY=${SECRET_KEY:-changeme-in-production}
 
 EXPOSE 8000
 
-CMD ["otree", "prodserver1of2"]
+CMD ["otree", "prodserver"]

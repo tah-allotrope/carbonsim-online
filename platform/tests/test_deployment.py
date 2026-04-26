@@ -38,6 +38,28 @@ class ConfigurationTests(unittest.TestCase):
             else:
                 del os.environ["OTREE_ADMIN_PASSWORD"]
 
+    def test_settings_requires_secret_key_in_production(self):
+        import settings as settings_module
+
+        original_secret = os.environ.get("SECRET_KEY")
+        original_prod = os.environ.get("OTREE_PRODUCTION")
+        try:
+            os.environ["OTREE_PRODUCTION"] = "1"
+            if "SECRET_KEY" in os.environ:
+                del os.environ["SECRET_KEY"]
+            with self.assertRaises(RuntimeError):
+                importlib.reload(settings_module)
+        finally:
+            if original_secret is not None:
+                os.environ["SECRET_KEY"] = original_secret
+            elif "SECRET_KEY" in os.environ:
+                del os.environ["SECRET_KEY"]
+            if original_prod is not None:
+                os.environ["OTREE_PRODUCTION"] = original_prod
+            elif "OTREE_PRODUCTION" in os.environ:
+                del os.environ["OTREE_PRODUCTION"]
+            importlib.reload(settings_module)
+
     def test_settings_room_config_exists(self):
         import settings as settings_module
 
@@ -74,7 +96,7 @@ class HealthCheckTests(unittest.TestCase):
 
         health = deployment.health_check(state)
         self.assertEqual(health["phase"], engine.PHASE_LOBBY)
-        self.assertEqual(health["current_year"], 0)
+        self.assertEqual(health["year"], 0)
 
     def test_health_check_reports_active_session(self):
         state = engine.create_initial_state(participant_count=3)
@@ -83,9 +105,19 @@ class HealthCheckTests(unittest.TestCase):
 
         health = deployment.health_check(state)
         self.assertEqual(health["phase"], engine.PHASE_YEAR_START)
-        self.assertEqual(health["current_year"], 1)
+        self.assertEqual(health["year"], 1)
         self.assertEqual(health["participant_count"], 3)
         self.assertGreater(health["total_companies"], 0)
+
+    def test_health_check_uses_plan_field_names(self):
+        state = engine.create_initial_state(participant_count=3)
+        state = engine.start_simulation(state, utc())
+        from carbonsim_phase12 import deployment
+
+        health = deployment.health_check(state)
+        self.assertIn("auction_count", health)
+        self.assertIn("trade_count", health)
+        self.assertIn("audit_log_size", health)
 
     def test_health_check_reports_paused_state(self):
         state = engine.create_initial_state(participant_count=3)
@@ -270,6 +302,15 @@ class ExportIntegrityTests(unittest.TestCase):
         self.assertIn("rankings", summary)
         self.assertIn("total_trades_completed", summary)
         self.assertIn("average_clearing_price", summary)
+
+    def test_export_includes_session_metadata_shape(self):
+        state = engine.create_initial_state(participant_count=2)
+        state = engine.start_simulation(state, utc())
+
+        export = engine.export_session_data(state)
+        self.assertIn("session_metadata", export)
+        self.assertEqual(export["session_metadata"]["scenario"], state["scenario"])
+        self.assertEqual(export["session_metadata"]["num_years"], state["num_years"])
 
 
 if __name__ == "__main__":

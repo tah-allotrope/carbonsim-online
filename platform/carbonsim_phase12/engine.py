@@ -32,7 +32,7 @@ SCENARIO_PACKS = {
         "label": "Vietnam Pilot (Default)",
         "description": "Three-year arc with tightening allocation, sector-specific abatement, and limited offsets aligned with Vietnam's pilot ETS posture.",
         "num_years": 3,
-        "penalty_rate": 200.0,
+        "penalty_rate": 301.0,
         "offset_usage_cap": 0.1,
         "offset_price": 25.0,
         "auction_count_per_year": 2,
@@ -119,7 +119,7 @@ SCENARIO_PACKS = {
         "label": "High Pressure",
         "description": "Sharper cap decline and higher penalty rate forces aggressive abatement and trading.",
         "num_years": 3,
-        "penalty_rate": 350.0,
+        "penalty_rate": 401.0,
         "offset_usage_cap": 0.05,
         "offset_price": 40.0,
         "auction_count_per_year": 2,
@@ -206,7 +206,7 @@ SCENARIO_PACKS = {
         "label": "Generous Allocation",
         "description": "Gentler cap decline with lower penalties, suitable for introductory workshops where the learning focus is on market mechanics.",
         "num_years": 3,
-        "penalty_rate": 120.0,
+        "penalty_rate": 251.0,
         "offset_usage_cap": 0.15,
         "offset_price": 18.0,
         "auction_count_per_year": 2,
@@ -1499,6 +1499,15 @@ def export_session_data(state: dict[str, Any]) -> dict[str, Any]:
         )
 
     return {
+        "session_metadata": {
+            "scenario": state.get("scenario", "vietnam_pilot"),
+            "num_years": state["num_years"],
+            "created_at": state.get("started_at"),
+            "started_at": state.get("started_at"),
+            "completed_at": state.get("completed_at"),
+            "participant_count": state.get("participant_count", 0),
+            "total_companies": len(state.get("companies", [])),
+        },
         "phase": state["phase"],
         "current_year": state["current_year"],
         "num_years": state["num_years"],
@@ -1740,7 +1749,7 @@ def apply_shock(
         now = datetime.now(timezone.utc)
     current_time = _normalize_time(now)
 
-    if state["phase"] not in {PHASE_DECISION_WINDOW, PHASE_YEAR_START}:
+    if state["phase"] not in {PHASE_DECISION_WINDOW, PHASE_YEAR_START, PHASE_COMPLIANCE}:
         return state
 
     if shock_type == "emissions_spike":

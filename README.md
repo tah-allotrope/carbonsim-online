@@ -23,7 +23,7 @@ A Vietnam-aligned, workshop-ready online CarbonSim platform for ETS training, bu
 - `plan/` - Markdown project roadmap
 - `platform/` - Runnable `oTree` prototype
 - `platform/carbonsim_phase12/` - Main oTree app (engine, pages, deployment module)
-- `platform/tests/` - Unit test suite (86 tests)
+- `platform/tests/` - Unit test suite (92 tests)
 - `platform/FACILITATOR_RUNBOOK.md` - Workshop operations guide
 - `activeContext.md` - Current implementation tracking
 
@@ -62,21 +62,34 @@ Open the demo or room pages from the running server and use one of the session c
 
 ```bash
 cd platform
-cp .env.example .env
-# Edit .env with production values (OTREE_ADMIN_PASSWORD, SECRET_KEY, etc.)
+copy .env.production.example .env
+# Edit .env with production values.
 docker compose up -d
 docker compose logs -f web
 ```
 
-## Heroku deployment
+## Free-tier deployment
+
+Primary target: Oracle Cloud Always Free.
+
+Fallback target: Fly.io.
+
+The repo includes these deployment artifacts:
+
+- `platform/.env.production.example`
+- `platform/Caddyfile`
+- `platform/fly.toml`
+- `platform/docker-compose.yml`
+
+For the full workshop operations and deployment steps, use `platform/FACILITATOR_RUNBOOK.md`.
+
+## Oracle deployment outline
 
 ```bash
 cd platform
-heroku create your-app-name
-heroku config:set OTREE_ADMIN_PASSWORD=your-strong-password
-heroku config:set SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
-heroku config:set OTREE_PRODUCTION=1
-git push heroku main
+copy .env.production.example .env
+# Fill in OTREE_ADMIN_PASSWORD, SECRET_KEY, DATABASE_URL, and Postgres values
+docker compose up -d
 ```
 
 ## Session configs

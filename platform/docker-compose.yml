@@ -19,23 +19,6 @@ services:
       - ./carbonsim_phase12:/app/carbonsim_phase12
     restart: unless-stopped
 
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: ["otree", "prodserver2of2"]
-    environment:
-      - OTREE_ADMIN_PASSWORD=${OTREE_ADMIN_PASSWORD:-carbonsim}
-      - OTREE_PRODUCTION=1
-      - SECRET_KEY=${SECRET_KEY:-changeme-in-production}
-      - DATABASE_URL=${DATABASE_URL:-}
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - ./carbonsim_phase12:/app/carbonsim_phase12
-    restart: unless-stopped
-
   db:
     image: postgres:16-alpine
     environment:
