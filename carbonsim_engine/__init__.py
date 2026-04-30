@@ -50,7 +50,9 @@ from .constants import (
     PHASE_LABELS,
 )
 
-from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG
+from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES
+
+from .cards import CardDeck, draw_cards, resolve_card
 
 __all__ = [
     "build_company_specs",
@@ -101,4 +103,8 @@ __all__ = [
     "PHASE_LABELS",
     "SCENARIO_PACKS",
     "SHOCK_CATALOG",
+    "TECH_UNLOCK_TEMPLATES",
+    "CardDeck",
+    "draw_cards",
+    "resolve_card",
 ]

@@ -1319,6 +1319,7 @@ def apply_shock(
     *,
     shock_type: str,
     magnitude: float = 0.1,
+    shock_params: dict[str, Any] | None = None,
     now: datetime,
 ) -> dict[str, Any]:
     if shock_type not in SHOCK_CATALOG:
@@ -1361,6 +1362,64 @@ def apply_shock(
         current_cap = state["offset_usage_cap"]
         new_cap = round(current_cap * (1 + magnitude), 4)
         state["offset_usage_cap"] = max(0.0, min(1.0, new_cap))
+
+    elif shock_type == "tech_unlock":
+        from .scenarios import TECH_UNLOCK_TEMPLATES
+        params = shock_params or {}
+        sector = params.get("sector", "all")
+        template_key = params.get("template", "default")
+        template = TECH_UNLOCK_TEMPLATES.get(template_key, TECH_UNLOCK_TEMPLATES["default"])
+        measure_label = params.get("measure_label", template["measure_label"])
+        abatement_amount = params.get("abatement_amount", template["abatement_amount"])
+        cost = params.get("cost", template["cost"])
+        activation_timing = params.get("activation_timing", template["activation_timing"])
+        new_measure = {
+            "measure_id": f"card_{len(state.get('active_shocks', []))}_{state['current_year']}",
+            "label": measure_label,
+            "abatement_amount": abatement_amount,
+            "cost": cost,
+            "activation_timing": activation_timing,
+        }
+        for company in state["companies"]:
+            if sector == "all" or company["sector"] == sector:
+                existing_ids = {m["measure_id"] for m in company["abatement_menu"]}
+                if new_measure["measure_id"] not in existing_ids:
+                    company["abatement_menu"].append(deepcopy(new_measure))
+
+    elif shock_type == "fdi_proposal":
+        for company in state["companies"]:
+            boost = round(company["cash"] * abs(magnitude), 2)
+            company["cash"] = round(company["cash"] + boost, 2)
+
+    elif shock_type == "cbam_threat":
+        penalty_premium = abs(magnitude)
+        current_penalty = state.get("penalty_rate", 200.0)
+        state["penalty_rate"] = round(current_penalty * (1 + penalty_premium), 2)
+
+    elif shock_type == "election_pressure":
+        adjustment = magnitude
+        for year_key in list(state.get("allocation_factors", {}).keys()):
+            if year_key >= state.get("current_year", 1):
+                current = state["allocation_factors"][year_key]
+                state["allocation_factors"][year_key] = round(
+                    max(0.5, min(1.0, current + adjustment)), 4
+                )
+
+    elif shock_type == "allowance_boost":
+        for company in state["companies"]:
+            bonus = round(company["allowances"] * abs(magnitude), 2)
+            company["allowances"] = round(company["allowances"] + bonus, 2)
+            company["compliance_gap"] = round(
+                company["projected_emissions"]
+                - company["allowances"]
+                - company["offset_holdings"],
+                2,
+            )
+
+    elif shock_type == "cash_boost":
+        for company in state["companies"]:
+            bonus = round(company["cash"] * abs(magnitude), 2)
+            company["cash"] = round(company["cash"] + bonus, 2)
 
     shock_entry = {
         "shock_type": shock_type,
@@ -1754,6 +1813,12 @@ def _event_summary(event_type: str, details: dict[str, Any]) -> str:
         return f"Phase force-advanced from {details.get('from_phase', 'unknown')} in year {details['year']}"
     if event_type == "shock_applied":
         return f"Shock '{details['shock_type']}' (magnitude {details['magnitude']}) applied in year {details['year']}"
+    if event_type == "card_resolved":
+        title = details.get("title", details.get("card_id", "unknown"))
+        return f"Event card '{title}' resolved in year {details['year']}"
+    if event_type == "card_drawn":
+        title = details.get("title", details.get("card_id", "unknown"))
+        return f"Event card '{title}' drawn in year {details['year']}"
     return f"{event_type}: {details}"
 
 

@@ -1,0 +1,504 @@
+{
+  "cards": [
+    {
+      "card_id": "crisis_001",
+      "title": "Mekong Delta Flooding",
+      "description": "Severe flooding in the Mekong Delta disrupts coal barge transport and damages hydropower infrastructure. Thermal plants ramp up to compensate, increasing sector-wide emissions.",
+      "category": "crisis",
+      "effect_type": "emissions_spike",
+      "effect_params": { "magnitude": 0.12 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "crisis_002",
+      "title": "Coal Supply Disruption",
+      "description": "Geopolitical tensions in the South China Sea delay coal shipments from Indonesia and Australia. Spot coal prices surge 40%, forcing some plants to buy expensive spot cargoes.",
+      "category": "crisis",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.15 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "crisis_003",
+      "title": "Nationwide Blackouts",
+      "description": "Unusually low rainfall reduces hydropower output across northern Vietnam. Grid operator orders industrial load shedding; backup diesel generators run at full capacity, spiking emissions.",
+      "category": "crisis",
+      "effect_type": "emissions_spike",
+      "effect_params": { "magnitude": 0.18 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "crisis_004",
+      "title": "EU CBAM Enforcement Accelerated",
+      "description": "The EU accelerates its Carbon Border Adjustment Mechanism timeline. Vietnamese steel and cement exporters face new compliance documentation costs and preliminary carbon cost assessments.",
+      "category": "crisis",
+      "effect_type": "cbam_threat",
+      "effect_params": { "magnitude": 0.15 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "crisis_005",
+      "title": "Typhoon Rai Aftermath",
+      "description": "Super typhoon damages industrial zones in central Vietnam. Facilities in affected areas require emergency repairs; diverted operating budgets strain cash reserves.",
+      "category": "crisis",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.12 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "crisis_006",
+      "title": "Global Recession Cuts Export Demand",
+      "description": "A global economic downturn reduces demand for Vietnamese manufactured goods and steel. Revenue drops sharply across industrial sectors.",
+      "category": "crisis",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.20 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "crisis_007",
+      "title": "Carbon Credit Fraud Investigation",
+      "description": "Authorities uncover fraudulent carbon credits in the domestic offset market. Regulators temporarily suspend all offset usage pending review, reducing available offset supply.",
+      "category": "crisis",
+      "effect_type": "offset_supply_change",
+      "effect_params": { "magnitude": -0.5 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "crisis_008",
+      "title": "Industrial Accident at Power Plant",
+      "description": "A boiler explosion at a major thermal power plant forces a month-long shutdown. Output shifts to older, dirtier backup units, increasing overall emissions.",
+      "category": "crisis",
+      "effect_type": "emissions_spike",
+      "effect_params": { "magnitude": 0.08 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "crisis_009",
+      "title": "Protests Over Industrial Pollution",
+      "description": "Community protests erupt in Haiphong over industrial air pollution. Local government demands immediate compliance documentation and imposes emergency emissions audits.",
+      "category": "crisis",
+      "effect_type": "allowance_withdrawal",
+      "effect_params": { "magnitude": 0.10 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "crisis_010",
+      "title": "Drought Curtails Hydropower",
+      "description": "El Nino conditions cause severe drought in Vietnam's Central Highlands. Reservoir levels drop, reducing hydropower output and forcing increased coal-fired generation.",
+      "category": "crisis",
+      "effect_type": "emissions_spike",
+      "effect_params": { "magnitude": 0.10 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 5
+    },
+    {
+      "card_id": "crisis_011",
+      "title": "Supply Chain Crisis",
+      "description": "Global shipping container shortages and port congestion at Cai Mep deepwater port delay delivery of critical industrial equipment and raw materials.",
+      "category": "crisis",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.10 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "crisis_012",
+      "title": "Early ETS Compliance Audit",
+      "description": "Regulators conduct surprise early audits of emissions reporting. Discrepancies are found in self-reported data, resulting in mandatory allowance surrenders for under-reporting.",
+      "category": "crisis",
+      "effect_type": "allowance_withdrawal",
+      "effect_params": { "magnitude": 0.08 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 5
+    },
+    {
+      "card_id": "opportunity_001",
+      "title": "Solar Energy Subsidy Program",
+      "description": "The Vietnamese government launches a rooftop solar subsidy program offering tax credits for industrial solar installations. A new abatement option becomes available for all sectors.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Rooftop Solar Installation", "abatement_amount": 8.0, "cost": 60000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "opportunity_002",
+      "title": "International Carbon Credit Partnership",
+      "description": "Vietnam signs an Article 6 agreement with Switzerland, opening access to high-quality international carbon credits at competitive prices.",
+      "category": "opportunity",
+      "effect_type": "offset_supply_change",
+      "effect_params": { "magnitude": 0.4 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_003",
+      "title": "Japanese Technology Transfer",
+      "description": "A Japanese engineering consortium offers advanced energy-efficient kiln technology to Vietnamese cement producers at subsidized rates.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "cement", "measure_label": "Advanced Kiln Retrofit", "abatement_amount": 10.0, "cost": 80000.0, "activation_timing": "next_year" },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_004",
+      "title": "Green FDI Inflow",
+      "description": "A European renewable energy fund establishes a green investment facility in Vietnam, providing capital for industrial decarbonization projects.",
+      "category": "opportunity",
+      "effect_type": "fdi_proposal",
+      "effect_params": { "magnitude": 0.15 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "opportunity_005",
+      "title": "Energy Efficiency Grant Program",
+      "description": "The Vietnam Energy Efficiency Program offers matching grants for industrial heat recovery and process optimization projects.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Heat Recovery Optimizer", "abatement_amount": 6.0, "cost": 40000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 5
+    },
+    {
+      "card_id": "opportunity_006",
+      "title": "Carbon Capture Pilot Opportunity",
+      "description": "A multilateral development bank offers to co-finance a carbon capture pilot at a major industrial facility, unlocking a high-impact abatement measure.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Carbon Capture Pilot", "abatement_amount": 15.0, "cost": 150000.0, "activation_timing": "next_year" },
+      "prerequisites": { "min_year": 3, "max_year": 20, "max_penalties": 1 },
+      "weight": 2
+    },
+    {
+      "card_id": "opportunity_007",
+      "title": "Waste-to-Energy Project",
+      "description": "A municipal solid waste-to-energy project offers industrial partners discounted steam and electricity, reducing both costs and emissions.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Waste Heat Recovery", "abatement_amount": 5.0, "cost": 35000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_008",
+      "title": "Forest Carbon Offset Expansion",
+      "description": "Vietnam's REDD+ program expands verified forest carbon credits, increasing the volume and quality of domestic offsets available on the market.",
+      "category": "opportunity",
+      "effect_type": "offset_supply_change",
+      "effect_params": { "magnitude": 0.25 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_009",
+      "title": "Smart Grid Investment",
+      "description": "The national power utility invests in smart grid technology, reducing transmission losses and improving renewable energy integration across the industrial grid.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Smart Grid Connection", "abatement_amount": 4.0, "cost": 30000.0, "activation_timing": "next_year" },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "opportunity_010",
+      "title": "Circular Economy Initiative",
+      "description": "A provincial circular economy program offers incentives for industrial symbiosis where one facility's waste becomes another's raw material.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "cement", "measure_label": "Circular Material Inputs", "abatement_amount": 5.0, "cost": 25000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_011",
+      "title": "Green Bond Issuance",
+      "description": "International capital markets show strong appetite for Vietnamese green bonds. A successful issuance would provide low-cost capital for environmental investments.",
+      "category": "opportunity",
+      "effect_type": "cash_boost",
+      "effect_params": { "magnitude": 0.12 },
+      "prerequisites": { "min_year": 1, "max_year": 20, "min_cash": 100000 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_012",
+      "title": "Wind Power Development Zone",
+      "description": "The government designates a new offshore wind development zone in Binh Thuan province, offering priority grid access and tax incentives for industrial off-takers.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "thermal_power", "measure_label": "Offshore Wind PPA", "abatement_amount": 12.0, "cost": 100000.0, "activation_timing": "next_year" },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "policy_001",
+      "title": "ETS Cap Tightened",
+      "description": "The Ministry of Natural Resources and Environment revises the national ETS cap downward, accelerating the pace of emissions reduction targets.",
+      "category": "policy",
+      "effect_type": "election_pressure",
+      "effect_params": { "magnitude": -0.05 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "policy_002",
+      "title": "Offset Eligibility Expanded",
+      "description": "Regulators expand the list of eligible offset methodologies, including rice cultivation best practices and mangrove restoration projects.",
+      "category": "policy",
+      "effect_type": "offset_supply_change",
+      "effect_params": { "magnitude": 0.20 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "policy_003",
+      "title": "Carbon Tax Considered",
+      "description": "Parliament debates a complementary carbon tax on sectors not covered by the ETS. Uncertainty raises compliance costs across the board.",
+      "category": "policy",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.08 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "policy_004",
+      "title": "Allocation Factor Adjusted Upward",
+      "description": "Industry advocacy succeeds in securing a more generous free allocation for the next compliance period, citing international competitiveness concerns.",
+      "category": "policy",
+      "effect_type": "election_pressure",
+      "effect_params": { "magnitude": 0.05 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "policy_005",
+      "title": "Enhanced MRV Requirements",
+      "description": "New monitoring, reporting, and verification regulations require third-party audits of all emissions data. Administrative costs increase for all participants.",
+      "category": "policy",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.05 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 5
+    },
+    {
+      "card_id": "policy_006",
+      "title": "Provincial Target Revision",
+      "description": "The Prime Minister issues a new directive requiring provinces to submit more ambitious climate action plans aligned with Vietnam's Net Zero 2050 commitment.",
+      "category": "policy",
+      "effect_type": "election_pressure",
+      "effect_params": { "magnitude": -0.03 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "policy_007",
+      "title": "International Climate Finance Approval",
+      "description": "Vietnam receives approval for a climate finance facility from the Green Climate Fund, providing grants for industrial decarbonization feasibility studies.",
+      "category": "policy",
+      "effect_type": "cash_boost",
+      "effect_params": { "magnitude": 0.08 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "policy_008",
+      "title": "Borrowing Provision Allowed",
+      "description": "As a temporary measure to address liquidity concerns, regulators allow companies to borrow up to 10% of next year's allocation at a 5% penalty.",
+      "category": "policy",
+      "effect_type": "allowance_boost",
+      "effect_params": { "magnitude": 0.10 },
+      "prerequisites": { "min_year": 3, "max_year": 20, "max_penalties": 2 },
+      "weight": 2
+    },
+    {
+      "card_id": "policy_009",
+      "title": "Election Year Promises",
+      "description": "Provincial elections bring campaign promises of industrial support. Regardless of outcome, policy uncertainty during the transition delays regulatory decisions.",
+      "category": "policy",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.06 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "policy_010",
+      "title": "Cross-Border ETS Linkage Talks",
+      "description": "Vietnam begins exploratory talks with South Korea and Indonesia about linking emissions trading systems, potentially expanding the offset market significantly.",
+      "category": "policy",
+      "effect_type": "offset_supply_change",
+      "effect_params": { "magnitude": 0.15 },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "policy_011",
+      "title": "Renewable Portfolio Standard Enacted",
+      "description": "A new Renewable Portfolio Standard requires industrial electricity consumers to source 15% of power from renewables by year 5, with increasing targets thereafter.",
+      "category": "policy",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Renewable Energy Compliance", "abatement_amount": 7.0, "cost": 55000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "policy_012",
+      "title": "Environmental Tax Reform",
+      "description": "The National Assembly passes environmental tax reform, increasing taxes on fossil fuel use while reducing corporate income tax for green investments.",
+      "category": "policy",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.10 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_001",
+      "title": "Carbon Price Volatility Spike",
+      "description": "Uncertainty about future cap stringency drives wild price swings in the carbon market. Hedging costs increase, impacting bottom lines.",
+      "category": "market",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.10 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "market_002",
+      "title": "Allowance Surplus Hits Market",
+      "description": "A large industrial group unexpectedly exits the market, selling its entire allowance hoard. Prices soften, and extra allowances become available.",
+      "category": "market",
+      "effect_type": "allowance_boost",
+      "effect_params": { "magnitude": 0.08 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_003",
+      "title": "Offset Price Collapse",
+      "description": "A glut of cheap international offsets enters the market following verification methodology changes in host countries, dramatically lowering offset prices.",
+      "category": "market",
+      "effect_type": "offset_supply_change",
+      "effect_params": { "magnitude": 0.35 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "market_004",
+      "title": "Green Technology Stock Boom",
+      "description": "Investor enthusiasm for clean technology drives a stock market boom in green companies. Industrial firms with decarbonization plans see increased access to capital.",
+      "category": "market",
+      "effect_type": "fdi_proposal",
+      "effect_params": { "magnitude": 0.10 },
+      "prerequisites": { "min_year": 2, "max_year": 20, "min_cash": 50000 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_005",
+      "title": "Banking Demand Surge",
+      "description": "Companies expecting tighter future caps increase their banking demand, reducing secondary market supply and pushing allowance prices higher.",
+      "category": "market",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.07 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_006",
+      "title": "Speculative Trading Investigation",
+      "description": "Regulators investigate suspected market manipulation in the carbon market. Trading volumes drop as participants adopt a wait-and-see approach.",
+      "category": "market",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.05 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "market_007",
+      "title": "Emissions Verification Discrepancy",
+      "description": "A third-party auditor finds systematic over-reporting of emissions reductions across multiple facilities. Allowance holdings are adjusted downward.",
+      "category": "market",
+      "effect_type": "allowance_withdrawal",
+      "effect_params": { "magnitude": 0.06 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "market_008",
+      "title": "Market Liquidity Crisis",
+      "description": "Several major market participants simultaneously hoard allowances for compliance certainty, causing a severe liquidity crunch in the secondary market.",
+      "category": "market",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.12 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_009",
+      "title": "CDM Project Revival",
+      "description": "The Clean Development Mechanism sees renewed activity as countries seek cost-effective emissions reductions. Vietnamese industrial gas capture projects become eligible for credits.",
+      "category": "market",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Industrial Gas Capture", "abatement_amount": 6.0, "cost": 45000.0, "activation_timing": "next_year" },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "market_010",
+      "title": "Technology Breakthrough: Low-Carbon Steel",
+      "description": "A breakthrough in low-carbon steel production using green hydrogen becomes commercially viable. Early adopters gain significant competitive advantage.",
+      "category": "market",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "steel", "measure_label": "Green Hydrogen Steelmaking", "abatement_amount": 20.0, "cost": 200000.0, "activation_timing": "next_year" },
+      "prerequisites": { "min_year": 4, "max_year": 20 },
+      "weight": 1
+    },
+    {
+      "card_id": "market_011",
+      "title": "Carbon Forward Contract Liquidity",
+      "description": "Banks begin offering standardized carbon forward contracts, enabling better price risk management for compliance entities. Market depth improves.",
+      "category": "market",
+      "effect_type": "cash_boost",
+      "effect_params": { "magnitude": 0.05 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_012",
+      "title": "International Offset Verification Shakeup",
+      "description": "Major international offset standards revise their methodologies, invalidating some previously issued credits and creating scarcity in the offset market.",
+      "category": "market",
+      "effect_type": "offset_supply_change",
+      "effect_params": { "magnitude": -0.20 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_013",
+      "title": "Auction Boycott by Major Players",
+      "description": "Several large emitters boycott the quarterly auction to protest the cap trajectory. Reduced competition lowers clearing prices but creates reputational risk.",
+      "category": "market",
+      "effect_type": "allowance_boost",
+      "effect_params": { "magnitude": 0.05 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_014",
+      "title": "Green Electricity Certificate Market Launches",
+      "description": "A voluntary green electricity certificate market launches, allowing industrial consumers to credibly claim renewable energy usage and reduce their emissions footprint.",
+      "category": "market",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Renewable Energy Certificates", "abatement_amount": 3.0, "cost": 20000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 5
+    }
+  ]
+}

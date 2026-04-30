@@ -262,6 +262,81 @@ SCENARIO_PACKS = {
     },
 }
 
+TECH_UNLOCK_TEMPLATES = {
+    "default": {
+        "measure_label": "Process Optimization",
+        "abatement_amount": 5.0,
+        "cost": 40000.0,
+        "activation_timing": "immediate",
+    },
+    "solar_subsidy": {
+        "measure_label": "Rooftop Solar Installation",
+        "abatement_amount": 8.0,
+        "cost": 60000.0,
+        "activation_timing": "immediate",
+    },
+    "heat_recovery": {
+        "measure_label": "Heat Recovery Optimizer",
+        "abatement_amount": 6.0,
+        "cost": 40000.0,
+        "activation_timing": "immediate",
+    },
+    "carbon_capture": {
+        "measure_label": "Carbon Capture Pilot",
+        "abatement_amount": 15.0,
+        "cost": 150000.0,
+        "activation_timing": "next_year",
+    },
+    "green_hydrogen": {
+        "measure_label": "Green Hydrogen Steelmaking",
+        "abatement_amount": 20.0,
+        "cost": 200000.0,
+        "activation_timing": "next_year",
+    },
+    "offshore_wind": {
+        "measure_label": "Offshore Wind PPA",
+        "abatement_amount": 12.0,
+        "cost": 100000.0,
+        "activation_timing": "next_year",
+    },
+    "smart_grid": {
+        "measure_label": "Smart Grid Connection",
+        "abatement_amount": 4.0,
+        "cost": 30000.0,
+        "activation_timing": "next_year",
+    },
+    "waste_to_energy": {
+        "measure_label": "Waste Heat Recovery",
+        "abatement_amount": 5.0,
+        "cost": 35000.0,
+        "activation_timing": "immediate",
+    },
+    "circular_materials": {
+        "measure_label": "Circular Material Inputs",
+        "abatement_amount": 5.0,
+        "cost": 25000.0,
+        "activation_timing": "immediate",
+    },
+    "renewable_compliance": {
+        "measure_label": "Renewable Energy Compliance",
+        "abatement_amount": 7.0,
+        "cost": 55000.0,
+        "activation_timing": "immediate",
+    },
+    "industrial_gas_capture": {
+        "measure_label": "Industrial Gas Capture",
+        "abatement_amount": 6.0,
+        "cost": 45000.0,
+        "activation_timing": "next_year",
+    },
+    "renewable_certificates": {
+        "measure_label": "Renewable Energy Certificates",
+        "abatement_amount": 3.0,
+        "cost": 20000.0,
+        "activation_timing": "immediate",
+    },
+}
+
 SHOCK_CATALOG = {
     "emissions_spike": {
         "label": "Emissions Spike",
@@ -282,5 +357,35 @@ SHOCK_CATALOG = {
         "label": "Offset Supply Change",
         "description": "Change the offset usage cap for the current year, simulating policy changes to offset eligibility.",
         "applies_to": "session_wide",
+    },
+    "tech_unlock": {
+        "label": "Technology Unlock",
+        "description": "Add a new abatement measure to a sector's catalog mid-game, making it available to all companies in that sector.",
+        "applies_to": "all_companies",
+    },
+    "fdi_proposal": {
+        "label": "FDI Inflow",
+        "description": "Foreign direct investment provides a cash infusion proportional to current holdings, boosting financial resources.",
+        "applies_to": "all_companies",
+    },
+    "cbam_threat": {
+        "label": "CBAM Pressure",
+        "description": "Carbon border adjustment mechanism increases compliance costs for exposed sectors, modeled as a proportional penalty increase.",
+        "applies_to": "session_wide",
+    },
+    "election_pressure": {
+        "label": "Election / Policy Pressure",
+        "description": "Political pressure modifies future allocation factors, tightening or loosening the cap trajectory for upcoming years.",
+        "applies_to": "session_wide",
+    },
+    "allowance_boost": {
+        "label": "Allowance Boost",
+        "description": "Additional allowances become available to all companies proportional to their current holdings.",
+        "applies_to": "all_companies",
+    },
+    "cash_boost": {
+        "label": "Cash Injection",
+        "description": "External funding provides a cash boost proportional to current holdings.",
+        "applies_to": "all_companies",
     },
 }
