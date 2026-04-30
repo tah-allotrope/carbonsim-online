@@ -12,3 +12,6 @@ platform/db.sqlite3
 
 # Docker volumes
 pgdata/
+
+# Python package build artifacts
+*.egg-info/

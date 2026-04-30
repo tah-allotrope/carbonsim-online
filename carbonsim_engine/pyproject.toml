@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "carbonsim_engine"
+version = "0.1.0"
+description = "Standalone compliance engine for CarbonSim climate policy simulations"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["climate", "carbon", "ets", "simulation", "workshop"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Education",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["carbonsim_engine*"]

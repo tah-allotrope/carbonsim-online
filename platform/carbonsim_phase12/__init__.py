@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from otree.api import *
 
-from . import engine
+from carbonsim_engine import engine
 from . import deployment
 
 

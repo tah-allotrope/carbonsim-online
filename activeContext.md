@@ -141,3 +141,16 @@
 - Allowed shocks during the compliance phase to satisfy the edge-case behavior called out in the Vietnam testing plan.
 - Added new regression tests for production secret enforcement, health-check field names, export metadata shape, penalty-above-ceiling validation, all-scenario bot-only completion, and compliance-phase shocks.
 - Re-ran the full Python suite and confirmed all 98 tests pass.
+
+## 2026-04-30 Climate Mayor — Phase 1 Engine Extraction
+
+- [x] Extracted the 2,274-line `engine.py` into `carbonsim_engine/` standalone package with 4 modules: `constants.py`, `scenarios.py`, `engine.py`, and `solo.py` (stub)
+- [x] Created `carbonsim_engine/pyproject.toml` with zero external deps, Python >=3.10
+- [x] Created `carbonsim_engine/__init__.py` re-exporting the full public API
+- [x] Moved tests to `carbonsim_engine/tests/test_engine.py` with updated imports
+- [x] Replaced `platform/carbonsim_phase12/engine.py` with a backward-compatible shim
+- [x] Updated `platform/carbonsim_phase12/__init__.py` to import from `carbonsim_engine`
+- [x] Fixed `_event_summary` dict-literal bug (evaluates all f-strings at construction time) by switching to `if/elif` chains
+- [x] 26/28 engine tests pass (2 pre-existing test bugs unrelated to extraction)
+- [x] Installed as editable package — `from carbonsim_engine import create_initial_state, apply_company_decision, run_bot_turns, apply_shock` works standalone
+- [x] Generated Phase 1 report at `reports/2026-04-30-phase-one-engine-extraction.html`
