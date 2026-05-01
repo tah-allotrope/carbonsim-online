@@ -260,6 +260,111 @@ SCENARIO_PACKS = {
             ],
         },
     },
+    "solo_easy": {
+        "label": "Solo Easy (Generous)",
+        "description": "20-year solo game with gentle allocation decline, low penalty, and generous offsets. Suitable for first-time players.",
+        "num_years": 20,
+        "penalty_rate": 201.0,
+        "offset_usage_cap": 0.20,
+        "offset_price": 18.0,
+        "auction_count_per_year": 1,
+        "auction_price_floor": 50.0,
+        "auction_price_ceiling": 200.0,
+        "auction_share_of_cap": 0.08,
+        "trade_expiry_seconds": 60,
+        "allocation_factors": {y: round(max(0.60, 1.0 - (y - 1) * 0.02), 4) for y in range(1, 21)},
+        "company_library": [
+            {"company_name": "Red River Thermal", "sector": "thermal_power", "baseline_emissions": 120.0, "growth_rate": 0.020, "cash": 1_800_000.0},
+            {"company_name": "Hai Phong Steel", "sector": "steel", "baseline_emissions": 95.0, "growth_rate": 0.015, "cash": 1_500_000.0},
+            {"company_name": "Da Nang Cement", "sector": "cement", "baseline_emissions": 88.0, "growth_rate": 0.012, "cash": 1_300_000.0},
+            {"company_name": "Binh Duong Textiles", "sector": "thermal_power", "baseline_emissions": 45.0, "growth_rate": 0.018, "cash": 900_000.0},
+            {"company_name": "Vung Tau Refinery", "sector": "steel", "baseline_emissions": 65.0, "growth_rate": 0.020, "cash": 1_100_000.0},
+        ],
+        "abatement_catalog": {
+            "thermal_power": [
+                {"measure_id": "tp_heat_rate_upgrade", "label": "Heat-rate upgrade", "abatement_amount": 12.0, "cost": 80000.0, "activation_timing": "immediate"},
+                {"measure_id": "tp_cofiring_preparation", "label": "Biomass cofiring", "abatement_amount": 10.0, "cost": 55000.0, "activation_timing": "next_year"},
+                {"measure_id": "tp_solar_hybrid", "label": "Solar hybrid integration", "abatement_amount": 8.0, "cost": 70000.0, "activation_timing": "next_year"},
+            ],
+            "steel": [
+                {"measure_id": "st_waste_heat_recovery", "label": "Waste heat recovery", "abatement_amount": 10.0, "cost": 65000.0, "activation_timing": "immediate"},
+                {"measure_id": "st_scrap_optimization", "label": "Scrap ratio optimization", "abatement_amount": 6.0, "cost": 45000.0, "activation_timing": "next_year"},
+            ],
+            "cement": [
+                {"measure_id": "ce_blended_clinker_shift", "label": "Blended clinker shift", "abatement_amount": 8.0, "cost": 42000.0, "activation_timing": "immediate"},
+                {"measure_id": "ce_kiln_control_upgrade", "label": "Kiln control upgrade", "abatement_amount": 5.0, "cost": 35000.0, "activation_timing": "next_year"},
+            ],
+        },
+    },
+    "solo_standard": {
+        "label": "Solo Standard",
+        "description": "15-year solo game with moderate cap decline and standard penalties. Balanced challenge for experienced workshop participants.",
+        "num_years": 15,
+        "penalty_rate": 301.0,
+        "offset_usage_cap": 0.12,
+        "offset_price": 25.0,
+        "auction_count_per_year": 2,
+        "auction_price_floor": 80.0,
+        "auction_price_ceiling": 300.0,
+        "auction_share_of_cap": 0.12,
+        "trade_expiry_seconds": 45,
+        "allocation_factors": {y: round(max(0.40, 1.0 - (y - 1) * 0.03), 4) for y in range(1, 16)},
+        "company_library": [
+            {"company_name": "Red River Thermal", "sector": "thermal_power", "baseline_emissions": 120.0, "growth_rate": 0.025, "cash": 1_500_000.0},
+            {"company_name": "Hai Phong Steel", "sector": "steel", "baseline_emissions": 95.0, "growth_rate": 0.020, "cash": 1_250_000.0},
+            {"company_name": "Da Nang Cement", "sector": "cement", "baseline_emissions": 88.0, "growth_rate": 0.016, "cash": 1_050_000.0},
+            {"company_name": "Quang Ninh Mining", "sector": "thermal_power", "baseline_emissions": 55.0, "growth_rate": 0.022, "cash": 950_000.0},
+        ],
+        "abatement_catalog": {
+            "thermal_power": [
+                {"measure_id": "tp_heat_rate_upgrade", "label": "Heat-rate upgrade", "abatement_amount": 10.0, "cost": 90000.0, "activation_timing": "immediate"},
+                {"measure_id": "tp_cofiring_preparation", "label": "Biomass cofiring", "abatement_amount": 7.0, "cost": 65000.0, "activation_timing": "next_year"},
+            ],
+            "steel": [
+                {"measure_id": "st_waste_heat_recovery", "label": "Waste heat recovery", "abatement_amount": 8.0, "cost": 72000.0, "activation_timing": "immediate"},
+                {"measure_id": "st_scrap_optimization", "label": "Scrap ratio optimization", "abatement_amount": 5.0, "cost": 50000.0, "activation_timing": "next_year"},
+            ],
+            "cement": [
+                {"measure_id": "ce_blended_clinker_shift", "label": "Blended clinker shift", "abatement_amount": 6.0, "cost": 46000.0, "activation_timing": "immediate"},
+                {"measure_id": "ce_kiln_control_upgrade", "label": "Kiln control upgrade", "abatement_amount": 4.0, "cost": 38000.0, "activation_timing": "next_year"},
+            ],
+        },
+    },
+    "solo_hard": {
+        "label": "Solo Hard (Aggressive)",
+        "description": "10-year solo game with steep cap decline, high penalty, and tight offset access. Designed for experienced ETS players.",
+        "num_years": 10,
+        "penalty_rate": 450.0,
+        "offset_usage_cap": 0.05,
+        "offset_price": 40.0,
+        "auction_count_per_year": 2,
+        "auction_price_floor": 100.0,
+        "auction_price_ceiling": 450.0,
+        "auction_share_of_cap": 0.18,
+        "trade_expiry_seconds": 30,
+        "allocation_factors": {y: round(max(0.30, 1.0 - (y - 1) * 0.05), 4) for y in range(1, 11)},
+        "company_library": [
+            {"company_name": "Red River Thermal", "sector": "thermal_power", "baseline_emissions": 120.0, "growth_rate": 0.035, "cash": 1_400_000.0},
+            {"company_name": "Hai Phong Steel", "sector": "steel", "baseline_emissions": 95.0, "growth_rate": 0.028, "cash": 1_150_000.0},
+            {"company_name": "Da Nang Cement", "sector": "cement", "baseline_emissions": 88.0, "growth_rate": 0.024, "cash": 950_000.0},
+            {"company_name": "Quang Ninh Mining", "sector": "thermal_power", "baseline_emissions": 55.0, "growth_rate": 0.030, "cash": 850_000.0},
+            {"company_name": "Dong Nai Chemicals", "sector": "cement", "baseline_emissions": 40.0, "growth_rate": 0.025, "cash": 750_000.0},
+        ],
+        "abatement_catalog": {
+            "thermal_power": [
+                {"measure_id": "tp_heat_rate_upgrade", "label": "Heat-rate upgrade", "abatement_amount": 10.0, "cost": 95000.0, "activation_timing": "immediate"},
+                {"measure_id": "tp_cofiring_preparation", "label": "Biomass cofiring", "abatement_amount": 6.0, "cost": 70000.0, "activation_timing": "next_year"},
+            ],
+            "steel": [
+                {"measure_id": "st_waste_heat_recovery", "label": "Waste heat recovery", "abatement_amount": 7.0, "cost": 78000.0, "activation_timing": "immediate"},
+                {"measure_id": "st_scrap_optimization", "label": "Scrap ratio optimization", "abatement_amount": 4.0, "cost": 55000.0, "activation_timing": "next_year"},
+            ],
+            "cement": [
+                {"measure_id": "ce_blended_clinker_shift", "label": "Blended clinker shift", "abatement_amount": 5.0, "cost": 50000.0, "activation_timing": "immediate"},
+                {"measure_id": "ce_kiln_control_upgrade", "label": "Kiln control upgrade", "abatement_amount": 3.0, "cost": 42000.0, "activation_timing": "next_year"},
+            ],
+        },
+    },
 }
 
 TECH_UNLOCK_TEMPLATES = {

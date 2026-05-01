@@ -54,6 +54,8 @@ from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES
 
 from .cards import CardDeck, draw_cards, resolve_card
 
+from .solo import create_solo_game, solo_player_company
+
 __all__ = [
     "build_company_specs",
     "create_initial_state",
@@ -107,4 +109,7 @@ __all__ = [
     "CardDeck",
     "draw_cards",
     "resolve_card",
+    "CardDeck",
+    "create_solo_game",
+    "solo_player_company",
 ]
