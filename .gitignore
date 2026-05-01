@@ -15,3 +15,8 @@ pgdata/
 
 # Python package build artifacts
 *.egg-info/
+
+# Mayor API database
+mayor_api/*.db
+mayor_api/*.db-wal
+mayor_api/*.db-shm
