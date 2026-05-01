@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Climate Mayor — Co-op</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div class="header-title">Climate Mayor Co-op</div>
+      <div style="color:var(--muted);font-size:0.85rem" id="coopSubtitle">Loading...</div>
+    </div>
+    <div class="header-meta">
+      <span class="badge badge-blue" id="coopPhase">Loading</span>
+      <button class="btn" onclick="refreshCoop()">Refresh</button>
+      <button class="btn" onclick="showSummary()">Summary</button>
+      <a href="/" class="btn">Main Menu</a>
+    </div>
+  </div>
+
+  <div id="coopContent"><div class="card"><p style="color:var(--muted)">Loading co-op session...</p></div></div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const GAME_ID = params.get('id');
+const PARTICIPANT_ID = params.get('participant');
+let coopState = null;
+let ws = null;
+
+async function refreshCoop() {
+  coopState = await API.getCoopState(GAME_ID, PARTICIPANT_ID);
+  renderCoop();
+}
+
+function connectWs() {
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${protocol}://${window.location.host}/ws/games/${GAME_ID}/${PARTICIPANT_ID}`);
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type !== 'snapshot') return;
+    const mine = (data.participants || []).find(p => p.snapshot && p.snapshot.your_participant_id === PARTICIPANT_ID);
+    if (mine) {
+      coopState = { game_id: GAME_ID, participant_id: PARTICIPANT_ID, snapshot: mine.snapshot };
+      renderCoop();
+    }
+  };
+}
+
+function renderCoop() {
+  const s = coopState.snapshot || {};
+  document.getElementById('coopSubtitle').textContent = `Participant ${PARTICIPANT_ID} · ${s.participants?.length || 0} players`;
+  document.getElementById('coopPhase').textContent = s.phase || 'Unknown';
+
+  const player = s.player_company || {};
+  const participants = s.participants || [];
+  const readyCheck = s.ready_check?.participants || {};
+  const menu = player.abatement_menu || [];
+
+  let html = '';
+  html += `<div class="grid-2">
+    <div class="card">
+      <div class="card-title">Your Company</div>
+      <div class="stat"><div class="stat-label">Company</div><div class="stat-value">${player.company_name || '-'}</div></div>
+      <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent">$${fmt(player.cash || 0)}</div></div>
+      <div class="stat"><div class="stat-label">Compliance Gap</div><div class="stat-value ${(player.compliance_gap || 0) > 0 ? 'red' : 'green'}">${fmt(player.compliance_gap || 0)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ready Check</div>
+      ${participants.map(p => `<div class="leaderboard-row"><span>${p.player_name}</span><span class="badge ${readyCheck[p.participant_id] ? 'badge-green' : 'badge-orange'}">${readyCheck[p.participant_id] ? 'Ready' : 'Waiting'}</span></div>`).join('')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn btn-primary" onclick="setReady(true)">I'm Ready</button>
+        <button class="btn" onclick="setReady(false)">Not Ready</button>
+      </div>
+    </div>
+  </div>`;
+
+  if (menu.length) {
+    html += `<div class="card"><div class="card-title">Abatement Menu</div><table><tr><th>Measure</th><th>Reduction</th><th>Cost</th><th></th></tr>`;
+    for (const m of menu) {
+      html += `<tr>
+        <td>${m.label}</td>
+        <td>${fmt(m.abatement_amount)}</td>
+        <td>$${fmt(m.cost)}</td>
+        <td>${m.active || m.pending ? '<span class="badge badge-green">Selected</span>' : `<button class="btn" onclick="activateMeasure('${m.measure_id}')">Activate</button>`}</td>
+      </tr>`;
+    }
+    html += `</table></div>`;
+  }
+
+  html += `<div class="card">
+    <div class="card-title">Session</div>
+    <div style="color:var(--muted);font-family:var(--mono)">Game ID: ${GAME_ID}</div>
+    <div style="color:var(--muted);font-family:var(--mono)">Participant ID: ${PARTICIPANT_ID}</div>
+  </div>`;
+
+  document.getElementById('coopContent').innerHTML = html;
+}
+
+function activateMeasure(measureId) {
+  API.coopDecision(GAME_ID, PARTICIPANT_ID, {
+    action: 'activate_abatement',
+    payload: { measure_id: measureId },
+  }).then(refreshCoop).catch(e => alert('Error: ' + e.message));
+}
+
+function setReady(ready) {
+  API.coopReady(GAME_ID, { participant_id: PARTICIPANT_ID, ready }).then(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'refresh' }));
+    refreshCoop();
+  }).catch(e => alert('Error: ' + e.message));
+}
+
+function showSummary() {
+  API.getCoopSummary(GAME_ID).then(data => {
+    const mvp = data.mvp ? `${data.mvp.player_name} (${data.mvp.company_name})` : 'None';
+    alert(`Co-op Summary\nParticipants: ${data.participants.length}\nMVP: ${mvp}`);
+  }).catch(e => alert('Error: ' + e.message));
+}
+
+function fmt(n) {
+  if (n == null) return '0';
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return Number(n).toFixed(1);
+}
+
+refreshCoop().then(connectWs).catch(e => {
+  document.getElementById('coopContent').innerHTML = `<div class="card"><p style="color:var(--red)">Error: ${e.message}</p></div>`;
+});
+</script>
+</body>
+</html>

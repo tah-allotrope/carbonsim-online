@@ -53,6 +53,18 @@ from .constants import (
 from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES
 
 from .cards import CardDeck, draw_cards, resolve_card
+from .achievements import ACHIEVEMENTS, compute_achievements
+from .playtest import run_playtest, run_playtest_batch, summarize_playtests
+from .tutorial import TUTORIAL_CARDS, mark_tutorial_state, tutorial_notes_for_year
+from .coop import (
+    add_coop_participant,
+    all_participants_ready,
+    create_coop_game,
+    participant_snapshot,
+    reset_ready_check,
+    set_participant_connection,
+    set_participant_ready,
+)
 
 from .solo import create_solo_game, solo_player_company
 
@@ -109,7 +121,21 @@ __all__ = [
     "CardDeck",
     "draw_cards",
     "resolve_card",
-    "CardDeck",
+    "ACHIEVEMENTS",
+    "compute_achievements",
+    "run_playtest",
+    "run_playtest_batch",
+    "summarize_playtests",
+    "TUTORIAL_CARDS",
+    "mark_tutorial_state",
+    "tutorial_notes_for_year",
+    "add_coop_participant",
+    "all_participants_ready",
+    "create_coop_game",
+    "participant_snapshot",
+    "reset_ready_check",
+    "set_participant_connection",
+    "set_participant_ready",
     "create_solo_game",
     "solo_player_company",
 ]

@@ -1,93 +1,89 @@
 # Active Context
 
 ## Plan
-- [x] Review the latest CarbonSim and Vietnam ETS research in `research/`
-- [x] Extract the V1 product assumptions that should govern future implementation work
-- [x] Create a project `AGENTS.md` that defines scope, stack, rules, and delivery priorities
-- [x] Write a detailed multi-phase markdown plan for building the online CarbonSim platform
-- [x] Review the planning artifacts for consistency with the cited research and repo context
-- [x] Inspect the current repository state and local Python runtime support for `oTree`
-- [x] Update the repository with a concrete implementation plan for phases 1 and 2
-- [x] Scaffold an `oTree` project with a multiplayer-ready CarbonSim workshop app
-- [x] Implement session creation, join flow, facilitator visibility, and a placeholder company dashboard
-- [x] Add a deterministic year-state engine with year-start allocation and year-end compliance processing
-- [x] Write and run tests for allocation, emissions growth, banking, penalties, and multi-year scenarios
-- [x] Update repo documentation for local setup and verification
-- [x] Generate a phase report artifact for phase 1
-- [x] Generate a phase report artifact for phase 2
-- [x] Extend the implementation plan to cover phase 3 abatement and offset decisions
-- [x] Add failing tests for sector-specific abatement logic, activation timing, offset caps, and dashboard projections
-- [x] Implement phase 3 abatement menus, persistence rules, offset holding logic, and projected compliance updates
-- [x] Update the live workshop dashboard so participants can make abatement and offset decisions during the decision window
-- [x] Run verification for phase 3 and generate the phase 3 report artifact
-- [x] Extend the implementation plan to cover phase 4 sealed-bid auctions
-- [x] Add failing tests for auction scheduling, bidding, clearing, and dashboard integration
-- [x] Implement phase 4 sealed-bid auctions with multi-bid clearing, results, and dashboard updates
-- [x] Run verification for phase 4 and generate the phase 4 report artifact
-- [x] Extend the implementation plan to cover phase 5 secondary trading
-- [x] Add failing tests for trade proposal, acceptance, expiry, and dashboard feed
-- [x] Implement phase 5 bilateral trading with expiry, accept/reject, and live trade feed
-- [x] Run verification for phase 5 and generate the phase 5 report artifact
-- [x] Extend the implementation plan to cover phase 6 facilitator tools
-- [x] Add failing tests for session pause/resume, phase advance, participant status, and snapshot
-- [x] Implement phase 6 facilitator controls: pause/resume, force-advance, status tracking, facilitator snapshot
-- [x] Run verification for phase 6 and generate the phase 6 report artifact
-- [x] Extend the implementation plan to cover phase 7 scenarios, bots, and shocks
-- [x] Add failing tests for scenario packs, bot strategies, shock application, and session replay
-- [x] Implement phase 7: scenario packs, bot AI, shock events, session replay, and analytics
-- [x] Run verification for phase 7 and generate the phase 7 report artifact
-- [x] Extend the implementation plan to cover phase 8 pilot deployment
-- [x] Add failing tests for deployment hardening, config, health checks, and session recovery
-- [x] Implement phase 8: deployment config, health endpoint, session recovery, and oTree launch wrappers
-- [x] Run verification for phase 8 and generate the phase 8 report artifact
-- [x] Extend the implementation plan to cover phase 9 session replay and export
-- [x] Add failing tests for export format, replay data, analytics, and summary
-- [x] Implement phase 9: session replay, analytics dashboard, CSV/JSON export, and session summary
-- [x] Run verification for phase 9 and generate the phase 9 report artifact
-- [x] Write the Climate Mayor single-player narrative tycoon multi-phase plan
-- [x] Implement Phase 1: Extract engine into standalone `carbonsim_engine/` package
-- [ ] Implement Phase 2: Event-Card System (50+ events, CardDeck class, integration)
+- [x] Review current Phase 5 engine additions, API models, and unfinished route wiring
+- [x] Identify gaps and regressions in the partial `mayor_api/routes/game.py` changes
+- [x] Finish backend Phase 5 wiring in `mayor_api/routes/game.py` and `carbonsim_engine/__init__.py`
+- [x] Add failing or missing API coverage for tutorial mode, fast-forward, playtest batch, and achievements
+- [x] Run focused verification for Phase 5 backend changes
+- [x] Finish frontend Phase 5 wiring for tutorial start, fast-forward, and achievements
+- [x] Run frontend/API verification as feasible
+- [x] Add review/results notes and determine remaining Phase 5 work
+- [x] Run Phase 5 playtests and capture aggregate results for balancing/reporting
+- [x] Tune solo balance and any clearly dead or dominant card settings based on playtest output
+- [x] Implement remaining Phase 5 performance/reporting work needed for completion
+- [x] Implement minimal Phase 6 co-op backend, websocket sync, and tests
+- [x] Implement minimal Phase 6 co-op frontend flow
+- [x] Run Phase 5/6 verification and finalize review notes
+- [x] Generate phase and final reports
+- [ ] Commit and push requested changes
+
 
 ## Goal
-- Implement Phase 2 of the Climate Mayor plan: Event-Card System
+- Finish pending Phase 5 tasks, then implement Phase 6 co-op mode with report artifacts, commit the changes, and push them.
 
 ## Constraints & Preferences
-- 50+ event cards across 4 types: policy, market, weather, tech
-- Each event has: id, type, title, description, effect (dict), rarity (common/rare/legendary)
-- CardDeck class with: draw(), shuffle(), seed-based determinism, discard pile
-- Wire into existing `apply_shock()` in engine
-- Events must be legible to non-expert players (workshop-friendly language)
-- Follow Vietnam ETS research for realistic event modeling
+- Keep changes minimal and aligned with the existing FastAPI + static HTML/CSS/JS architecture.
+- Do not change unrelated behavior in the engine or frontend.
+- Follow the Phase 5 and Phase 6 requirements in `plans/2026-04-30-climate-mayor-plan.md`.
+- Verify behavior with tests before calling the work done.
 
 ## Progress
 ### Done
-- (Phase 1 complete — see prior section)
+- Phase 5 tutorial, fast-forward, achievements, expansion deck usage, and playtest endpoint are wired through backend and frontend.
+- Phase 5 playtests were run and used to retune `solo_standard`, `solo_hard`, and a few low/high-frequency card weights.
+- Phase 5 performance/reporting additions are in place: gzip response compression and summary prefetch.
+- Phase 6 minimal co-op mode is implemented with co-op state helpers, co-op API routes, WebSocket snapshot broadcast, basic co-op UI, and summary/MVP endpoint.
+- Reports were generated:
+  - `reports/2026-05-01-climate-mayor-phase-six-coop-mode.html`
+  - `reports/2026-05-01-final-climate-mayor.html`
+- Verification now passes for the new work:
+  - `pytest mayor_api/tests/test_api.py -q` -> 25 passed
+  - `pytest mayor_api/tests/test_api.py carbonsim_engine/tests/test_cards.py -q` -> 54 passed
 
 ### In Progress
-- Phase 2: Event-Card System
+- Preparing commit and push.
 
 ### Blocked
-- (none)
+- None.
 
 ## Key Decisions
-- (TBD during implementation)
-
-## Next Steps
-- Create `carbonsim_engine/events.py` with 50+ event definitions
-- Create `carbonsim_engine/deck.py` with CardDeck class
-- Update `carbonsim_engine/__init__.py` to export new types
-- Write tests in `carbonsim_engine/tests/test_events.py`
-- Update `SHOCK_CATALOG` in `scenarios.py` to reference event IDs
-- Generate Phase 2 report
+- Keep tutorial guidance lightweight and server-driven using `tutorial.py` rather than introducing a new state machine.
+- Keep fast-forward conservative and deterministic enough for API tests, with minimal heuristics built on top of existing decision actions.
+- For Phase 6, prefer a minimal server-authoritative co-op implementation that reuses the existing state model and sends snapshots over WebSockets.
 
 ## Critical Context
-- `apply_shock(state, shock_type, intensity, year)` already exists in engine.py
-- Shock types in engine: "carbon_price_crash", "new_regulation", "technology_breakthrough", "recession"
-- Event cards should map to these shock types (or extend them)
-- Solo mode (Phase 3+) will draw event cards between years
+- Two pre-existing engine tests still fail and are not part of this Phase 5/6 scope unless directly required to unblock the new work:
+  - `test_start_simulation_initializes_year_one_allocations`
+  - `test_trade_transfers_allowances_and_cash`
+- `mayor_api/main.py` currently serves API plus static HTML/CSS/JS and is the correct place to attach WebSocket support.
+- There is no existing co-op implementation in `mayor_api/` or `mayor_web/` yet.
 
 ## Relevant Files
-- `carbonsim_engine/engine.py`: contains `apply_shock()` at line ~1970
-- `carbonsim_engine/scenarios.py`: contains `SHOCK_CATALOG`
-- `carbonsim_engine/solo.py`: stub for future solo mode that will use events
-- `plans/2026-04-30-climate-mayor-plan.md`: Phase 2 spec at section "Phase 2 -- Event-Card System"
+- `mayor_api/main.py`
+- `mayor_api/routes/game.py`
+- `mayor_api/tests/test_api.py`
+- `mayor_web/index.html`
+- `mayor_web/game.html`
+- `mayor_web/summary.html`
+- `mayor_web/js/api.js`
+- `carbonsim_engine/__init__.py`
+- `carbonsim_engine/engine.py`
+- `carbonsim_engine/scenarios.py`
+- `carbonsim_engine/tutorial.py`
+- `carbonsim_engine/achievements.py`
+- `carbonsim_engine/playtest.py`
+- `plans/2026-04-30-climate-mayor-plan.md`
+
+## Review / Results
+- Backend Phase 5 route wiring is complete and tested.
+- Frontend Phase 5 user-facing surfaces are complete for tutorial start, fast-forward, and achievements.
+- Phase 5 playtest aggregate after tuning:
+  - easy: completion 1.0, avg final cash 785949.31, avg penalties 319423.6
+  - standard: completion 1.0, avg final cash 439405.8, avg penalties 352146.41
+  - hard: completion 1.0, avg final cash 643307.09, avg penalties 408756.86
+- Card coverage remains healthy with no dead cards in the sampled batch; `opportunity_006` and `policy_008` remain relatively rare by design.
+- Phase 6 implementation is an early but working co-op scaffold, not the full shared-budget/shared-province design envisioned in the long-range plan.
+- Known unrelated engine test failures remain:
+  - `test_start_simulation_initializes_year_one_allocations`
+  - `test_trade_transfers_allowances_and_cash`

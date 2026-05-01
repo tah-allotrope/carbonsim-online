@@ -33,6 +33,18 @@ class CardDeck:
         cards = data if isinstance(data, list) else data.get("cards", data.get("deck", data))
         return cls(cards, rng)
 
+    @classmethod
+    def from_paths(
+        cls,
+        *paths: str | Path,
+        rng: random.Random | None = None,
+    ) -> CardDeck:
+        cards: list[dict[str, Any]] = []
+        for path in paths:
+            deck = cls.from_json(path, rng=random.Random(0))
+            cards.extend(deck._cards)
+        return cls(cards, rng)
+
     def draw(self, count: int = 3, state: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         eligible = [c for c in self._cards if _prereqs_met(c, state)]
         if len(eligible) < count:
@@ -89,6 +101,10 @@ def _prereqs_met(card: dict[str, Any], state: dict[str, Any] | None) -> bool:
         )
         if penalty_count > prereqs["max_penalties"]:
             return False
+    if "min_offset_cap" in prereqs and state.get("offset_usage_cap", 0) < prereqs["min_offset_cap"]:
+        return False
+    if "required_scenario" in prereqs and state.get("scenario") != prereqs["required_scenario"]:
+        return False
     return True
 
 

@@ -265,14 +265,14 @@ SCENARIO_PACKS = {
         "description": "20-year solo game with gentle allocation decline, low penalty, and generous offsets. Suitable for first-time players.",
         "num_years": 20,
         "penalty_rate": 201.0,
-        "offset_usage_cap": 0.20,
+        "offset_usage_cap": 0.18,
         "offset_price": 18.0,
         "auction_count_per_year": 1,
         "auction_price_floor": 50.0,
         "auction_price_ceiling": 200.0,
         "auction_share_of_cap": 0.08,
         "trade_expiry_seconds": 60,
-        "allocation_factors": {y: round(max(0.60, 1.0 - (y - 1) * 0.02), 4) for y in range(1, 21)},
+        "allocation_factors": {y: round(max(0.68, 1.0 - (y - 1) * 0.0175), 4) for y in range(1, 21)},
         "company_library": [
             {"company_name": "Red River Thermal", "sector": "thermal_power", "baseline_emissions": 120.0, "growth_rate": 0.020, "cash": 1_800_000.0},
             {"company_name": "Hai Phong Steel", "sector": "steel", "baseline_emissions": 95.0, "growth_rate": 0.015, "cash": 1_500_000.0},
@@ -300,15 +300,15 @@ SCENARIO_PACKS = {
         "label": "Solo Standard",
         "description": "15-year solo game with moderate cap decline and standard penalties. Balanced challenge for experienced workshop participants.",
         "num_years": 15,
-        "penalty_rate": 301.0,
-        "offset_usage_cap": 0.12,
-        "offset_price": 25.0,
+        "penalty_rate": 325.0,
+        "offset_usage_cap": 0.10,
+        "offset_price": 28.0,
         "auction_count_per_year": 2,
         "auction_price_floor": 80.0,
         "auction_price_ceiling": 300.0,
         "auction_share_of_cap": 0.12,
         "trade_expiry_seconds": 45,
-        "allocation_factors": {y: round(max(0.40, 1.0 - (y - 1) * 0.03), 4) for y in range(1, 16)},
+        "allocation_factors": {y: round(max(0.42, 1.0 - (y - 1) * 0.031), 4) for y in range(1, 16)},
         "company_library": [
             {"company_name": "Red River Thermal", "sector": "thermal_power", "baseline_emissions": 120.0, "growth_rate": 0.025, "cash": 1_500_000.0},
             {"company_name": "Hai Phong Steel", "sector": "steel", "baseline_emissions": 95.0, "growth_rate": 0.020, "cash": 1_250_000.0},
@@ -334,15 +334,15 @@ SCENARIO_PACKS = {
         "label": "Solo Hard (Aggressive)",
         "description": "10-year solo game with steep cap decline, high penalty, and tight offset access. Designed for experienced ETS players.",
         "num_years": 10,
-        "penalty_rate": 450.0,
-        "offset_usage_cap": 0.05,
-        "offset_price": 40.0,
+        "penalty_rate": 520.0,
+        "offset_usage_cap": 0.03,
+        "offset_price": 48.0,
         "auction_count_per_year": 2,
         "auction_price_floor": 100.0,
         "auction_price_ceiling": 450.0,
         "auction_share_of_cap": 0.18,
         "trade_expiry_seconds": 30,
-        "allocation_factors": {y: round(max(0.30, 1.0 - (y - 1) * 0.05), 4) for y in range(1, 11)},
+        "allocation_factors": {y: round(max(0.22, 1.0 - (y - 1) * 0.062), 4) for y in range(1, 11)},
         "company_library": [
             {"company_name": "Red River Thermal", "sector": "thermal_power", "baseline_emissions": 120.0, "growth_rate": 0.035, "cash": 1_400_000.0},
             {"company_name": "Hai Phong Steel", "sector": "steel", "baseline_emissions": 95.0, "growth_rate": 0.028, "cash": 1_150_000.0},
@@ -364,6 +364,37 @@ SCENARIO_PACKS = {
                 {"measure_id": "ce_kiln_control_upgrade", "label": "Kiln control upgrade", "abatement_amount": 3.0, "cost": 42000.0, "activation_timing": "next_year"},
             ],
         },
+    },
+    "solo_tutorial": {
+        "label": "Solo Tutorial",
+        "description": "Three-year guided tutorial with generous allocation and fixed teaching moments.",
+        "num_years": 3,
+        "penalty_rate": 150.0,
+        "offset_usage_cap": 0.20,
+        "offset_price": 15.0,
+        "auction_count_per_year": 0,
+        "auction_price_floor": 40.0,
+        "auction_price_ceiling": 120.0,
+        "auction_share_of_cap": 0.0,
+        "trade_expiry_seconds": 120,
+        "allocation_factors": {1: 1.02, 2: 0.98, 3: 0.94},
+        "company_library": [
+            {"company_name": "Tutorial Thermal", "sector": "thermal_power", "baseline_emissions": 90.0, "growth_rate": 0.01, "cash": 900000.0},
+            {"company_name": "Tutorial Steel", "sector": "steel", "baseline_emissions": 70.0, "growth_rate": 0.01, "cash": 850000.0},
+            {"company_name": "Tutorial Cement", "sector": "cement", "baseline_emissions": 65.0, "growth_rate": 0.01, "cash": 820000.0}
+        ],
+        "abatement_catalog": {
+            "thermal_power": [
+                {"measure_id": "tp_tutorial_efficiency", "label": "Boiler efficiency tune-up", "abatement_amount": 9.0, "cost": 30000.0, "activation_timing": "immediate"},
+                {"measure_id": "tp_tutorial_cofire", "label": "Small biomass cofiring pilot", "abatement_amount": 5.0, "cost": 22000.0, "activation_timing": "next_year"}
+            ],
+            "steel": [
+                {"measure_id": "st_tutorial_recovery", "label": "Waste heat capture", "abatement_amount": 7.0, "cost": 26000.0, "activation_timing": "immediate"}
+            ],
+            "cement": [
+                {"measure_id": "ce_tutorial_blend", "label": "Higher blended clinker", "abatement_amount": 6.0, "cost": 24000.0, "activation_timing": "immediate"}
+            ]
+        }
     },
 }
 

@@ -1,0 +1,204 @@
+{
+  "cards": [
+    {
+      "card_id": "crisis_101",
+      "title": "Grid Congestion Emergency",
+      "description": "Rapid renewable buildout without matching transmission upgrades creates regional congestion. Industrial users face curtailment and must rely on backup generation.",
+      "category": "crisis",
+      "effect_type": "emissions_spike",
+      "effect_params": { "magnitude": 0.09 },
+      "prerequisites": { "min_year": 4, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "crisis_102",
+      "title": "Methane Leak Scandal",
+      "description": "A provincial methane leak scandal triggers intense monitoring and immediate compliance pressure on heavy industry.",
+      "category": "crisis",
+      "effect_type": "allowance_withdrawal",
+      "effect_params": { "magnitude": 0.07 },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "crisis_103",
+      "title": "Imported Technology Failure",
+      "description": "A promising imported control system underperforms in local operating conditions, forcing costly rework.",
+      "category": "crisis",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.09 },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "crisis_104",
+      "title": "Severe Heatwave",
+      "description": "Extreme temperatures raise electricity demand and reduce equipment efficiency across the province.",
+      "category": "crisis",
+      "effect_type": "emissions_spike",
+      "effect_params": { "magnitude": 0.11 },
+      "prerequisites": { "min_year": 1, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "crisis_105",
+      "title": "Insurance Premium Spike",
+      "description": "Climate-linked industrial insurance premiums jump sharply after a bad storm season.",
+      "category": "crisis",
+      "effect_type": "cost_shock",
+      "effect_params": { "magnitude": 0.07 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_101",
+      "title": "Battery Storage Breakthrough",
+      "description": "Cheaper grid-scale storage makes flexible low-carbon power procurement much more attractive for industry.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Battery-backed Load Shifting", "abatement_amount": 6.0, "cost": 38000.0, "activation_timing": "next_year" },
+      "prerequisites": { "min_year": 4, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_102",
+      "title": "Provincial Green Skills Program",
+      "description": "A labor transition program improves local expertise for industrial retrofit deployment.",
+      "category": "opportunity",
+      "effect_type": "cash_boost",
+      "effect_params": { "magnitude": 0.04 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "opportunity_103",
+      "title": "Low-Carbon Cement Additives",
+      "description": "New supplementary cementitious materials reach commercial scale, allowing deeper clinker substitution.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "cement", "measure_label": "High SCM Blending", "abatement_amount": 9.0, "cost": 36000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_104",
+      "title": "Demand Response Revenue",
+      "description": "Industrial demand response participation generates new revenue while lowering peak emissions.",
+      "category": "opportunity",
+      "effect_type": "cash_boost",
+      "effect_params": { "magnitude": 0.06 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_105",
+      "title": "Industrial Symbiosis Park",
+      "description": "A new industrial symbiosis park lets facilities trade waste heat and residual materials more efficiently.",
+      "category": "opportunity",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Industrial Symbiosis Retrofit", "abatement_amount": 7.0, "cost": 42000.0, "activation_timing": "next_year" },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "policy_101",
+      "title": "Climate Accountability Law",
+      "description": "A new climate accountability law increases pressure on lagging emitters but improves long-term policy certainty.",
+      "category": "policy",
+      "effect_type": "election_pressure",
+      "effect_params": { "magnitude": -0.02 },
+      "prerequisites": { "min_year": 4, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "policy_102",
+      "title": "Industrial Decarbonization Tax Credit",
+      "description": "A temporary tax credit lowers the effective cost of qualifying retrofits.",
+      "category": "policy",
+      "effect_type": "cash_boost",
+      "effect_params": { "magnitude": 0.05 },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 4
+    },
+    {
+      "card_id": "policy_103",
+      "title": "Export Standards Tighten",
+      "description": "Major buyers require stronger climate disclosures, increasing competitive pressure on exporters.",
+      "category": "policy",
+      "effect_type": "cbam_threat",
+      "effect_params": { "magnitude": 0.08 },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "policy_104",
+      "title": "Just Transition Package",
+      "description": "A just transition package softens industrial resistance to cap tightening by subsidizing worker reskilling.",
+      "category": "policy",
+      "effect_type": "cash_boost",
+      "effect_params": { "magnitude": 0.03 },
+      "prerequisites": { "min_year": 4, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "policy_105",
+      "title": "Managed Cap Relief",
+      "description": "After industry pushback, regulators offer limited short-term cap relief next year while keeping the long-term trajectory intact.",
+      "category": "policy",
+      "effect_type": "election_pressure",
+      "effect_params": { "magnitude": 0.02 },
+      "prerequisites": { "min_year": 5, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "market_101",
+      "title": "Voluntary Market Convergence",
+      "description": "Voluntary buyers converge on higher-quality industrial credits, supporting a healthier offset market.",
+      "category": "market",
+      "effect_type": "offset_supply_change",
+      "effect_params": { "magnitude": 0.10 },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_102",
+      "title": "Hydrogen Hype Cycle",
+      "description": "Capital floods into low-carbon hydrogen suppliers, improving industrial access to new decarbonization options.",
+      "category": "market",
+      "effect_type": "fdi_proposal",
+      "effect_params": { "magnitude": 0.07 },
+      "prerequisites": { "min_year": 4, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "market_103",
+      "title": "Registry Modernization",
+      "description": "Modern registry tools reduce transaction frictions and improve confidence in compliance-market operations.",
+      "category": "market",
+      "effect_type": "allowance_boost",
+      "effect_params": { "magnitude": 0.04 },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 2
+    },
+    {
+      "card_id": "market_104",
+      "title": "Steel Scrap Windfall",
+      "description": "Unexpected regional scrap availability improves material efficiency options for steel producers.",
+      "category": "market",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "steel", "measure_label": "Deep Scrap Substitution", "abatement_amount": 8.0, "cost": 30000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 3, "max_year": 20 },
+      "weight": 3
+    },
+    {
+      "card_id": "market_105",
+      "title": "Cheap Solar Procurement Window",
+      "description": "An oversupplied renewable market briefly makes long-term industrial solar procurement extremely attractive.",
+      "category": "market",
+      "effect_type": "tech_unlock",
+      "effect_params": { "sector": "all", "measure_label": "Discount Solar Procurement", "abatement_amount": 5.0, "cost": 26000.0, "activation_timing": "immediate" },
+      "prerequisites": { "min_year": 2, "max_year": 20 },
+      "weight": 4
+    }
+  ]
+}

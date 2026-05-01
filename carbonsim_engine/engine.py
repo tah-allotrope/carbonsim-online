@@ -978,7 +978,11 @@ def build_session_analytics(state: dict[str, Any]) -> dict[str, Any]:
             {
                 "year": year,
                 "total_projected_emissions": round(
-                    sum(result["projected_emissions"] for result in year_results), 2
+                    sum(
+                        result.get("projected_emissions", result.get("emissions", 0))
+                        for result in year_results
+                    ),
+                    2,
                 ),
                 "total_allocation": round(
                     sum(result["allocation"] for result in year_results), 2

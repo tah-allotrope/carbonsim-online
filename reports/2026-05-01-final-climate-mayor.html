@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: Climate Mayor</title>
+  <meta name="color-scheme" content="dark light">
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) return;
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'base',
+        securityLevel: 'loose',
+        themeVariables: {
+          primaryColor: '#f3ead9',
+          primaryTextColor: '#1f1912',
+          primaryBorderColor: '#9d6b37',
+          lineColor: '#3b6f76',
+          secondaryColor: '#efe4d0',
+          tertiaryColor: '#ffffff',
+          background: '#fbf7f1',
+          mainBkg: '#fbf7f1',
+          nodeBorder: '#9d6b37',
+          clusterBkg: '#f7efdf',
+          clusterBorder: '#3b6f76',
+          edgeLabelBackground: '#fbf7f1'
+        }
+      });
+      await mermaid.run({ nodes: blocks });
+    }
+
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  </script>
+  <style>
+    :root {
+      --paper: #fbf7f1;
+      --paper-strong: #fffdf9;
+      --ink: #1f1912;
+      --ink-soft: #5f564c;
+      --line: #dccdb6;
+      --line-strong: #bfa37d;
+      --accent: #9d6b37;
+      --accent-soft: #efe4d0;
+      --accent-2: #3b6f76;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08);
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --page-width: 1040px;
+      --display-font: Georgia, "Times New Roman", serif;
+      --body-font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono-font: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(157, 107, 55, 0.09), transparent 26%),
+        radial-gradient(circle at 88% 10%, rgba(59, 111, 118, 0.08), transparent 22%),
+        linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%);
+      font-family: var(--body-font);
+      line-height: 1.65;
+      letter-spacing: 0.01em;
+    }
+
+    a { color: var(--accent-2); }
+
+    code, pre, .technical, .meta-chip, .section-index, .eyebrow, .stat-label, .stat-value, .mermaid {
+      font-family: var(--mono-font);
+    }
+
+    .page-shell {
+      width: min(var(--page-width), calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid rgba(159, 123, 79, 0.28);
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(157, 107, 55, 0.1), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.86)),
+        var(--paper-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.85fr);
+      gap: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin: 0;
+      max-width: 12ch;
+      font-family: var(--display-font);
+      font-size: clamp(2.8rem, 5vw, 4.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin: 18px 0 0;
+      max-width: 60ch;
+      color: var(--ink-soft);
+      font-size: 1rem;
+    }
+
+    .takeaway {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: rgba(59, 111, 118, 0.08);
+      color: #20373a;
+      font-size: 1.02rem;
+    }
+
+    .meta-grid, .summary-grid, .dual-grid, .phase-grid, .appendix-grid, .stat-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .meta-grid { gap: 12px; }
+
+    .summary-grid, .dual-grid, .phase-grid, .appendix-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stat-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 16px;
+    }
+
+    .meta-card, .section, .subcard, .empty-state, .narrative, .diagram-frame, .technical-frame, .stat {
+      border: 1px solid rgba(95, 72, 46, 0.12);
+      background: rgba(255, 253, 249, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .meta-card, .subcard, .narrative, .diagram-frame, .technical-frame, .empty-state, .stat {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .section {
+      margin-top: 22px;
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px 18px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-index {
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: var(--display-font);
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      line-height: 1.05;
+    }
+
+    .meta-label, .stat-label {
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .meta-chip, .stat-value {
+      margin-top: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .meta-chip { color: var(--accent); }
+    .stat-value { color: var(--accent-2); font-size: 1.18rem; }
+
+    .subcard h3, .subcard h4 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .diagram-frame {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: min(70vh, 720px);
+    }
+
+    .diagram-frame.compact-diagram {
+      padding: 12px;
+      max-height: min(62vh, 560px);
+    }
+
+    .diagram-frame.compact-diagram .mermaid { min-width: 980px; }
+
+    .mermaid {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      color: var(--ink);
+    }
+
+    .mermaid svg {
+      display: block;
+      width: auto !important;
+      min-width: 100%;
+      max-width: none !important;
+      height: auto !important;
+    }
+
+    .technical-frame table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .technical-frame th, .technical-frame td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .technical-frame th {
+      color: var(--accent);
+      font-size: 0.76rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--ink-soft);
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+      font-size: 0.84rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    ul, ol { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 8px; }
+    p:first-child, ul:first-child, ol:first-child { margin-top: 0; }
+    p:last-child, li:last-child { margin-bottom: 0; }
+
+    .footer-note {
+      margin-top: 18px;
+      color: rgba(95, 86, 76, 0.74);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: right;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid, .summary-grid, .dual-grid, .phase-grid, .stat-grid, .appendix-grid {
+        grid-template-columns: 1fr;
+      }
+      .title { max-width: none; }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        width: min(100vw - 20px, var(--page-width));
+        padding-top: 16px;
+        padding-bottom: 36px;
+      }
+      .hero, .section { padding: 18px; border-radius: 20px; }
+      .title { font-size: clamp(2.1rem, 12vw, 3.2rem); }
+    }
+
+    @media print {
+      :root {
+        --paper: #ffffff;
+        --paper-strong: #ffffff;
+        --ink: #111111;
+        --ink-soft: #444444;
+        --line: #d6d1c8;
+      }
+
+      @page {
+        size: A4;
+        margin: 14mm;
+      }
+
+      body { background: #ffffff; }
+      .page-shell { width: 100%; max-width: none; padding: 0; }
+      .hero, .meta-card, .section, .subcard, .narrative, .diagram-frame, .technical-frame, .empty-state, .stat {
+        background: #ffffff;
+        box-shadow: none;
+      }
+      .hero, .section { margin-top: 0; margin-bottom: 10mm; }
+      .diagram-frame { overflow: visible; max-height: none; }
+      .diagram-frame.compact-diagram .mermaid { min-width: 0; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="title-hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Final Report / Shareable Analysis Artifact</p>
+          <h1 class="title">Climate Mayor</h1>
+          <p class="lede">
+            A stakeholder-safe synthesis of the multi-phase implementation plan and the repository evidence now present around the proposed single-player narrative tycoon extension to CarbonSim Online.
+          </p>
+          <div class="takeaway">The project has moved beyond ideation into a meaningful in-repo buildout, but the evidence supports describing Climate Mayor as a partially implemented product track rather than a finished release: single-player foundations are present, Phase 5 closure is still open, and co-op exists only as an early scaffold.</div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">Project</div>
+            <div class="meta-chip">CarbonSim Online / Climate Mayor</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Repository</div>
+            <div class="meta-chip">carbonsim-online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Date</div>
+            <div class="meta-chip">2026-05-01</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="executive-summary">
+      <div class="section-header">
+        <div>
+          <div class="section-index">01 / Executive Summary</div>
+          <h2 class="section-title">Executive Summary</h2>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="subcard">
+          <h3>What Was Analyzed</h3>
+          <p>The report synthesizes the draft plan at <code>plans/2026-04-30-climate-mayor-plan.md</code>, the active delivery context in <code>activeContext.md</code>, and concrete repo evidence under <code>carbonsim_engine/</code>, <code>mayor_api/</code>, and <code>mayor_web/</code>.</p>
+        </div>
+        <div class="subcard">
+          <h3>What Matters</h3>
+          <p>The plan's core bet was correct: the existing compliance engine is reusable as a product foundation. That bet is now reflected in code, with engine extraction, cards, solo APIs, frontend surfaces, and early co-op wiring all present.</p>
+        </div>
+        <div class="subcard">
+          <h3>Current Truth</h3>
+          <p>The work is not complete enough to position as a launched Climate Mayor experience. The plan file remains marked <code>draft</code>, Phase 5 closure items are still open, and active context explicitly calls out pending playtests, tuning, performance/reporting work, and Phase 6 verification.</p>
+        </div>
+        <div class="subcard">
+          <h3>Recommended Direction</h3>
+          <p>Re-baseline the program around what has actually been built, finish the single-player vertical slice with verified balance and reporting, and treat co-op as a separate hardening track rather than implying it is already done.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="background-objective">
+      <div class="section-header">
+        <div>
+          <div class="section-index">02 / Background &amp; Objective</div>
+          <h2 class="section-title">Background &amp; Objective</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p>The Climate Mayor plan reframes CarbonSim Online from a facilitator-led workshop simulator into a self-directed narrative game for policy and public audiences. Instead of inventing a new carbon-market rules engine, the plan deliberately reuses the existing CarbonSim engine and wraps it in a save/resume product shell with event cards, NPC behavior, and a shareable end-of-run summary.</p>
+        <p>The plan's objective was to define a staged path from engine extraction to a polished solo experience, then eventually to co-op multiplayer. The central product promise is clear: deliver a credible, Vietnamese-contextualized climate and compliance simulation that is easier to approach than the workshop product while preserving the underlying ETS learning value.</p>
+        <p>This final report does not assume the plan was fully executed. Its purpose is to show what the plan set out to do, what the repository now demonstrates, where implementation deviated from the initial plan, and what should happen next if the project is to become a stakeholder-ready product line.</p>
+      </div>
+    </section>
+
+    <section class="section" id="inputs-scope">
+      <div class="section-header">
+        <div>
+          <div class="section-index">03 / Inputs &amp; Scope</div>
+          <h2 class="section-title">Inputs &amp; Scope</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Primary Inputs</h3>
+          <ul>
+            <li><code>plans/2026-04-30-climate-mayor-plan.md</code> as the main source of intent, phase design, and exit criteria.</li>
+            <li><code>activeContext.md</code> as the source of in-flight execution status and remaining work.</li>
+            <li>Repository surfaces showing concrete implementation evidence in engine, API, web, testing, and co-op files.</li>
+            <li>Referenced research input: <code>research/2026-04-26_carbon-game-ideas.md</code>.</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Scope Boundaries</h3>
+          <ul>
+            <li>In scope: plan synthesis, implementation maturity, delivery gaps, and recommendation path.</li>
+            <li>In scope: repo-evidenced deviations from the plan, such as the static web frontend actually present.</li>
+            <li>Out of scope: inventing completion metrics, attributing unverified test success, or claiming a production release.</li>
+            <li>Out of scope: detailed code review of every module or gameplay balance judgment without completed playtest evidence.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="assumptions-constraints">
+      <div class="section-header">
+        <div>
+          <div class="section-index">04 / Assumptions &amp; Constraints</div>
+          <h2 class="section-title">Assumptions &amp; Constraints</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Assumptions Used In This Report</h3>
+          <ul>
+            <li>File presence plus active-context notes are treated as valid evidence of implementation intent, but not as proof of end-to-end readiness.</li>
+            <li>The plan's own status field, <code>draft</code>, is taken seriously; unresolved items remain unresolved unless repo evidence clearly closes them.</li>
+            <li>The current web experience is represented by the static HTML/CSS/JS app in <code>mayor_web/</code>, not by the framework options originally discussed in the plan.</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Confidence Constraints</h3>
+          <ul>
+            <li>No validated playtest aggregate was attached to this report, so balance and engagement claims remain limited.</li>
+            <li>No full release checklist or deployment artifact was reviewed here.</li>
+            <li><code>activeContext.md</code> still lists open work for Phase 5, Phase 6, verification, reporting, and commit/push steps, which limits confidence in finality.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="methodology">
+      <div class="section-header">
+        <div>
+          <div class="section-index">05 / Methodology</div>
+          <h2 class="section-title">Methodology</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p>The analysis followed a simple evidence ladder. First, the plan was parsed for stated objectives, phases, dependencies, and exit criteria. Second, active execution notes were used to determine which tasks were described as finished, in progress, or still open. Third, repo structure was inspected to confirm which major deliverables exist in code today.</p>
+        <p>The report then compared plan intent to implementation reality. This matters because the plan assumed certain choices, such as a Next.js or SvelteKit frontend, while the current repo shows a more minimal static web stack. That difference is not a failure by itself, but it is a material architectural deviation that stakeholders should understand.</p>
+        <p>Where evidence was incomplete, the report defaults to honesty rather than smoothing uncertainty away. That is why the recommendation emphasizes re-baselining and verification over celebratory framing.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Orientation</div>
+          <div class="stat-value">multi-phase</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Audience</div>
+          <div class="stat-value">stakeholder-safe</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Evidence Rule</div>
+          <div class="stat-value">no invented data</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="phase-analysis">
+      <div class="section-header">
+        <div>
+          <div class="section-index">06 / Phase-by-Phase Analysis</div>
+          <h2 class="section-title">Phase-by-Phase Analysis</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="subcard">
+          <h3>Phase 1: Engine Extraction</h3>
+          <p>The plan's first phase is materially evidenced. The repo now contains a dedicated <code>carbonsim_engine/</code> package with <code>engine.py</code>, <code>constants.py</code>, <code>scenarios.py</code>, <code>solo.py</code>, a <code>pyproject.toml</code>, and migrated tests under <code>carbonsim_engine/tests/</code>. This is the foundational move the rest of the program depends on.</p>
+        </div>
+        <div class="subcard">
+          <h3>Phase 2: Event Cards</h3>
+          <p>Phase 2 is also evidenced in code. The repo includes <code>cards.py</code>, schema and deck data under <code>carbonsim_engine/data/</code>, a validation script, and dedicated tests. The implementation appears to have gone beyond the initial 50-card starter intent by also introducing an expansion deck.</p>
+        </div>
+        <div class="subcard">
+          <h3>Phase 3: Solo Backend</h3>
+          <p>The FastAPI layer exists in <code>mayor_api/</code> with routes, models, persistence, tests, and a local database artifact. That suggests the solo lifecycle moved from plan to implementation. Active context also states that backend Phase 5 route wiring is complete and tested, implying the solo API is not merely scaffolded.</p>
+        </div>
+        <div class="subcard">
+          <h3>Phase 4: Frontend Delivery</h3>
+          <p>The intended user-facing product exists, but with a notable deviation: instead of a Next.js or SvelteKit app, the repo currently presents a lighter static frontend under <code>mayor_web/</code> with <code>index.html</code>, <code>game.html</code>, <code>summary.html</code>, shared CSS, and API JavaScript. That choice aligns with the repo's stated preference for minimal changes, but the plan should be updated to match it.</p>
+        </div>
+        <div class="subcard">
+          <h3>Phase 5: Playtest, Balance, Content</h3>
+          <p>This phase is partially implemented. Evidence includes <code>tutorial.py</code>, <code>achievements.py</code>, <code>playtest.py</code>, expansion card content, and frontend/backend wiring for tutorial, fast-forward, and achievements. At the same time, <code>activeContext.md</code> still lists playtests, tuning, and performance/reporting work as open, so this phase should be described as in closure rather than complete.</p>
+        </div>
+        <div class="subcard">
+          <h3>Phase 6: Co-op</h3>
+          <p>The repo shows initial co-op work in <code>carbonsim_engine/coop.py</code>, <code>mayor_api/routes/coop.py</code>, <code>mayor_api/ws.py</code>, and <code>mayor_web/coop.html</code>. That is meaningful progress, but active context explicitly calls the current objective a "minimal" co-op implementation with verification still pending. Stakeholders should read this as an early scaffold, not a proven multiplayer mode.</p>
+        </div>
+      </div>
+      <div class="diagram-frame compact-diagram">
+        <div class="mermaid">
+flowchart LR
+    A[Plan: Draft multi-phase program] --> B[Phase 1<br/>Engine extracted into package]
+    B --> C[Phase 2<br/>Card system and deck tooling]
+    C --> D[Phase 3<br/>FastAPI solo backend]
+    D --> E[Phase 4<br/>Playable web surfaces]
+    E --> F[Phase 5<br/>Tutorial, achievements, playtest hooks]
+    F --> G[Phase 6<br/>Minimal co-op scaffold]
+    G --> H[Next required move<br/>Re-baseline, verify, balance, harden]
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="findings-recommendation">
+      <div class="section-header">
+        <div>
+          <div class="section-index">07 / Findings &amp; Recommendation</div>
+          <h2 class="section-title">Findings &amp; Recommendation</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p><strong>Finding 1:</strong> The plan's highest-risk assumption, that the existing CarbonSim engine could be reused as the nucleus of a solo product, has effectively been validated by the repo structure. The project is no longer just conceptual.</p>
+        <p><strong>Finding 2:</strong> The implementation path evolved toward a simpler delivery stack than originally proposed. That is a reasonable engineering tradeoff, but the plan and external messaging should reflect the actual stack now in use.</p>
+        <p><strong>Finding 3:</strong> Single-player product value is close enough to visible that completion discipline now matters more than new scope. The most important unfinished work is not ideation; it is playtest evidence, balance closure, reporting, and verification.</p>
+        <p><strong>Finding 4:</strong> Co-op should not yet be marketed as complete. The codebase suggests a prudent start, but not a finished multiplayer experience.</p>
+        <p><strong>Recommendation:</strong> Freeze major scope expansion, update the plan to reflect actual architecture and current maturity, finish a verified single-player release candidate, and only then move co-op from scaffold to product commitment.</p>
+      </div>
+      <div class="empty-state">
+        <strong>No Chart Included</strong>
+        Quantitative visualization was intentionally omitted because the available evidence does not include validated playtest aggregates, shipped KPIs, or completion metrics suitable for stakeholder reporting without fabrication.
+      </div>
+    </section>
+
+    <section class="section" id="implementation-path">
+      <div class="section-header">
+        <div>
+          <div class="section-index">08 / Implementation Path</div>
+          <h2 class="section-title">Implementation Path</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="subcard">
+          <h3>1. Re-baseline The Plan</h3>
+          <p>Update the markdown plan so it matches the codebase: note the extracted engine package, note the static frontend architecture, and explicitly classify Phases 5 and 6 as partially complete.</p>
+        </div>
+        <div class="subcard">
+          <h3>2. Finish Single-Player Closure</h3>
+          <p>Complete the open Phase 5 items already listed in <code>activeContext.md</code>: run playtests, capture aggregate results, tune dead or dominant balance points, and close remaining performance/reporting work.</p>
+        </div>
+        <div class="subcard">
+          <h3>3. Verify The Vertical Slice</h3>
+          <p>Produce one trusted release checklist covering new game, save/load, full run summary, achievements, tutorial flow, and the intended reporting artifact path. This is the gate between "implemented" and "presentable".</p>
+        </div>
+        <div class="subcard">
+          <h3>4. Harden Co-op Separately</h3>
+          <p>Treat co-op as a follow-on hardening stream with explicit websocket, reconnection, and state-consistency criteria. Do not let it dilute the single-player finish line.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="risks-open-questions">
+      <div class="section-header">
+        <div>
+          <div class="section-index">09 / Risks / Open Questions</div>
+          <h2 class="section-title">Risks / Open Questions</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Risks</h3>
+          <ul>
+            <li>The team may keep expanding features before validating the current single-player loop with real playtest evidence.</li>
+            <li>External messaging may outpace implementation maturity if Phase 6 scaffolding is mistaken for shipped multiplayer.</li>
+            <li>Architecture drift between the written plan and the actual codebase will make future planning, onboarding, and stakeholder review less reliable.</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Open Questions</h3>
+          <ul>
+            <li>Is the intended MVP still single-company control, as recommended in the plan's Grill Me section, or has the implementation shifted toward broader portfolio management?</li>
+            <li>What deployment target is now expected for the MVP, and does the current persistence approach still match that target?</li>
+            <li>What telemetry or reporting will count as sufficient evidence that the product is educationally and experientially ready?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="appendices-evidence">
+      <div class="section-header">
+        <div>
+          <div class="section-index">10 / Appendices / Evidence Notes</div>
+          <h2 class="section-title">Appendices / Evidence Notes</h2>
+        </div>
+      </div>
+      <div class="appendix-grid">
+        <div class="technical-frame">
+          <h3>Repo Evidence Snapshot</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Surface</th>
+                <th>Evidence</th>
+                <th>Implication</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>carbonsim_engine/</code></td>
+                <td>Engine package, tests, solo, cards, achievements, playtest, coop modules</td>
+                <td>Phases 1-2 and parts of 5-6 moved into code</td>
+              </tr>
+              <tr>
+                <td><code>mayor_api/</code></td>
+                <td>FastAPI app, routes, models, db, tests, websocket support</td>
+                <td>Solo backend is materially implemented; co-op API work has started</td>
+              </tr>
+              <tr>
+                <td><code>mayor_web/</code></td>
+                <td><code>index.html</code>, <code>game.html</code>, <code>summary.html</code>, <code>coop.html</code>, CSS/JS assets</td>
+                <td>User-facing delivery exists on a lighter stack than the original plan assumed</td>
+              </tr>
+              <tr>
+                <td><code>activeContext.md</code></td>
+                <td>Completed and open checklist items for Phases 5-6</td>
+                <td>The program is active and partially complete, not fully closed</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="subcard">
+          <h3>Evidence Notes</h3>
+          <ul>
+            <li>This report is grounded in repo artifacts present on 2026-05-01 and the referenced plan file dated 2026-04-30.</li>
+            <li>The plan status is still <code>draft</code>; this report therefore treats it as a living roadmap, not a completed program record.</li>
+            <li>The report intentionally avoids claiming exact test totals, KPI performance, or playtest outcomes unless they were explicitly available in the inspected sources.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">designed for html first, printable without reconstruction</div>
+    </section>
+  </main>
+</body>
+</html>

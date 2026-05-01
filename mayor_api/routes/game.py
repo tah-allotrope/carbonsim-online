@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -19,8 +20,11 @@ from carbonsim_engine import (
     run_bot_turns,
     start_simulation,
 )
+from carbonsim_engine.achievements import compute_achievements
 from carbonsim_engine.cards import CardDeck, draw_cards, resolve_card
+from carbonsim_engine.playtest import run_playtest_batch
 from carbonsim_engine.solo import create_solo_game, solo_player_company
+from carbonsim_engine.tutorial import TUTORIAL_CARDS, tutorial_notes_for_year
 
 from ..db import (
     create_game as db_create_game,
@@ -39,8 +43,10 @@ from ..models import (
     CreateGameResponse,
     DecisionRequest,
     ErrorResponse,
+    FastForwardRequest,
     GameListItem,
     GameStateResponse,
+    PlaytestResponse,
     ResolveCardRequest,
     SaveGameRequest,
     SaveListItem,
@@ -50,11 +56,15 @@ from ..models import (
 router = APIRouter(prefix="/api/games", tags=["games"])
 
 STARTER_DECK_PATH = None
+EXPANSION_DECK_PATH = None
 try:
     from pathlib import Path
     _p = Path(__file__).parent.parent.parent / "carbonsim_engine" / "data" / "starter_deck.json"
     if _p.exists():
         STARTER_DECK_PATH = str(_p)
+    _exp = Path(__file__).parent.parent.parent / "carbonsim_engine" / "data" / "expansion_deck.json"
+    if _exp.exists():
+        EXPANSION_DECK_PATH = str(_exp)
 except Exception:
     pass
 
@@ -81,6 +91,7 @@ def _available_actions(state: dict[str, Any]) -> list[str]:
     actions = []
     if phase in ("year_start", "decision_window"):
         actions.append("advance_phase")
+        actions.append("fast_forward")
     if phase == "decision_window":
         actions.append("activate_abatement")
         actions.append("buy_offsets")
@@ -101,6 +112,7 @@ async def create_game_route(req: CreateGameRequest):
         province_name=req.province_name,
         difficulty=req.difficulty,
         num_years=num_years,
+        tutorial_mode=req.tutorial_mode,
     )
     state["game_id"] = game_id
     db_create_game(game_id, req.player_name, req.province_name, req.difficulty, num_years, state)
@@ -136,6 +148,7 @@ async def get_game_route(game_id: str):
         current_year=state.get("current_year", 0),
         total_years=row["total_years"],
         snapshot=_snapshot(state),
+        drawn_cards=state.get("drawn_cards", []),
         available_actions=_available_actions(state),
     )
 
@@ -166,10 +179,27 @@ async def advance_year(game_id: str):
     phase = state.get("phase", "")
 
     drawn_cards = []
-    if phase == "decision_window" and STARTER_DECK_PATH:
+    if phase == "decision_window":
         import random
-        deck = CardDeck.from_json(STARTER_DECK_PATH, rng=random.Random())
-        state, drawn_cards = draw_cards(state, deck, count=3, now=now)
+        if state.get("tutorial_mode"):
+            drawn_cards = [
+                card
+                for card in TUTORIAL_CARDS
+                if card.get("prerequisites", {}).get("min_year") == state.get("current_year")
+            ]
+        elif STARTER_DECK_PATH:
+            if EXPANSION_DECK_PATH:
+                deck = CardDeck.from_paths(
+                    STARTER_DECK_PATH,
+                    EXPANSION_DECK_PATH,
+                    rng=random.Random(hash((game_id, state.get("current_year", 0)))),
+                )
+            else:
+                deck = CardDeck.from_json(
+                    STARTER_DECK_PATH,
+                    rng=random.Random(hash((game_id, state.get("current_year", 0)))),
+                )
+            state, drawn_cards = draw_cards(state, deck, count=3, now=now)
         state["drawn_cards"] = drawn_cards
 
     state = force_advance_phase(state, now=now)
@@ -257,7 +287,102 @@ async def end_year(game_id: str):
         "year": state.get("current_year", 0),
         "phase": phase,
         "snapshot": _snapshot(state),
+        "tutorial_note": tutorial_notes_for_year(state.get("current_year", 0)) if state.get("tutorial_mode") else None,
     }
+
+
+@router.post("/{game_id}/fast-forward")
+async def fast_forward(game_id: str, req: FastForwardRequest):
+    row = db_get_game(game_id)
+    if not row:
+        raise HTTPException(404, "Game not found")
+    state = decompress_state(row["state_json"])
+
+    for _ in range(req.years):
+        if state.get("phase") == "complete":
+            break
+
+        now = _utc()
+        while state.get("phase") == "compliance":
+            state = force_advance_phase(state, now=now)
+        if state.get("phase") == "complete":
+            state["game_status"] = "completed"
+            break
+
+        if state.get("phase") == "year_start":
+            state = force_advance_phase(state, now=now)
+
+        if state.get("phase") == "decision_window":
+            player = solo_player_company(state)
+            if not player:
+                raise HTTPException(400, "No player company found")
+
+            available = [
+                measure
+                for measure in player.get("abatement_menu", [])
+                if measure["measure_id"] not in player.get("active_abatement_ids", [])
+                and measure["measure_id"] not in player.get("pending_abatement_ids", [])
+            ]
+            if available:
+                cheapest = sorted(
+                    available,
+                    key=lambda m: m["cost"] / max(m["abatement_amount"], 0.01),
+                )[0]
+                try:
+                    state = apply_company_decision(
+                        state,
+                        company_id=player["company_id"],
+                        action="activate_abatement",
+                        payload={"measure_id": cheapest["measure_id"]},
+                        now=now,
+                    )
+                except Exception:
+                    pass
+
+            player = solo_player_company(state)
+            gap = max(0.0, player.get("compliance_gap", 0)) if player else 0.0
+            if gap > 0:
+                qty = round(gap * 0.25, 2)
+                if qty > 0:
+                    try:
+                        state = apply_company_decision(
+                            state,
+                            company_id=player["company_id"],
+                            action="buy_offsets",
+                            payload={"quantity": qty},
+                            now=now,
+                        )
+                    except Exception:
+                        pass
+
+        state["drawn_cards"] = []
+        state = run_bot_turns(state, now=now)
+        while state.get("phase") not in ("year_start", "complete"):
+            state = force_advance_phase(state, now=now)
+        if state.get("phase") == "complete":
+            state["game_status"] = "completed"
+            break
+
+    db_update_game_state(game_id, state)
+    return {
+        "status": "fast_forwarded",
+        "current_year": state.get("current_year", 0),
+        "phase": state.get("phase"),
+        "snapshot": _snapshot(state),
+    }
+
+
+@router.post("/playtest", response_model=PlaytestResponse)
+async def playtest_route():
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as report_file:
+        report_path = report_file.name
+    try:
+        aggregate = run_playtest_batch(report_path, runs_per_difficulty=4)
+    finally:
+        from pathlib import Path
+
+        Path(report_path).unlink(missing_ok=True)
+    return PlaytestResponse(aggregate=aggregate)
 
 
 @router.post("/{game_id}/save", response_model=SaveListItem)
@@ -298,6 +423,7 @@ async def summary(game_id: str):
         total_years=row["total_years"],
         completed_years=state.get("current_year", 0),
         snapshot=_snapshot(state),
+        achievements=compute_achievements(state),
     )
 
 

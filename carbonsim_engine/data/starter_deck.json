@@ -178,7 +178,7 @@
       "effect_type": "tech_unlock",
       "effect_params": { "sector": "all", "measure_label": "Carbon Capture Pilot", "abatement_amount": 15.0, "cost": 150000.0, "activation_timing": "next_year" },
       "prerequisites": { "min_year": 3, "max_year": 20, "max_penalties": 1 },
-      "weight": 2
+      "weight": 3
     },
     {
       "card_id": "opportunity_007",
@@ -288,7 +288,7 @@
       "effect_type": "cost_shock",
       "effect_params": { "magnitude": 0.05 },
       "prerequisites": { "min_year": 1, "max_year": 20 },
-      "weight": 5
+      "weight": 4
     },
     {
       "card_id": "policy_006",
@@ -458,7 +458,7 @@
       "effect_type": "tech_unlock",
       "effect_params": { "sector": "steel", "measure_label": "Green Hydrogen Steelmaking", "abatement_amount": 20.0, "cost": 200000.0, "activation_timing": "next_year" },
       "prerequisites": { "min_year": 4, "max_year": 20 },
-      "weight": 1
+      "weight": 2
     },
     {
       "card_id": "market_011",

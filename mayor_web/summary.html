@@ -29,6 +29,11 @@
   </div>
 
   <div class="card">
+    <div class="card-title">Achievements</div>
+    <div id="achievementsList"><p style="color:var(--muted)">Loading achievements...</p></div>
+  </div>
+
+  <div class="card">
     <div class="card-title">Emissions Trajectory</div>
     <div class="chart-frame" style="height:300px;position:relative">
       <canvas id="emissionsChart"></canvas>
@@ -94,8 +99,22 @@ Difficulty: ${summary.difficulty}
 Years: ${summary.completed_years}/${summary.total_years}
 Final Cash: $${fmt(player.cash || 0)}
 Total Penalties: $${fmt(totalPen)}
-Score: ${score}`;
+Score: ${score}
+Achievements: ${(summary.achievements || []).map(a => a.title).join(', ') || 'None'}`;
     document.getElementById('shareText').value = share;
+
+    const achievements = summary.achievements || [];
+    document.getElementById('achievementsList').innerHTML = achievements.length
+      ? achievements.map(a => `
+          <div class="leaderboard-row">
+            <div>
+              <strong>${a.title}</strong>
+              <div style="color:var(--muted);font-size:0.85rem">${a.description}</div>
+            </div>
+            <span class="badge badge-green">Unlocked</span>
+          </div>
+        `).join('')
+      : '<p style="color:var(--muted)">No achievements unlocked this run.</p>';
 
     drawChart(s);
   } catch (e) {

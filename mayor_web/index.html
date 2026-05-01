@@ -33,6 +33,15 @@
             <option value="hard">Hard — 10 years, steep cap decline, high penalties</option>
           </select>
         </div>
+        <div style="margin-bottom:18px">
+          <label style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:normal;font-size:0.9rem;color:var(--text)">
+            <input type="checkbox" id="tutorialMode" style="width:auto">
+            Start with the guided 3-year tutorial
+          </label>
+          <div style="margin-top:6px;color:var(--muted);font-size:0.85rem">
+            Recommended for first-time players. The tutorial uses fixed event cards and lighter guidance.
+          </div>
+        </div>
         <button class="btn btn-primary" onclick="startGame()" style="width:100%;justify-content:center">
           Start Game
         </button>
@@ -42,6 +51,14 @@
       <div class="card">
         <div class="card-title">Saved Games</div>
         <div id="gameList"><p style="color:var(--muted)">Loading...</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Co-op Session</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-primary" onclick="createCoop()">Create Co-op Game</button>
+          <input class="input" id="coopJoinId" placeholder="Enter co-op game ID">
+          <button class="btn" onclick="joinCoop()">Join Co-op Game</button>
+        </div>
       </div>
     </div>
   </div>
@@ -56,11 +73,42 @@ async function startGame() {
       player_name: document.getElementById('playerName').value || 'Player',
       province_name: document.getElementById('provinceName').value || 'default',
       difficulty: document.getElementById('difficulty').value,
+      tutorial_mode: document.getElementById('tutorialMode').checked,
     });
     window.location.href = `/game.html?id=${data.game_id}`;
   } catch (e) {
     alert('Error: ' + e.message);
     btn.disabled = false; btn.textContent = 'Start Game';
+  }
+}
+
+async function createCoop() {
+  try {
+    const data = await API.createCoop({
+      host_name: document.getElementById('playerName').value || 'Host',
+      province_name: document.getElementById('provinceName').value || 'default',
+      difficulty: document.getElementById('difficulty').value,
+      player_count: 2,
+    });
+    window.location.href = `/coop.html?id=${data.game_id}&participant=${data.participant_id}`;
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function joinCoop() {
+  const gameId = document.getElementById('coopJoinId').value.trim();
+  if (!gameId) {
+    alert('Enter a co-op game ID');
+    return;
+  }
+  try {
+    const data = await API.joinCoop(gameId, {
+      player_name: document.getElementById('playerName').value || 'Guest',
+    });
+    window.location.href = `/coop.html?id=${data.game_id}&participant=${data.participant_id}`;
+  } catch (e) {
+    alert('Error: ' + e.message);
   }
 }
 

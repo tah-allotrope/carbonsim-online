@@ -68,7 +68,13 @@ async function refresh() {
   try {
     gameState = await API.getGame(GAME_ID);
     render();
+    prefetchSummary();
   } catch (e) { showError(e.message); }
+}
+
+function prefetchSummary() {
+  if (!window.fetch) return;
+  fetch(`/api/games/${GAME_ID}/summary`, { headers: { 'Accept': 'application/json' } }).catch(() => {});
 }
 
 function render() {
@@ -121,8 +127,28 @@ function renderContent() {
   const leaderboard = s.leaderboard || s.companies || [];
   const activeShocks = s.active_shocks || [];
   const drawnCards = gameState.drawn_cards || s.drawn_cards || [];
+  const isTutorial = Boolean(s.tutorial_mode);
+  const tutorialNotes = {
+    1: 'Review the compliance gap and what your current allowances cover.',
+    2: 'Activate one cheap immediate abatement measure before advancing.',
+    3: 'Use offsets to cover only the smaller remaining gap.'
+  };
+  const tutorialNote = isTutorial ? (tutorialNotes[y] || 'Tutorial complete. You can continue with the full loop.') : '';
 
   let html = '';
+
+  if (isTutorial) {
+    html += `<div class="card">
+      <div class="card-title">Tutorial Guidance</div>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+        <div>
+          <div style="font-size:1rem;font-weight:600;margin-bottom:6px">Year ${y} learning goal</div>
+          <div style="color:var(--muted)">${tutorialNote}</div>
+        </div>
+        <span class="badge badge-blue">Guided Run</span>
+      </div>
+    </div>`;
+  }
 
   html += `<div class="grid-2 mb-16">
     <div class="card">
@@ -146,6 +172,7 @@ function renderContent() {
       <div class="card-title">Quick Actions</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-primary" onclick="doAdvanceYear()" id="advanceBtn">Advance Year</button>
+        <button class="btn" onclick="doFastForward()">Fast-Forward 1 Year</button>
         <button class="btn" onclick="doSave()">Save Game</button>
         <a href="/summary.html?id=${GAME_ID}" class="btn text-center">Session Summary</a>
       </div>
@@ -245,6 +272,13 @@ function doAdvanceYear() {
     document.getElementById('advanceBtn').disabled = false;
     document.getElementById('advanceBtn').textContent = 'Advance Year';
   });
+}
+
+function doFastForward() {
+  API.fastForward(GAME_ID, { years: 1 }).then(() => {
+    showToast('Fast-forward complete');
+    refresh();
+  }).catch(e => showError(e.message));
 }
 
 function doResolveCard(cardId, choiceId) {

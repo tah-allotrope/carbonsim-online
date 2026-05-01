@@ -21,8 +21,9 @@ def create_solo_game(
     province_name: str = "default",
     difficulty: str = "standard",
     num_years: int | None = None,
+    tutorial_mode: bool = False,
 ) -> dict:
-    scenario_key = SOLO_SCENARIO_MAP.get(difficulty, "solo_standard")
+    scenario_key = "solo_tutorial" if tutorial_mode else SOLO_SCENARIO_MAP.get(difficulty, "solo_standard")
     bot_count = BOT_COUNT_MAP.get(difficulty, 3)
     pack = SCENARIO_PACKS.get(scenario_key, SCENARIO_PACKS["solo_standard"])
 
@@ -42,6 +43,12 @@ def create_solo_game(
     state["difficulty"] = difficulty
     state["game_status"] = "active"
     state["drawn_cards"] = []
+    state["starting_year"] = 1
+    for company in state.get("companies", []):
+        company["starting_cash"] = company.get("cash", 0)
+    if tutorial_mode:
+        state["tutorial_mode"] = True
+        state["tutorial_completed"] = False
 
     return state
 

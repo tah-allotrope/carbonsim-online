@@ -11,6 +11,7 @@ class CreateGameRequest(BaseModel):
     province_name: str = Field(default="default", max_length=100)
     difficulty: str = Field(default="standard", pattern=r"^(easy|standard|hard)$")
     num_years: int | None = Field(default=None, ge=5, le=25)
+    tutorial_mode: bool = False
 
 
 class CreateGameResponse(BaseModel):
@@ -84,6 +85,32 @@ class SummaryResponse(BaseModel):
     total_years: int
     completed_years: int
     snapshot: dict[str, Any]
+    achievements: list[dict[str, str]] = []
+
+
+class FastForwardRequest(BaseModel):
+    years: int = Field(default=1, ge=1, le=5)
+
+
+class PlaytestResponse(BaseModel):
+    aggregate: dict[str, Any]
+
+
+class CreateCoopGameRequest(BaseModel):
+    host_name: str = Field(min_length=1, max_length=100)
+    province_name: str = Field(default="default", max_length=100)
+    difficulty: str = Field(default="standard", pattern=r"^(easy|standard|hard)$")
+    player_count: int = Field(default=2, ge=2, le=4)
+    num_years: int | None = Field(default=None, ge=5, le=25)
+
+
+class JoinCoopRequest(BaseModel):
+    player_name: str = Field(min_length=1, max_length=100)
+
+
+class ReadyRequest(BaseModel):
+    participant_id: str = Field(min_length=1, max_length=20)
+    ready: bool = True
 
 
 class ErrorResponse(BaseModel):
