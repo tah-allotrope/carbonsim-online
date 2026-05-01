@@ -44,6 +44,7 @@ class GameStateResponse(BaseModel):
     current_year: int
     total_years: int
     snapshot: dict[str, Any]
+    drawn_cards: list[dict[str, Any]] = []
     available_actions: list[str] = []
 
 

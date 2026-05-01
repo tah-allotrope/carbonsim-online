@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from pathlib import Path
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
 from .routes.game import router as game_router
@@ -27,6 +31,25 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(game_router)
+
+    web_dir = Path(__file__).parent.parent / "mayor_web"
+    css_dir = web_dir / "css"
+    js_dir = web_dir / "js"
+
+    if css_dir.exists():
+        app.mount("/css", StaticFiles(directory=str(css_dir)), name="css")
+    if js_dir.exists():
+        app.mount("/js", StaticFiles(directory=str(js_dir)), name="js")
+
+    @app.get("/{path:path}")
+    async def serve_frontend(path: str):
+        file_path = web_dir / path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+        index_path = web_dir / "index.html"
+        if index_path.exists():
+            return FileResponse(str(index_path))
+        return FileResponse(str(index_path)) if index_path.exists() else None
 
     return app
 

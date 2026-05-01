@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Climate Mayor — Game</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="page" id="app">
+  <div class="header" id="gameHeader">
+    <div>
+      <div class="header-title" id="title">Loading...</div>
+      <div style="color:var(--muted);font-size:0.85rem" id="subtitle"></div>
+    </div>
+    <div class="header-meta">
+      <span class="badge badge-blue" id="phaseBadge">Loading</span>
+      <span class="badge" id="yearBadge">Year 0/0</span>
+      <button class="btn" onclick="showSaveModal()">Save</button>
+      <button class="btn" onclick="showLoadModal()">Load</button>
+      <button class="btn btn-danger" onclick="confirmQuit()">Quit</button>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="yearProgress" style="width:0%"></div></div>
+
+  <div id="mainContent">
+    <div class="text-center" style="padding:40px;color:var(--muted)">Loading game...</div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="saveModal">
+  <div class="modal">
+    <h2>Save Game</h2>
+    <div style="margin-bottom:14px">
+      <label>Save Name</label>
+      <input class="input" id="saveName" value="Quick Save">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('saveModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="loadModal">
+  <div class="modal">
+    <h2>Load Game</h2>
+    <div id="savesList"><p style="color:var(--muted)">Loading saves...</p></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('loadModal')">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="cardModal">
+  <div class="modal" style="max-width:600px">
+    <h2 id="cardTitle">Event Card</h2>
+    <div id="cardContent"></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const GAME_ID = params.get('id');
+let gameState = null;
+
+async function refresh() {
+  try {
+    gameState = await API.getGame(GAME_ID);
+    render();
+  } catch (e) { showError(e.message); }
+}
+
+function render() {
+  const g = gameState;
+  document.getElementById('title').textContent = g.player_name || 'Climate Mayor';
+  document.getElementById('subtitle').textContent = `${g.province_name} · ${g.difficulty}`;
+
+  const phaseLabels = { lobby:'Lobby', year_start:'Year Start', decision_window:'Decisions', compliance:'Compliance Review', complete:'Complete', paused:'Paused' };
+  document.getElementById('phaseBadge').textContent = phaseLabels[g.snapshot?.phase] || g.snapshot?.phase || g.phase || 'Unknown';
+
+  const y = g.current_year || 0, total = g.total_years || 15;
+  document.getElementById('yearBadge').textContent = `Year ${y}/${total}`;
+  document.getElementById('yearBadge').className = y >= total ? 'badge badge-green' : 'badge badge-blue';
+  document.getElementById('yearProgress').style.width = `${(y / total) * 100}%`;
+
+  renderContent();
+}
+
+function renderContent() {
+  const s = gameState.snapshot || {};
+  const phase = s.phase || gameState.phase || '';
+  const y = gameState.current_year || 0;
+  const total = gameState.total_years || 15;
+  const el = document.getElementById('mainContent');
+
+  if (phase === 'complete' || gameState.status === 'completed') {
+    el.innerHTML = `
+      <div class="card text-center" style="padding:40px">
+        <div style="font-size:3rem;margin-bottom:16px">&#127942;</div>
+        <h2 style="margin-bottom:8px">Game Complete!</h2>
+        <p style="color:var(--muted);margin-bottom:20px">You completed ${y} of ${total} years.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <a href="/summary.html?id=${GAME_ID}" class="btn btn-primary">View Summary</a>
+          <a href="/" class="btn">New Game</a>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const player = s.player_company || s.companies?.[0] || {};
+  const cash = player.cash || 0;
+  const allowances = player.allowances || 0;
+  const projected = player.projected_emissions || 0;
+  const gap = player.compliance_gap || 0;
+  const banked = player.banked_allowances || 0;
+  const penalties = player.penalty_due || 0;
+  const menu = player.abatement_menu || [];
+  const activeIds = player.active_abatement_ids || [];
+  const pendingIds = player.pending_abatement_ids || [];
+  const leaderboard = s.leaderboard || s.companies || [];
+  const activeShocks = s.active_shocks || [];
+  const drawnCards = gameState.drawn_cards || s.drawn_cards || [];
+
+  let html = '';
+
+  html += `<div class="grid-2 mb-16">
+    <div class="card">
+      <div class="card-title">Compliance Position</div>
+      <div class="grid-3">
+        <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent">$${fmt(cash)}</div></div>
+        <div class="stat"><div class="stat-label">Allowances</div><div class="stat-value">${fmt(allowances)}</div></div>
+        <div class="stat"><div class="stat-label">Projected Emissions</div><div class="stat-value ${projected > allowances ? 'red' : 'green'}">${fmt(projected)}</div></div>
+      </div>
+      <div class="compliance-meter">
+        <span>Compliance Gap</span>
+        <span class="gap-indicator ${gap > 0 ? 'red' : 'green'}">${gap > 0 ? '+'+fmt(gap) : fmt(gap)}</span>
+        <span class="badge ${gap <= 0 ? 'badge-green' : 'badge-red'}">${gap <= 0 ? 'Compliant' : 'Shortfall'}</span>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.85rem;color:var(--muted)">
+        <span>Banked: ${fmt(banked)}</span>
+        <span>Penalty Due: $${fmt(penalties)}</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-primary" onclick="doAdvanceYear()" id="advanceBtn">Advance Year</button>
+        <button class="btn" onclick="doSave()">Save Game</button>
+        <a href="/summary.html?id=${GAME_ID}" class="btn text-center">Session Summary</a>
+      </div>
+    </div>
+  </div>`;
+
+  if (drawnCards.length > 0) {
+    html += `<div class="card"><div class="card-title">Event Cards</div>`;
+    for (const card of drawnCards) {
+      const cat = card.category || 'event';
+      const catClass = { crisis:'cat-crisis', opportunity:'cat-opportunity', policy:'cat-policy', market:'cat-market' }[cat] || '';
+      const catLabels = { crisis:'&#9888; Crisis', opportunity:'&#127919; Opportunity', policy:'&#9878; Policy', market:'&#128176; Market' };
+      html += `<div class="event-card">
+        <div class="category ${catClass}">${catLabels[cat] || cat}</div>
+        <h3>${card.title}</h3>
+        <p>${card.description}</p>`;
+      if (card.choices && card.choices.length > 0) {
+        html += `<div class="choices">`;
+        for (const ch of card.choices) {
+          html += `<button class="btn" onclick="doResolveCard('${card.card_id}','${ch.id}')">${ch.label}</button>`;
+        }
+        html += `</div>`;
+      } else {
+        html += `<button class="btn btn-primary" onclick="doResolveCard('${card.card_id}',null)">Resolve</button>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+
+  if (phase === 'decision_window' || phase === 'year_start') {
+    if (menu.length > 0) {
+      html += `<div class="card"><div class="card-title">Abatement Menu</div>`;
+      html += `<table><tr><th>Measure</th><th>Reduction</th><th>Cost</th><th>Timing</th><th></th></tr>`;
+      for (const m of menu) {
+        const isActive = activeIds.includes(m.measure_id);
+        const isPending = pendingIds.includes(m.measure_id);
+        const status = isActive ? 'badge-green Active' : isPending ? 'badge-orange Pending' : '';
+        html += `<tr>
+          <td>${m.label}</td>
+          <td style="font-family:var(--mono)">-${m.abatement_amount} t</td>
+          <td style="font-family:var(--mono)">$${fmt(m.cost)}</td>
+          <td>${m.activation_timing}</td>
+          <td>${status ? `<span class="badge ${status}"></span>` : `<button class="btn" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'})" style="padding:6px 12px;font-size:0.8rem">Activate</button>`}</td>
+        </tr>`;
+      }
+      html += `</table></div>`;
+    }
+
+    html += `<div class="card"><div class="card-title">Offsets & Market</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <span style="color:var(--muted)">Offset Price: <strong style="color:var(--text)">$${fmt(s.offset_price || 25)}</strong></span>
+        <span style="color:var(--muted)">Penalty Rate: <strong style="color:var(--text)">$${fmt(s.penalty_rate || 200)}</strong></span>
+        <span style="color:var(--muted)">Offset Cap: <strong style="color:var(--text)">${((s.offset_usage_cap || 0.1)*100).toFixed(0)}%</strong></span>
+      </div>
+    </div>`;
+  }
+
+  const leaderboardArr = Array.isArray(leaderboard) ? leaderboard : (leaderboard.leaderboard || []);
+  if (leaderboardArr.length > 0) {
+    html += `<div class="card"><div class="card-title">Company Standings</div>`;
+    html += `<table><tr><th>#</th><th>Company</th><th>Emissions</th><th>Allowances</th><th>Cash</th><th>Penalties</th></tr>`;
+    leaderboardArr.slice(0, 10).forEach((c, i) => {
+      const isPlayer = c.company_id === player.company_id;
+      html += `<tr style="${isPlayer ? 'background:rgba(0,245,255,0.05)' : ''}">
+        <td>${i+1}</td>
+        <td>${c.company_name || c.name} ${isPlayer ? '(You)' : ''}</td>
+        <td style="font-family:var(--mono)">${fmt(c.projected_emissions || c.emissions || 0)}</td>
+        <td style="font-family:var(--mono)">${fmt(c.allowances || 0)}</td>
+        <td style="font-family:var(--mono)">$${fmt(c.cash || 0)}</td>
+        <td style="font-family:var(--mono);color:${(c.penalty_due||0) > 0 ? 'var(--red)' : 'var(--green)'}">$${fmt(c.penalty_due || 0)}</td>
+      </tr>`;
+    });
+    html += `</table></div>`;
+  }
+
+  if (activeShocks.length > 0) {
+    html += `<div class="card"><div class="card-title">Active Shocks</div>`;
+    for (const sh of activeShocks) {
+      html += `<div class="leaderboard-row"><span>${sh.shock_type}</span><span style="color:var(--muted)">×${sh.magnitude}</span></div>`;
+    }
+    html += `</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function doAdvanceYear() {
+  document.getElementById('advanceBtn').disabled = true;
+  document.getElementById('advanceBtn').textContent = 'Advancing...';
+  API.advanceYear(GAME_ID).then(data => {
+    gameState = data;
+    showToast('Year advanced');
+    refresh();
+  }).catch(e => {
+    showError(e.message);
+    document.getElementById('advanceBtn').disabled = false;
+    document.getElementById('advanceBtn').textContent = 'Advance Year';
+  });
+}
+
+function doResolveCard(cardId, choiceId) {
+  API.resolveCard(GAME_ID, { card_id: cardId, choice_id: choiceId }).then(() => {
+    showToast('Card resolved');
+    refresh();
+  }).catch(e => showError(e.message));
+}
+
+function doDecision(action, payload) {
+  API.decision(GAME_ID, { action, payload }).then(r => {
+    showToast('Decision applied');
+    refresh();
+  }).catch(e => showError(e.message));
+}
+
+function showSaveModal() {
+  document.getElementById('saveModal').classList.remove('hidden');
+  document.getElementById('saveName').value = `Year ${gameState?.current_year || 0}`;
+}
+function doSave() {
+  const name = document.getElementById('saveName').value || 'Quick Save';
+  API.saveGame(GAME_ID, { save_name: name }).then(() => {
+    closeModal('saveModal');
+    showToast('Game saved');
+  }).catch(e => showError(e.message));
+}
+
+function showLoadModal() {
+  document.getElementById('loadModal').classList.remove('hidden');
+  const el = document.getElementById('savesList');
+  el.innerHTML = '<p style="color:var(--muted)">Loading...</p>';
+  API.listSaves(GAME_ID).then(saves => {
+    if (saves.length === 0) { el.innerHTML = '<p style="color:var(--muted)">No saves found</p>'; return; }
+    el.innerHTML = saves.map(s => `
+      <div class="leaderboard-row" style="cursor:pointer" onclick="doLoad('${s.save_id}')">
+        <div>
+          <strong>${s.save_name}</strong>
+          <div style="color:var(--muted);font-size:0.8rem;font-family:var(--mono)">${new Date(s.saved_at).toLocaleString()}</div>
+        </div>
+        <span class="badge badge-green">Load</span>
+      </div>
+    `).join('');
+  }).catch(e => { el.innerHTML = `<p style="color:var(--red)">${e.message}</p>`; });
+}
+function doLoad(saveId) {
+  API.loadSave(GAME_ID, saveId).then(() => {
+    closeModal('loadModal');
+    showToast('Save loaded');
+    refresh();
+  }).catch(e => showError(e.message));
+}
+
+function confirmQuit() {
+  if (confirm('Return to the main menu?')) window.location.href = '/';
+}
+
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+function showError(msg) { showToast('Error: ' + msg); }
+
+function fmt(n) {
+  if (n == null) return '0';
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toFixed(1);
+}
+
+refresh();
+</script>
+</body>
+</html>

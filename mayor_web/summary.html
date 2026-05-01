@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Climate Mayor — Summary</title>
+<link rel="stylesheet" href="/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="page" id="app">
+  <div class="header">
+    <div>
+      <div class="header-title">&#127942; Game Summary</div>
+      <div style="color:var(--muted);font-size:0.85rem" id="subtitle">Loading...</div>
+    </div>
+    <div class="header-meta">
+      <span class="badge badge-green" id="scoreBadge">-</span>
+      <button class="btn" onclick="shareSummary()">Share</button>
+      <a href="/" class="btn">New Game</a>
+    </div>
+  </div>
+
+  <div class="grid-2" id="statCards">
+    <div class="card"><div class="stat-label">Total Years</div><div class="stat-value accent" id="totalYears">-</div></div>
+    <div class="card"><div class="stat-label">Final Cash</div><div class="stat-value" id="finalCash">-</div></div>
+    <div class="card"><div class="stat-label">Total Penalties</div><div class="stat-value red" id="totalPenalties">-</div></div>
+    <div class="card"><div class="stat-label">Allowances Banked</div><div class="stat-value green" id="bankedAllowances">-</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Emissions Trajectory</div>
+    <div class="chart-frame" style="height:300px;position:relative">
+      <canvas id="emissionsChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Final Standings</div>
+    <div id="standingsTable"><p style="color:var(--muted)">Loading...</p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Share Result</div>
+    <textarea id="shareText" class="input" style="min-height:100px;font-family:var(--mono);font-size:0.8rem" readonly></textarea>
+    <div class="flex gap-8 mt-8">
+      <button class="btn btn-primary" onclick="copyShare()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const GAME_ID = params.get('id');
+
+async function load() {
+  try {
+    const summary = await API.getSummary(GAME_ID);
+    const s = summary.snapshot || {};
+    const player = s.player_company || s.companies?.[0] || {};
+
+    document.getElementById('subtitle').textContent = `${summary.player_name} · ${summary.difficulty} · ${summary.completed_years}/${summary.total_years} years`;
+    document.getElementById('totalYears').textContent = `${summary.completed_years}/${summary.total_years}`;
+    document.getElementById('finalCash').textContent = `$${fmt(player.cash || 0)}`;
+    document.getElementById('totalPenalties').textContent = `$${fmt(player.cumulative_penalties || player.penalty_due || 0)}`;
+    document.getElementById('bankedAllowances').textContent = fmt(player.banked_allowances || 0);
+
+    const totalPen = player.cumulative_penalties || player.penalty_due || 0;
+    const score = totalPen <= 0 ? 'A' : totalPen < player.cash * 0.1 ? 'B' : 'C';
+    document.getElementById('scoreBadge').textContent = `Score: ${score}`;
+
+    const companies = s.leaderboard || s.companies || [];
+    if (companies.length > 0) {
+      let html = '<table><tr><th>#</th><th>Company</th><th>Emissions</th><th>Allowances</th><th>Cash</th><th>Penalties</th></tr>';
+      companies.slice().sort((a,b) => (a.cumulative_penalties||0) - (b.cumulative_penalties||0)).forEach((c,i) => {
+        const isPlayer = c.company_id === player.company_id;
+        html += `<tr style="${isPlayer ? 'background:rgba(0,245,255,0.05)' : ''}">
+          <td>${i+1}</td>
+          <td>${c.company_name || c.name} ${isPlayer ? '(You)' : ''}</td>
+          <td style="font-family:var(--mono)">${fmt(c.projected_emissions || c.emissions || 0)}</td>
+          <td style="font-family:var(--mono)">${fmt(c.allowances || 0)}</td>
+          <td style="font-family:var(--mono)">$${fmt(c.cash || 0)}</td>
+          <td style="font-family:var(--mono);color:${(c.cumulative_penalties||0) > 0 ? 'var(--red)' : 'var(--green)'}">$${fmt(c.cumulative_penalties || 0)}</td>
+        </tr>`;
+      });
+      html += '</table>';
+      document.getElementById('standingsTable').innerHTML = html;
+    }
+
+    const share = `Climate Mayor Result
+Player: ${summary.player_name}
+Difficulty: ${summary.difficulty}
+Years: ${summary.completed_years}/${summary.total_years}
+Final Cash: $${fmt(player.cash || 0)}
+Total Penalties: $${fmt(totalPen)}
+Score: ${score}`;
+    document.getElementById('shareText').value = share;
+
+    drawChart(s);
+  } catch (e) {
+    document.getElementById('subtitle').textContent = 'Error: ' + e.message;
+  }
+}
+
+function drawChart(snapshot) {
+  const canvas = document.getElementById('emissionsChart');
+  const ctx = canvas.getContext('2d');
+  const companies = snapshot.leaderboard || snapshot.companies || [];
+  const labels = companies.map(c => c.company_name || c.name || 'Company');
+  const emissions = companies.map(c => c.projected_emissions || c.emissions || 0);
+  const allowances = companies.map(c => c.allowances || 0);
+  const penalties = companies.map(c => c.cumulative_penalties || 0);
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Emissions', data: emissions, backgroundColor: 'rgba(255,68,68,0.6)', borderColor: '#ff4444', borderWidth: 1 },
+        { label: 'Allowances', data: allowances, backgroundColor: 'rgba(0,245,255,0.6)', borderColor: '#00f5ff', borderWidth: 1 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: false, resizeDelay: 150, normalized: true,
+      plugins: { legend: { labels: { color: '#e9f6ff' } } },
+      scales: {
+        x: { ticks: { color: '#8ea3ad' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { beginAtZero: true, ticks: { color: '#8ea3ad', callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+}
+
+function copyShare() {
+  const t = document.getElementById('shareText');
+  t.select(); navigator.clipboard.writeText(t.value);
+  alert('Copied!');
+}
+
+function shareSummary() { copyShare(); }
+
+function fmt(n) {
+  if (n == null) return '0';
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toFixed(1);
+}
+
+load();
+</script>
+</body>
+</html>
