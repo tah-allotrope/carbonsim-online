@@ -1,5 +1,7 @@
 # Temporary text files from PDF extraction
 *.txt
+!requirements.txt
+!CHANGELOG.txt
 .venv/
 **/__pycache__/
 *.pyc
@@ -20,3 +22,7 @@ pgdata/
 mayor_api/*.db
 mayor_api/*.db-wal
 mayor_api/*.db-shm
+
+# oTree runtime files
+platform/otree_*.log
+platform/otree_*.pid

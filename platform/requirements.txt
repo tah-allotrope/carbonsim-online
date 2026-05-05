@@ -1,0 +1,5 @@
+# Local workshop runtime dependencies
+otree>=5.0.0a21
+psycopg2>=2.8.4
+requests>=2.33.1
+ws4py>=0.6.0
