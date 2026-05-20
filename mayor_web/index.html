@@ -5,12 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Climate Mayor — New Game</title>
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/animations.css">
 </head>
-<body>
+<body class="game-bg-animated page-fade-in">
 <div class="page" id="app">
   <div class="header">
     <div class="header-title">&#127758; Climate Mayor</div>
-    <div class="header-meta"><span class="badge badge-blue">Single-Player</span></div>
+    <div class="header-meta" style="display:flex;align-items:center;gap:12px">
+      <span id="globalLifetimeHUD" style="font-family:var(--mono);color:var(--accent);font-size:0.85rem"></span>
+      <span class="badge badge-blue">Single-Player</span>
+      <button class="btn" id="muteBtn" onclick="toggleMute()" style="padding:6px 12px;font-size:0.85rem;border-radius:6px" title="Toggle Sound">🔊</button>
+    </div>
   </div>
 
   <div class="grid-2">
@@ -64,7 +69,18 @@
   </div>
 </div>
 <script src="/js/api.js"></script>
+<script src="/js/audio.js"></script>
+<script src="/js/progression.js"></script>
 <script>
+// Fade page out smoothly on transition
+function navigateTo(url) {
+  if (window.AudioManager) AudioManager.playSFX('click');
+  document.body.classList.add('page-exit');
+  setTimeout(() => {
+    window.location.href = url;
+  }, 250);
+}
+
 async function startGame() {
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'Creating...';
@@ -75,7 +91,7 @@ async function startGame() {
       difficulty: document.getElementById('difficulty').value,
       tutorial_mode: document.getElementById('tutorialMode').checked,
     });
-    window.location.href = `/game.html?id=${data.game_id}`;
+    navigateTo(`/game.html?id=${data.game_id}`);
   } catch (e) {
     alert('Error: ' + e.message);
     btn.disabled = false; btn.textContent = 'Start Game';
@@ -90,7 +106,7 @@ async function createCoop() {
       difficulty: document.getElementById('difficulty').value,
       player_count: 2,
     });
-    window.location.href = `/coop.html?id=${data.game_id}&participant=${data.participant_id}`;
+    navigateTo(`/coop.html?id=${data.game_id}&participant=${data.participant_id}`);
   } catch (e) {
     alert('Error: ' + e.message);
   }
@@ -106,7 +122,7 @@ async function joinCoop() {
     const data = await API.joinCoop(gameId, {
       player_name: document.getElementById('playerName').value || 'Guest',
     });
-    window.location.href = `/coop.html?id=${data.game_id}&participant=${data.participant_id}`;
+    navigateTo(`/coop.html?id=${data.game_id}&participant=${data.participant_id}`);
   } catch (e) {
     alert('Error: ' + e.message);
   }
@@ -122,7 +138,7 @@ async function loadGames() {
       return;
     }
     el.innerHTML = active.map(g => `
-      <div class="leaderboard-row" style="cursor:pointer" onclick="window.location.href='/game.html?id=${g.game_id}'">
+      <div class="leaderboard-row" style="cursor:pointer" onclick="navigateTo('/game.html?id=${g.game_id}')">
         <div>
           <strong>${g.player_name}</strong>
           <div style="color:var(--muted);font-size:0.8rem;font-family:var(--mono)">
@@ -136,7 +152,39 @@ async function loadGames() {
     el.innerHTML = `<p style="color:var(--red)">Error loading games: ${e.message}</p>`;
   }
 }
-loadGames();
+
+// Sync lifetime HUD display
+function updateLifetimeHUD() {
+  if (window.Progression) {
+    Progression.initLifetime();
+    const lifetimeXp = parseInt(localStorage.getItem('climate_mayor_lifetime_xp')) || 0;
+    const lvlInfo = Progression.getLevelInfo(lifetimeXp);
+    document.getElementById('globalLifetimeHUD').innerHTML = `<span class="level-badge">Lvl ${lvlInfo.level}</span> <span class="xp-text">${lvlInfo.currentXp} XP</span>`;
+  }
+}
+
+// Mute toggle helper
+function toggleMute() {
+  if (window.AudioManager) {
+    const isMuted = AudioManager.toggleMute();
+    document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.AudioManager) {
+    AudioManager.init();
+    const isMuted = AudioManager.getMuteState();
+    document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+    
+    // Play ambient loops on first user click anywhere
+    document.body.addEventListener('click', () => {
+      AudioManager.ensureCtx();
+    }, { once: true });
+  }
+  updateLifetimeHUD();
+  loadGames();
+});
 </script>
 </body>
 </html>

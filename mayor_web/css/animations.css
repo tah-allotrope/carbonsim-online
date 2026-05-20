@@ -1,0 +1,346 @@
+/* Visual Juice Animations for Climate Mayor */
+
+/* Card reveal: fade in and scale up from center with a nice bounce */
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-card-reveal {
+  animation: cardReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Card dismiss: slide to the right and fade out */
+@keyframes cardDismiss {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(60px) scale(0.95);
+    filter: blur(2px);
+  }
+}
+
+.animate-card-dismiss {
+  animation: cardDismiss 0.35s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
+}
+
+/* Year Transition Full Screen Overlay */
+@keyframes yearWipeIn {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  50% {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  50.1% {
+    transform: scaleX(1);
+    transform-origin: right;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right;
+  }
+}
+
+@keyframes yearTitleGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.6), 0 0 30px rgba(0, 245, 255, 0.4);
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  25%, 75% {
+    text-shadow: 0 0 25px rgba(0, 245, 255, 0.9), 0 0 50px rgba(57, 255, 20, 0.6);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.year-wipe-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-soft);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.year-wipe-overlay.active {
+  animation: yearOverlayFade 2s ease-in-out forwards;
+  pointer-events: auto;
+}
+
+@keyframes yearOverlayFade {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.year-wipe-title {
+  font-size: clamp(3rem, 10vw, 6rem);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  animation: yearTitleGlow 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.year-wipe-subtitle {
+  font-size: 1.2rem;
+  color: var(--accent);
+  margin-top: 16px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  opacity: 0;
+  animation: fadeIn 1.2s ease forwards 0.3s;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* Glow pulse animations */
+@keyframes pulseCyan {
+  0% { box-shadow: 0 0 5px rgba(0, 245, 255, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(0, 245, 255, 0.8), 0 0 8px rgba(0, 245, 255, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(0, 245, 255, 0.4); }
+}
+
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 5px rgba(57, 255, 20, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(57, 255, 20, 0.9), 0 0 10px rgba(57, 255, 20, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(57, 255, 20, 0.4); }
+}
+
+@keyframes pulseRed {
+  0% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(255, 68, 68, 0.9), 0 0 10px rgba(255, 68, 68, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(255, 68, 68, 0.4); }
+}
+
+.pulse-glow-cyan {
+  animation: pulseCyan 1.2s ease-in-out;
+}
+
+.pulse-glow-green {
+  animation: pulseGreen 1.2s ease-in-out;
+}
+
+.pulse-glow-red {
+  animation: pulseRed 1.2s ease-in-out;
+}
+
+/* Counter Tick Animation */
+@keyframes statBump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.stat-value-bump {
+  animation: statBump 0.25s ease-out;
+}
+
+/* Screen Flash overlay */
+.screen-flash-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+
+/* Enhanced Toasts */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast-enhanced {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 420px;
+  background: rgba(13, 13, 13, 0.95);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  color: var(--text);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.3s ease;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%) translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast-enhanced.toast-slide-out {
+  transform: translateX(120%);
+  opacity: 0;
+}
+
+.toast-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.toast-icon {
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.toast-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--mono);
+}
+
+.toast-message {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent);
+  width: 100%;
+  transform-origin: left;
+}
+
+/* Toast Categories styles */
+.toast-success {
+  border-color: rgba(57, 255, 20, 0.4);
+}
+.toast-success .toast-title { color: var(--green); }
+.toast-success .toast-progress { background: var(--green); }
+
+.toast-error {
+  border-color: rgba(255, 68, 68, 0.4);
+}
+.toast-error .toast-title { color: var(--red); }
+.toast-error .toast-progress { background: var(--red); }
+
+.toast-warning {
+  border-color: rgba(255, 170, 0, 0.4);
+}
+.toast-warning .toast-title { color: var(--orange); }
+.toast-warning .toast-progress { background: var(--orange); }
+
+.toast-info {
+  border-color: rgba(0, 245, 255, 0.4);
+}
+.toast-info .toast-title { color: var(--accent); }
+.toast-info .toast-progress { background: var(--accent); }
+
+/* Particle explosion styles */
+.visual-particle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+}
+
+/* CSS Page transitions */
+.page-fade-in {
+  animation: pageFadeInAnimation 0.4s ease forwards;
+}
+.page-exit {
+  animation: pageFadeOutAnimation 0.3s ease forwards !important;
+}
+@keyframes pageFadeInAnimation {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pageFadeOutAnimation {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+/* Dynamic background */
+body.game-bg-animated::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: linear-gradient(135deg, #050505, #0a0e14, #040908, #050505);
+  background-size: 400% 400%;
+  animation: ambientBgGrad 24s ease infinite;
+}
+@keyframes ambientBgGrad {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+body.game-bg-animated::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(rgba(0, 245, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.game-bg-animated::before,
+  body.game-bg-animated::after,
+  .animate-card-reveal,
+  .year-wipe-overlay.active,
+  .year-wipe-title,
+  .toast-enhanced {
+    animation: none !important;
+    transition: none !important;
+  }
+}

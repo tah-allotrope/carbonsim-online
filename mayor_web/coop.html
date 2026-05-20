@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Climate Mayor — Co-op</title>
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/animations.css">
 </head>
-<body>
+<body class="game-bg-animated page-fade-in">
 <div class="page">
   <div class="header">
     <div>
@@ -15,9 +16,10 @@
     </div>
     <div class="header-meta">
       <span class="badge badge-blue" id="coopPhase">Loading</span>
+      <button class="btn" id="muteBtn" onclick="toggleMute()" title="Mute Sound">🔊</button>
       <button class="btn" onclick="refreshCoop()">Refresh</button>
       <button class="btn" onclick="showSummary()">Summary</button>
-      <a href="/" class="btn">Main Menu</a>
+      <button onclick="navigateTo('/')" class="btn">Main Menu</button>
     </div>
   </div>
 
@@ -25,12 +27,24 @@
 </div>
 
 <script src="/js/api.js"></script>
+<script src="/js/effects.js"></script>
+<script src="/js/audio.js"></script>
+<script src="/js/shortcuts.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
 const PARTICIPANT_ID = params.get('participant');
 let coopState = null;
 let ws = null;
+
+// Fade page out smoothly on transition
+function navigateTo(url) {
+  if (window.AudioManager) AudioManager.playSFX('click');
+  document.body.classList.add('page-exit');
+  setTimeout(() => {
+    window.location.href = url;
+  }, 250);
+}
 
 async function refreshCoop() {
   coopState = await API.getCoopState(GAME_ID, PARTICIPANT_ID);
@@ -61,13 +75,22 @@ function renderCoop() {
   const readyCheck = s.ready_check?.participants || {};
   const menu = player.abatement_menu || [];
 
+  const cash = player.cash || 0;
+  const gap = player.compliance_gap || 0;
+
+  const oldCash = window.coopLastCash != null ? window.coopLastCash : cash;
+  const oldGap = window.coopLastGap != null ? window.coopLastGap : gap;
+
+  window.coopLastCash = cash;
+  window.coopLastGap = gap;
+
   let html = '';
   html += `<div class="grid-2">
     <div class="card">
       <div class="card-title">Your Company</div>
       <div class="stat"><div class="stat-label">Company</div><div class="stat-value">${player.company_name || '-'}</div></div>
-      <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent">$${fmt(player.cash || 0)}</div></div>
-      <div class="stat"><div class="stat-label">Compliance Gap</div><div class="stat-value ${(player.compliance_gap || 0) > 0 ? 'red' : 'green'}">${fmt(player.compliance_gap || 0)}</div></div>
+      <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent" id="coop-cash">$${fmt(cash)}</div></div>
+      <div class="stat"><div class="stat-label">Compliance Gap</div><div class="stat-value ${(player.compliance_gap || 0) > 0 ? 'red' : 'green'}" id="coop-gap">${fmt(gap)}</div></div>
     </div>
     <div class="card">
       <div class="card-title">Ready Check</div>
@@ -99,9 +122,16 @@ function renderCoop() {
   </div>`;
 
   document.getElementById('coopContent').innerHTML = html;
+
+  // Animate numeric statistics smoothly
+  if (window.Effects) {
+    Effects.animateCounter(document.getElementById('coop-cash'), oldCash, cash, 850, true);
+    Effects.animateCounter(document.getElementById('coop-gap'), oldGap, gap, 850, false);
+  }
 }
 
 function activateMeasure(measureId) {
+  if (window.AudioManager) AudioManager.playSFX('activate');
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'activate_abatement',
     payload: { measure_id: measureId },
@@ -109,6 +139,7 @@ function activateMeasure(measureId) {
 }
 
 function setReady(ready) {
+  if (window.AudioManager) AudioManager.playSFX('click');
   API.coopReady(GAME_ID, { participant_id: PARTICIPANT_ID, ready }).then(() => {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'refresh' }));
     refreshCoop();
@@ -116,6 +147,7 @@ function setReady(ready) {
 }
 
 function showSummary() {
+  if (window.AudioManager) AudioManager.playSFX('success');
   API.getCoopSummary(GAME_ID).then(data => {
     const mvp = data.mvp ? `${data.mvp.player_name} (${data.mvp.company_name})` : 'None';
     alert(`Co-op Summary\nParticipants: ${data.participants.length}\nMVP: ${mvp}`);
@@ -128,6 +160,29 @@ function fmt(n) {
   if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1) + 'K';
   return Number(n).toFixed(1);
 }
+
+// Persisted audio mute toggle
+function toggleMute() {
+  if (window.AudioManager) {
+    const isMuted = AudioManager.toggleMute();
+    const btn = document.getElementById('muteBtn');
+    if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.AudioManager) {
+    AudioManager.init();
+    const isMuted = AudioManager.getMuteState();
+    const btn = document.getElementById('muteBtn');
+    if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
+    
+    document.body.addEventListener('click', () => {
+      AudioManager.ensureCtx();
+      AudioManager.startAmbient();
+    }, { once: true });
+  }
+});
 
 refreshCoop().then(connectWs).catch(e => {
   document.getElementById('coopContent').innerHTML = `<div class="card"><p style="color:var(--red)">Error: ${e.message}</p></div>`;

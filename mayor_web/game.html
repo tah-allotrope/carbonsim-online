@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Climate Mayor — Game</title>
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/animations.css">
 </head>
-<body>
+<body class="game-bg-animated page-fade-in">
+<div class="loading-screen-tip" id="loadingScreen">
+  <div class="loading-logo">&#127758; CLIMATE MAYOR</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-tip-title">Pro Tip</div>
+  <div class="loading-tip-content" id="loadingTip">Analyzing carbon market dynamics...</div>
+</div>
 <div class="page" id="app">
   <div class="header" id="gameHeader">
     <div>
@@ -16,6 +23,7 @@
     <div class="header-meta">
       <span class="badge badge-blue" id="phaseBadge">Loading</span>
       <span class="badge" id="yearBadge">Year 0/0</span>
+      <button class="btn" id="muteBtn" onclick="toggleMute()" title="Mute Sound">🔊</button>
       <button class="btn" onclick="showSaveModal()">Save</button>
       <button class="btn" onclick="showLoadModal()">Load</button>
       <button class="btn btn-danger" onclick="confirmQuit()">Quit</button>
@@ -23,6 +31,22 @@
   </div>
 
   <div class="progress-bar"><div class="progress-fill" id="yearProgress" style="width:0%"></div></div>
+
+  <!-- XP HUD Bar -->
+  <div class="xp-hud-container" id="xpHud" style="display:flex;margin-bottom:16px;border-radius:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="level-badge" id="xpLevelBadge">Lvl 1</span>
+      <span id="xpLevelLabel" style="color:var(--accent);font-weight:700">Mayor</span>
+    </div>
+    <div class="xp-bar-outer">
+      <div class="xp-bar-inner" id="xpBarFill" style="width:0%"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <span class="xp-text" id="xpText">0 / 100 XP</span>
+      <span class="streak-badge" id="streakBadge" style="display:none">🔥 0 Streak</span>
+      <span id="globalXpBadge" style="color:var(--muted);font-size:0.75rem;border-left:1px solid rgba(255,255,255,0.15);padding-left:12px">Global: Lvl 1 (0 XP)</span>
+    </div>
+  </div>
 
   <div id="mainContent">
     <div class="text-center" style="padding:40px;color:var(--muted)">Loading game...</div>
@@ -59,15 +83,57 @@
 </div>
 
 <script src="/js/api.js"></script>
+<script src="/js/effects.js"></script>
+<script src="/js/audio.js"></script>
+<script src="/js/progression.js"></script>
+<script src="/js/shortcuts.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
 let gameState = null;
 
+const GAMEPLAY_TIPS = [
+  "Abatement measures reduce emissions permanently every year. Prioritize them early!",
+  "Offsets are cheap but limited by the offset cap. Use them to cover small gap shortfalls.",
+  "Keep a healthy cash reserve. Non-compliance penalties are extremely high and can drain your budget.",
+  "Banking unused allowances lets you save them for future years when the cap gets tighter.",
+  "Watch out for shock events between years. They can drastically change market prices and emissions.",
+  "Hotkeys can speed up your decisions. Try pressing SPACE to advance the year or 1-9 to select abatements!"
+];
+
+// Show random gameplay tip on loading screen
+const tipEl = document.getElementById('loadingTip');
+if (tipEl) {
+  const randomTip = GAMEPLAY_TIPS[Math.floor(Math.random() * GAMEPLAY_TIPS.length)];
+  tipEl.textContent = randomTip;
+}
+
+// Fade out loading screen after 1.2 seconds
+setTimeout(() => {
+  const screen = document.getElementById('loadingScreen');
+  if (screen) {
+    screen.style.opacity = '0';
+    setTimeout(() => screen.remove(), 400);
+  }
+}, 1200);
+
+// Fade page out smoothly on transition
+function navigateTo(url) {
+  if (window.AudioManager) AudioManager.playSFX('click');
+  document.body.classList.add('page-exit');
+  setTimeout(() => {
+    window.location.href = url;
+  }, 250);
+}
+
 async function refresh() {
   try {
     gameState = await API.getGame(GAME_ID);
     render();
+    if (gameState && window.Progression) {
+      syncProgressionState();
+      checkAchievements(gameState);
+    }
     prefetchSummary();
   } catch (e) { showError(e.message); }
 }
@@ -101,14 +167,15 @@ function renderContent() {
   const el = document.getElementById('mainContent');
 
   if (phase === 'complete' || gameState.status === 'completed') {
+    if (window.AudioManager) AudioManager.playSFX('success');
     el.innerHTML = `
-      <div class="card text-center" style="padding:40px">
-        <div style="font-size:3rem;margin-bottom:16px">&#127942;</div>
-        <h2 style="margin-bottom:8px">Game Complete!</h2>
-        <p style="color:var(--muted);margin-bottom:20px">You completed ${y} of ${total} years.</p>
+      <div class="card text-center" style="padding:40px;border-color:#b026ff;box-shadow: 0 0 30px rgba(176, 38, 255, 0.2)">
+        <div style="font-size:3.5rem;margin-bottom:16px;animation: achPulseIcon 1.5s infinite ease-in-out">🏆</div>
+        <h2 style="margin-bottom:8px;font-family:var(--mono);color:#fff">Game Completed Successfully!</h2>
+        <p style="color:var(--muted);margin-bottom:20px">Congratulations! You successfully governed ${y} of ${total} years.</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-          <a href="/summary.html?id=${GAME_ID}" class="btn btn-primary">View Summary</a>
-          <a href="/" class="btn">New Game</a>
+          <button onclick="navigateTo('/summary.html?id=${GAME_ID}')" class="btn btn-primary">View Final Grade Summary</button>
+          <button onclick="navigateTo('/')" class="btn">Return to Menu</button>
         </div>
       </div>`;
     return;
@@ -133,7 +200,41 @@ function renderContent() {
     2: 'Activate one cheap immediate abatement measure before advancing.',
     3: 'Use offsets to cover only the smaller remaining gap.'
   };
+
+  const oldCash = window.lastCash != null ? window.lastCash : cash;
+  const oldAllowances = window.lastAllowances != null ? window.lastAllowances : allowances;
+  const oldProjected = window.lastProjected != null ? window.lastProjected : projected;
+  const oldGap = window.lastGap != null ? window.lastGap : gap;
+
+  window.lastCash = cash;
+  window.lastAllowances = allowances;
+  window.lastProjected = projected;
+  window.lastGap = gap;
   const tutorialNote = isTutorial ? (tutorialNotes[y] || 'Tutorial complete. You can continue with the full loop.') : '';
+
+  // Get compliance historical year results to build timeline minimap
+  const history = player.year_results || [];
+  let timelineHtml = '<div class="timeline-minimap">';
+  for (let yr = 1; yr <= total; yr++) {
+    let segClass = 'future';
+    let labelText = `Year ${yr}: Future`;
+    if (yr < y) {
+      const yrRes = history[yr - 1];
+      if (yrRes) {
+        const isComp = (yrRes.shortfall || 0) <= 0;
+        segClass = isComp ? 'compliant' : 'shortfall';
+        labelText = `Year ${yr}: ${isComp ? 'Compliant' : 'Shortfall (+$' + fmt(yrRes.shortfall) + ')'}`;
+      } else {
+        segClass = 'compliant';
+        labelText = `Year ${yr}: Compliant`;
+      }
+    } else if (yr === y) {
+      segClass = 'current';
+      labelText = `Year ${yr}: Active Year`;
+    }
+    timelineHtml += `<div class="timeline-segment ${segClass}"><div class="tooltip">${labelText}</div></div>`;
+  }
+  timelineHtml += '</div>';
 
   let html = '';
 
@@ -151,16 +252,32 @@ function renderContent() {
   }
 
   html += `<div class="grid-2 mb-16">
-    <div class="card">
+    <div class="card" id="complianceCard">
       <div class="card-title">Compliance Position</div>
-      <div class="grid-3">
-        <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent">$${fmt(cash)}</div></div>
-        <div class="stat"><div class="stat-label">Allowances</div><div class="stat-value">${fmt(allowances)}</div></div>
-        <div class="stat"><div class="stat-label">Projected Emissions</div><div class="stat-value ${projected > allowances ? 'red' : 'green'}">${fmt(projected)}</div></div>
+      
+      <!-- Timeline minimap timeline -->
+      ${timelineHtml}
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
+        <div class="grid-3" style="flex:1;margin-bottom:0">
+          <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent" id="stat-cash">$${fmt(cash)}</div></div>
+          <div class="stat"><div class="stat-label">Allowances</div><div class="stat-value" id="stat-allowances">${fmt(allowances)}</div></div>
+          <div class="stat"><div class="stat-label">Projected Emissions</div><div class="stat-value ${projected > allowances ? 'red' : 'green'}" id="stat-emissions">${fmt(projected)}</div></div>
+        </div>
+
+        <!-- Radial gauge dial -->
+        <div class="compliance-progress-gauge" title="Percentage of emissions covered by allowances">
+          <svg viewBox="0 0 80 80">
+            <circle class="bg-circle" cx="40" cy="40" r="31.83"></circle>
+            <circle class="fill-circle" id="radialCircle" cx="40" cy="40" r="31.83"></circle>
+          </svg>
+          <div class="text-value" id="radialValue">100%</div>
+        </div>
       </div>
-      <div class="compliance-meter">
+
+      <div class="compliance-meter" id="complianceMeter">
         <span>Compliance Gap</span>
-        <span class="gap-indicator ${gap > 0 ? 'red' : 'green'}">${gap > 0 ? '+'+fmt(gap) : fmt(gap)}</span>
+        <span class="gap-indicator ${gap > 0 ? 'red' : 'green'}" id="stat-gap">${gap > 0 ? '+'+fmt(gap) : fmt(gap)}</span>
         <span class="badge ${gap <= 0 ? 'badge-green' : 'badge-red'}">${gap <= 0 ? 'Compliant' : 'Shortfall'}</span>
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.85rem;color:var(--muted)">
@@ -174,7 +291,7 @@ function renderContent() {
         <button class="btn btn-primary" onclick="doAdvanceYear()" id="advanceBtn">Advance Year</button>
         <button class="btn" onclick="doFastForward()">Fast-Forward 1 Year</button>
         <button class="btn" onclick="doSave()">Save Game</button>
-        <a href="/summary.html?id=${GAME_ID}" class="btn text-center">Session Summary</a>
+        <button onclick="navigateTo('/summary.html?id=${GAME_ID}')" class="btn text-center">Session Summary</button>
       </div>
     </div>
   </div>`;
@@ -185,18 +302,18 @@ function renderContent() {
       const cat = card.category || 'event';
       const catClass = { crisis:'cat-crisis', opportunity:'cat-opportunity', policy:'cat-policy', market:'cat-market' }[cat] || '';
       const catLabels = { crisis:'&#9888; Crisis', opportunity:'&#127919; Opportunity', policy:'&#9878; Policy', market:'&#128176; Market' };
-      html += `<div class="event-card">
+      html += `<div class="event-card animate-card-reveal">
         <div class="category ${catClass}">${catLabels[cat] || cat}</div>
         <h3>${card.title}</h3>
         <p>${card.description}</p>`;
       if (card.choices && card.choices.length > 0) {
         html += `<div class="choices">`;
         for (const ch of card.choices) {
-          html += `<button class="btn" onclick="doResolveCard('${card.card_id}','${ch.id}')">${ch.label}</button>`;
+          html += `<button class="btn" onclick="resolveCardWithAnim(this,'${card.card_id}','${ch.id}')">${ch.label}</button>`;
         }
         html += `</div>`;
       } else {
-        html += `<button class="btn btn-primary" onclick="doResolveCard('${card.card_id}',null)">Resolve</button>`;
+        html += `<button class="btn btn-primary" onclick="resolveCardWithAnim(this,'${card.card_id}',null)">Resolve</button>`;
       }
       html += `</div>`;
     }
@@ -216,8 +333,8 @@ function renderContent() {
           <td style="font-family:var(--mono)">-${m.abatement_amount} t</td>
           <td style="font-family:var(--mono)">$${fmt(m.cost)}</td>
           <td>${m.activation_timing}</td>
-          <td>${status ? `<span class="badge ${status}"></span>` : `<button class="btn" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'})" style="padding:6px 12px;font-size:0.8rem">Activate</button>`}</td>
-        </tr>`;
+          <td>${status ? `<span class="badge ${status}"></span>` : `<button class="btn" id="abBtn-${m.measure_id}" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'}, event)" style="padding:6px 12px;font-size:0.8rem">Activate</button>`}</td>
+        </tr>`;`;
       }
       html += `</table></div>`;
     }
@@ -258,56 +375,138 @@ function renderContent() {
   }
 
   el.innerHTML = html;
+
+  // Animate numeric text values smoothly
+  Effects.animateCounter(document.getElementById('stat-cash'), oldCash, cash, 850, true);
+  Effects.animateCounter(document.getElementById('stat-allowances'), oldAllowances, allowances, 850, false);
+  Effects.animateCounter(document.getElementById('stat-emissions'), oldProjected, projected, 850, false);
+  Effects.animateCounter(document.getElementById('stat-gap'), oldGap, gap, 850, false);
+
+  // Sync Compliance Progress radial SVG circle
+  const coveragePercent = projected > 0 ? Math.min(100, (allowances / projected) * 100) : 100;
+  const dashoffset = 200 - (coveragePercent / 100) * 200;
+  const radialCircle = document.getElementById('radialCircle');
+  if (radialCircle) {
+    radialCircle.style.strokeDashoffset = dashoffset;
+    radialCircle.style.stroke = coveragePercent >= 100 ? 'var(--green)' : 'var(--accent)';
+  }
+  const radialVal = document.getElementById('radialValue');
+  if (radialVal) radialVal.textContent = `${Math.round(coveragePercent)}%`;
+
+  // Compliance meter state changes: pulse glow and sound feedback
+  const compMeter = document.getElementById('complianceMeter');
+  if (compMeter && oldGap !== gap) {
+    if (gap <= 0 && oldGap > 0) {
+      Effects.glowPulse(compMeter, 'green');
+      if (window.AudioManager) AudioManager.playSFX('success');
+      showToast('Compliance Achieved!', 'success');
+    } else if (gap > 0 && oldGap <= 0) {
+      Effects.glowPulse(compMeter, 'red');
+      if (window.AudioManager) AudioManager.playSFX('penalty');
+      showToast('Compliance Shortfall Detected!', 'warning');
+    } else {
+      Effects.glowPulse(compMeter, 'cyan');
+    }
+  }
 }
 
 function doAdvanceYear() {
-  document.getElementById('advanceBtn').disabled = true;
-  document.getElementById('advanceBtn').textContent = 'Advancing...';
-  API.advanceYear(GAME_ID).then(data => {
-    gameState = data;
-    showToast('Year advanced');
-    refresh();
-  }).catch(e => {
-    showError(e.message);
-    document.getElementById('advanceBtn').disabled = false;
-    document.getElementById('advanceBtn').textContent = 'Advance Year';
-  });
+  const advBtn = document.getElementById('advanceBtn');
+  if (advBtn) {
+    advBtn.disabled = true;
+    advBtn.textContent = 'Advancing...';
+  }
+
+  if (window.AudioManager) AudioManager.playSFX('year-advance');
+
+  // Trigger year advanced wipe overlay
+  const wipe = document.createElement('div');
+  wipe.className = 'year-wipe-overlay active';
+  const currentY = gameState ? (gameState.current_year || 0) : 0;
+  wipe.innerHTML = `
+    <div class="year-wipe-title">Year ${currentY + 1}</div>
+    <div class="year-wipe-subtitle">Governance Transition</div>
+  `;
+  document.body.appendChild(wipe);
+
+  setTimeout(() => {
+    API.advanceYear(GAME_ID).then(data => {
+      gameState = data;
+      showToast('Year advanced successfully', 'success');
+      refresh();
+      setTimeout(() => wipe.remove(), 600);
+    }).catch(e => {
+      showError(e.message);
+      wipe.remove();
+      if (advBtn) {
+        advBtn.disabled = false;
+        advBtn.textContent = 'Advance Year';
+      }
+    });
+  }, 1400); // 1.4 seconds matching the wipe overlay sweep
 }
 
 function doFastForward() {
+  if (window.AudioManager) AudioManager.playSFX('click');
   API.fastForward(GAME_ID, { years: 1 }).then(() => {
-    showToast('Fast-forward complete');
+    showToast('Fast-forward complete', 'success');
     refresh();
   }).catch(e => showError(e.message));
 }
 
 function doResolveCard(cardId, choiceId) {
   API.resolveCard(GAME_ID, { card_id: cardId, choice_id: choiceId }).then(() => {
-    showToast('Card resolved');
+    showToast('Event card resolved', 'success');
     refresh();
   }).catch(e => showError(e.message));
 }
 
-function doDecision(action, payload) {
+function resolveCardWithAnim(btn, cardId, choiceId) {
+  const cardEl = btn.closest('.event-card');
+  if (window.AudioManager) AudioManager.playSFX('card-resolve');
+  if (cardEl) {
+    cardEl.classList.add('animate-card-dismiss');
+    setTimeout(() => {
+      doResolveCard(cardId, choiceId);
+    }, 320);
+  } else {
+    doResolveCard(cardId, choiceId);
+  }
+}
+
+function doDecision(action, payload, event) {
+  if (event) {
+    const rect = event.target.getBoundingClientRect();
+    const x = rect.left + rect.width / 2 + window.scrollX;
+    const y = rect.top + rect.height / 2 + window.scrollY;
+    if (window.Effects) {
+      Effects.particleBurst(x, y, 'var(--green)', 16);
+      Effects.screenFlash('rgba(57, 255, 20, 0.12)', 300);
+    }
+  }
+  if (window.AudioManager) AudioManager.playSFX('activate');
   API.decision(GAME_ID, { action, payload }).then(r => {
-    showToast('Decision applied');
+    showToast('Decision applied', 'success');
     refresh();
   }).catch(e => showError(e.message));
 }
 
 function showSaveModal() {
+  if (window.AudioManager) AudioManager.playSFX('click');
   document.getElementById('saveModal').classList.remove('hidden');
   document.getElementById('saveName').value = `Year ${gameState?.current_year || 0}`;
 }
 function doSave() {
   const name = document.getElementById('saveName').value || 'Quick Save';
+  if (window.AudioManager) AudioManager.playSFX('save');
   API.saveGame(GAME_ID, { save_name: name }).then(() => {
     closeModal('saveModal');
-    showToast('Game saved');
+    showToast('Game saved successfully', 'success');
   }).catch(e => showError(e.message));
 }
 
 function showLoadModal() {
+  if (window.AudioManager) AudioManager.playSFX('click');
   document.getElementById('loadModal').classList.remove('hidden');
   const el = document.getElementById('savesList');
   el.innerHTML = '<p style="color:var(--muted)">Loading...</p>';
@@ -325,26 +524,160 @@ function showLoadModal() {
   }).catch(e => { el.innerHTML = `<p style="color:var(--red)">${e.message}</p>`; });
 }
 function doLoad(saveId) {
+  if (window.AudioManager) AudioManager.playSFX('save');
   API.loadSave(GAME_ID, saveId).then(() => {
     closeModal('loadModal');
-    showToast('Save loaded');
+    showToast('Game loaded successfully', 'success');
     refresh();
   }).catch(e => showError(e.message));
 }
 
 function confirmQuit() {
-  if (confirm('Return to the main menu?')) window.location.href = '/';
+  if (window.AudioManager) AudioManager.playSFX('error');
+  if (confirm('Return to the main menu? All unsaved progress will be lost.')) navigateTo('/');
 }
 
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function closeModal(id) {
+  if (window.AudioManager) AudioManager.playSFX('click');
+  document.getElementById(id).classList.add('hidden');
+}
 
-function showToast(msg) {
+// Enhanced categorized cyber-toasts
+function showToast(msg, type = 'info') {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
   const t = document.createElement('div');
-  t.className = 'toast'; t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+  t.className = `toast-enhanced toast-${type}`;
+
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  const titles = { success: 'Success', error: 'System Error', warning: 'Warning', info: 'Notification' };
+
+  t.innerHTML = `
+    <div class="toast-header-row">
+      <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+      <span class="toast-title">${titles[type] || 'Notification'}</span>
+    </div>
+    <div class="toast-message">${msg}</div>
+    <div class="toast-progress"></div>
+  `;
+
+  container.appendChild(t);
+
+  // Play soft cue sound on notification
+  if (window.AudioManager) {
+    if (type === 'error' || type === 'warning') {
+      AudioManager.playSFX('error');
+    } else if (type === 'success') {
+      // Soft chime or click handled by triggers
+    } else {
+      AudioManager.playSFX('click');
+    }
+  }
+
+  // Animate the progress bar fade
+  const progress = t.querySelector('.toast-progress');
+  progress.style.transition = 'transform 3s linear';
+  progress.style.transform = 'scaleX(1)';
+  void progress.offsetWidth; // reflow
+  progress.style.transform = 'scaleX(0)';
+
+  setTimeout(() => {
+    t.classList.add('toast-slide-out');
+    setTimeout(() => t.remove(), 400);
+  }, 3000);
 }
-function showError(msg) { showToast('Error: ' + msg); }
+
+function showError(msg) { showToast(msg, 'error'); }
+
+// Progression integration helpers
+function syncProgressionState() {
+  const info = Progression.syncProgress(GAME_ID, gameState);
+  document.getElementById('xpLevelBadge').textContent = `Lvl ${info.levelInfo.level}`;
+  
+  // Dynamic descriptive level label
+  const titles = ['Novice Mayor', 'Active Mayor', 'Senior Mayor', 'Chief Carbon Marshall', 'Environmental Hero', 'Global Transition Lead', 'Climate Strategist', 'Kyoto Master', 'Net-Zero Champion', 'Savior of the Commons'];
+  document.getElementById('xpLevelLabel').textContent = titles[Math.min(titles.length - 1, info.levelInfo.level - 1)];
+  document.getElementById('xpBarFill').style.width = `${info.levelInfo.percent}%`;
+  document.getElementById('xpText').textContent = `${info.levelInfo.xpInLevel} / ${info.levelInfo.levelRange} XP`;
+  
+  const streak = Progression.getStreakInfo(gameState);
+  const streakBadge = document.getElementById('streakBadge');
+  if (streak.currentStreak > 0) {
+    streakBadge.style.display = 'inline-flex';
+    streakBadge.innerHTML = `🔥 ${streak.currentStreak} Year Streak`;
+  } else {
+    streakBadge.style.display = 'none';
+  }
+  
+  document.getElementById('globalXpBadge').innerHTML = `Global: <span class="level-badge" style="padding:1px 4px;font-size:0.7rem">Lvl ${info.lifetimeLevelInfo.level}</span> <span style="color:var(--accent);font-weight:700">${info.lifetimeXp} XP</span>`;
+}
+
+function checkAchievements(g) {
+  const achs = g.achievements || [];
+  if (!window.unlockedAchievements) {
+    window.unlockedAchievements = achs.map(a => a.title);
+    return;
+  }
+  achs.forEach(a => {
+    if (!window.unlockedAchievements.includes(a.title)) {
+      window.unlockedAchievements.push(a.title);
+      triggerAchievementCelebration(a);
+    }
+  });
+}
+
+function triggerAchievementCelebration(ach) {
+  if (window.AudioManager) AudioManager.playSFX('success');
+  const overlay = document.createElement('div');
+  overlay.className = 'achievement-popup-overlay';
+  overlay.innerHTML = `
+    <div class="ach-pop-icon">🏆</div>
+    <div class="ach-pop-title">Achievement Unlocked!</div>
+    <div style="color:var(--accent);font-family:var(--mono);font-size:1.15rem;font-weight:700;margin-bottom:8px">${ach.title}</div>
+    <div class="ach-pop-desc">${ach.description}</div>
+    <div class="ach-pop-xp">+100 XP</div>
+    <button class="btn btn-primary" style="margin-top:20px;padding:8px 24px" onclick="dismissAchievement(this)">Awesome!</button>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function dismissAchievement(btn) {
+  if (window.AudioManager) AudioManager.playSFX('click');
+  const overlay = btn.closest('.achievement-popup-overlay');
+  if (overlay) {
+    overlay.classList.add('ach-exit');
+    setTimeout(() => overlay.remove(), 400);
+  }
+}
+
+// Persisted audio mute toggle
+function toggleMute() {
+  if (window.AudioManager) {
+    const isMuted = AudioManager.toggleMute();
+    const btn = document.getElementById('muteBtn');
+    if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.AudioManager) {
+    AudioManager.init();
+    const isMuted = AudioManager.getMuteState();
+    const btn = document.getElementById('muteBtn');
+    if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
+    
+    document.body.addEventListener('click', () => {
+      AudioManager.ensureCtx();
+      AudioManager.startAmbient();
+    }, { once: true });
+  }
+});
 
 function fmt(n) {
   if (n == null) return '0';
