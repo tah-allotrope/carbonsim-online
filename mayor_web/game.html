@@ -334,7 +334,7 @@ function renderContent() {
           <td style="font-family:var(--mono)">$${fmt(m.cost)}</td>
           <td>${m.activation_timing}</td>
           <td>${status ? `<span class="badge ${status}"></span>` : `<button class="btn" id="abBtn-${m.measure_id}" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'}, event)" style="padding:6px 12px;font-size:0.8rem">Activate</button>`}</td>
-        </tr>`;`;
+        </tr>`;
       }
       html += `</table></div>`;
     }
