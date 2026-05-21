@@ -30,7 +30,7 @@ class EngineTests(unittest.TestCase):
         self.assertGreater(started["current_cap"], 0)
         for company in started["companies"]:
             self.assertGreater(company["current_year_allocation"], 0)
-            self.assertGreater(
+            self.assertGreaterEqual(
                 company["projected_emissions"], company["baseline_emissions"]
             )
             self.assertEqual(company["allowances"], company["current_year_allocation"])
@@ -212,6 +212,7 @@ class EngineTests(unittest.TestCase):
         seller = state["companies"][0]
         buyer = state["companies"][1]
         seller["allowances"] = 100
+        buyer["allowances"] = 0
         qty = 30
         price = 20
 

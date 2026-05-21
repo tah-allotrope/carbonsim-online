@@ -804,6 +804,8 @@ def build_player_snapshot(
         "auction_board": auction_board,
         "trade_feed": trade_feed,
         "company": None if company is None else _company_snapshot(state, company),
+        "player_company": None if company is None else _company_snapshot(state, company),
+        "companies": [] if company is None else [_company_snapshot(state, company)],
         "company_trade_book": company_trade_book,
         "leaderboard": leaderboard,
         "recent_events": recent_events,
@@ -1403,7 +1405,11 @@ def apply_shock(
     elif shock_type == "election_pressure":
         adjustment = magnitude
         for year_key in list(state.get("allocation_factors", {}).keys()):
-            if year_key >= state.get("current_year", 1):
+            try:
+                year_num = int(year_key)
+            except (ValueError, TypeError):
+                continue
+            if year_num >= state.get("current_year", 1):
                 current = state["allocation_factors"][year_key]
                 state["allocation_factors"][year_key] = round(
                     max(0.5, min(1.0, current + adjustment)), 4
@@ -1582,7 +1588,11 @@ def _company_snapshot(state: dict[str, Any], company: dict[str, Any]) -> dict[st
 
 def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
     state["current_year"] = year
-    allocation_factor = state["allocation_factors"].get(year, 0.80)
+    # Retrieve allocation factor supporting both string and integer keys
+    factors = state.get("allocation_factors", {})
+    allocation_factor = factors.get(year)
+    if allocation_factor is None:
+        allocation_factor = factors.get(str(year), 0.80)
     total_baseline = sum(
         company["baseline_emissions"] * (1 + company["growth_rate"]) ** (year - 1)
         for company in state["companies"]
