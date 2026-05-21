@@ -185,7 +185,11 @@ function renderContent() {
   const cash = player.cash || 0;
   const allowances = player.allowances || 0;
   const projected = player.projected_emissions || 0;
-  const gap = player.compliance_gap || 0;
+  const offsetHoldings = player.offset_holdings || 0;
+  const offsetCapPercent = s.offset_usage_cap != null ? s.offset_usage_cap : 0.1;
+  const maxUsableOffsets = Math.round(projected * offsetCapPercent * 100) / 100;
+  const usableOffsets = Math.min(offsetHoldings, maxUsableOffsets);
+  const gap = Math.round((projected - allowances - usableOffsets) * 100) / 100;
   const banked = player.banked_allowances || 0;
   const penalties = player.penalty_due || 0;
   const menu = player.abatement_menu || [];
@@ -282,6 +286,7 @@ function renderContent() {
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.85rem;color:var(--muted)">
         <span>Banked: ${fmt(banked)}</span>
+        <span>Offsets: ${fmt(offsetHoldings)} t (Usable: ${fmt(usableOffsets)} t)</span>
         <span>Penalty Due: $${fmt(penalties)}</span>
       </div>
     </div>
@@ -340,10 +345,25 @@ function renderContent() {
     }
 
     html += `<div class="card"><div class="card-title">Offsets & Market</div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-        <span style="color:var(--muted)">Offset Price: <strong style="color:var(--text)">$${fmt(s.offset_price || 25)}</strong></span>
-        <span style="color:var(--muted)">Penalty Rate: <strong style="color:var(--text)">$${fmt(s.penalty_rate || 200)}</strong></span>
-        <span style="color:var(--muted)">Offset Cap: <strong style="color:var(--text)">${((s.offset_usage_cap || 0.1)*100).toFixed(0)}%</strong></span>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+          <span style="color:var(--muted)">Offset Price: <strong style="color:var(--text)">$${fmt(s.offset_price || 25)}/t</strong></span>
+          <span style="color:var(--muted)">Penalty Rate: <strong style="color:var(--text)">$${fmt(s.penalty_rate || 200)}/t</strong></span>
+          <span style="color:var(--muted)">Offset Cap: <strong style="color:var(--text)">${((s.offset_usage_cap || 0.1)*100).toFixed(0)}% of Emissions</strong></span>
+        </div>
+        <div style="font-size:0.9rem;background:rgba(255,255,255,0.03);padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.05)">
+          <span>Holdings: <strong>${fmt(offsetHoldings)} t</strong></span>
+          <span style="margin:0 8px;color:var(--muted)">|</span>
+          <span>Usable: <strong style="color:${usableOffsets >= maxUsableOffsets && offsetHoldings > 0 ? 'var(--orange)' : 'var(--text)'}">${fmt(usableOffsets)} / ${fmt(maxUsableOffsets)} t</strong></span>
+        </div>
+      </div>
+      
+      <div class="glass-panel" style="padding:12px;border-radius:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px">
+          <label style="font-size:0.8rem;color:var(--muted);display:block;margin-bottom:4px">Quantity to Buy (t):</label>
+          <input type="number" id="offsetQtyInput" min="1" max="1000" value="10" class="input-base" style="width:100%">
+        </div>
+        <button class="btn btn-primary" onclick="buyOffsets(event)" style="margin-top:20px;height:40px">Buy Offsets</button>
       </div>
     </div>`;
   }
@@ -489,6 +509,16 @@ function doDecision(action, payload, event) {
     showToast('Decision applied', 'success');
     refresh();
   }).catch(e => showError(e.message));
+}
+
+function buyOffsets(event) {
+  const input = document.getElementById('offsetQtyInput');
+  const quantity = parseFloat(input.value);
+  if (isNaN(quantity) || quantity <= 0) {
+    showToast('Please enter a valid quantity', 'error');
+    return;
+  }
+  doDecision('buy_offsets', { quantity }, event);
 }
 
 function showSaveModal() {

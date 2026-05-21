@@ -76,7 +76,12 @@ function renderCoop() {
   const menu = player.abatement_menu || [];
 
   const cash = player.cash || 0;
-  const gap = player.compliance_gap || 0;
+  const projected = player.projected_emissions || 0;
+  const offsetHoldings = player.offset_holdings || 0;
+  const offsetCapPercent = s.offset_usage_cap != null ? s.offset_usage_cap : 0.1;
+  const maxUsableOffsets = Math.round(projected * offsetCapPercent * 100) / 100;
+  const usableOffsets = Math.min(offsetHoldings, maxUsableOffsets);
+  const gap = Math.round((projected - (player.allowances || 0) - usableOffsets) * 100) / 100;
 
   const oldCash = window.coopLastCash != null ? window.coopLastCash : cash;
   const oldGap = window.coopLastGap != null ? window.coopLastGap : gap;
@@ -90,7 +95,8 @@ function renderCoop() {
       <div class="card-title">Your Company</div>
       <div class="stat"><div class="stat-label">Company</div><div class="stat-value">${player.company_name || '-'}</div></div>
       <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent" id="coop-cash">$${fmt(cash)}</div></div>
-      <div class="stat"><div class="stat-label">Compliance Gap</div><div class="stat-value ${(player.compliance_gap || 0) > 0 ? 'red' : 'green'}" id="coop-gap">${fmt(gap)}</div></div>
+      <div class="stat"><div class="stat-label">Offsets Held</div><div class="stat-value">${fmt(offsetHoldings)} t (Usable: ${fmt(usableOffsets)} t)</div></div>
+      <div class="stat"><div class="stat-label">Compliance Gap</div><div class="stat-value ${gap > 0 ? 'red' : 'green'}" id="coop-gap">${fmt(gap)}</div></div>
     </div>
     <div class="card">
       <div class="card-title">Ready Check</div>
@@ -115,6 +121,28 @@ function renderCoop() {
     html += `</table></div>`;
   }
 
+  if (s.phase === 'decision_window' || s.phase === 'year_start') {
+    html += `<div class="card"><div class="card-title">Offsets & Market</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+          <span style="color:var(--muted)">Offset Price: <strong style="color:var(--text)">$${fmt(s.offset_price || 25)}/t</strong></span>
+          <span style="color:var(--muted)">Offset Cap: <strong style="color:var(--text)">${((s.offset_usage_cap || 0.1)*100).toFixed(0)}% of Emissions</strong></span>
+        </div>
+        <div style="font-size:0.9rem;background:rgba(255,255,255,0.03);padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.05)">
+          <span>Usable Offsets: <strong style="color:${usableOffsets >= maxUsableOffsets && offsetHoldings > 0 ? 'var(--orange)' : 'var(--text)'}">${fmt(usableOffsets)} / ${fmt(maxUsableOffsets)} t</strong></span>
+        </div>
+      </div>
+      
+      <div class="glass-panel" style="padding:12px;border-radius:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px">
+          <label style="font-size:0.8rem;color:var(--muted);display:block;margin-bottom:4px">Quantity to Buy (t):</label>
+          <input type="number" id="coopOffsetQtyInput" min="1" max="1000" value="10" class="input-base" style="width:100%">
+        </div>
+        <button class="btn btn-primary" onclick="buyCoopOffsets(event)" style="margin-top:20px;height:40px">Buy Offsets</button>
+      </div>
+    </div>`;
+  }
+
   html += `<div class="card">
     <div class="card-title">Session</div>
     <div style="color:var(--muted);font-family:var(--mono)">Game ID: ${GAME_ID}</div>
@@ -135,6 +163,20 @@ function activateMeasure(measureId) {
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'activate_abatement',
     payload: { measure_id: measureId },
+  }).then(refreshCoop).catch(e => alert('Error: ' + e.message));
+}
+
+function buyCoopOffsets(event) {
+  const input = document.getElementById('coopOffsetQtyInput');
+  const quantity = parseFloat(input.value);
+  if (isNaN(quantity) || quantity <= 0) {
+    alert('Please enter a valid quantity');
+    return;
+  }
+  if (window.AudioManager) AudioManager.playSFX('activate');
+  API.coopDecision(GAME_ID, PARTICIPANT_ID, {
+    action: 'buy_offsets',
+    payload: { quantity },
   }).then(refreshCoop).catch(e => alert('Error: ' + e.message));
 }
 
