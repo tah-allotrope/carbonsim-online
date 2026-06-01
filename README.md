@@ -33,13 +33,15 @@ pytest server/tests/test_api.py engine/tests/ -q
 
 | Directory | Purpose |
 |-----------|---------|
-| `engine/` | Compliance engine, cards, tutorial, achievements, playtest |
-| `server/` | FastAPI server, routes, WebSocket, database, models |
-| `web/` | Static HTML/CSS/JS frontend |
+| `engine/` | Compliance engine, cards, tutorial, achievements, playtest, scenarios |
+| `server/` | FastAPI server, routes, WebSocket, database, models, tests |
+| `web/` | Static HTML/CSS/JS frontend (game, co-op, summary screens) |
 | `plans/` | Sprint plans and roadmap |
 | `research/` | Vietnam ETS research and product framing |
 | `reports/` | Phase and final reports |
-| `archive/` | Archived oTree platform and obsolete plans |
+| `scripts/` | Utility scripts (report rendering) |
+| `archive/` | Archived oTree platform, obsolete plans, and old reports |
+| `docs/` | Project structure and contributor guides |
 
 ## Sprint Roadmap
 

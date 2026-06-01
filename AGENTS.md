@@ -101,6 +101,10 @@ Persist the decisions and outcomes needed to reconstruct what happened in a sess
 - Optimize for desktop/laptop; mobile usability is acceptable but secondary.
 - Visual quality should be a clear step above table-based simulators.
 
+## Project Structure
+
+See `docs/STRUCTURE.md` for the full directory layout and conventions.
+
 ## Sprint Roadmap
 
 Use `plans/2026-05-29-game-focus-roadmap-index.md` as the execution roadmap. The five sprints are dependency-ordered:

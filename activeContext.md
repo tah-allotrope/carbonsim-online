@@ -2,25 +2,25 @@
 
 ## Current Sprint
 
-Sprint 1 — Canonical Game Stack Consolidation
+Sprint 2 — Repository Reorganization & Clutter Purge
 
 ## Plan
 
-- [x] PHASE-01: Salvage reusable patterns from platform/ into archive/
-- [x] PHASE-02: Move platform/ to archive, create requirements.txt, clean .gitignore
-- [x] PHASE-03: Rewrite context docs and consolidate plans
+- [x] PHASE-01: Purge clutter (worktree dup, obsolete reports, runtime DBs, .gitignore)
+- [x] PHASE-02: Adopt src/-style layout (engine/, server/, web/) & fix all paths/imports
+- [x] PHASE-03: Document the new layout and conventions
 
 ## Goal
 
-Declare the Climate Mayor game stack (`carbonsim_engine` + `mayor_api` + `mayor_web`) the single canonical product, archive the orphaned oTree platform, and rewrite the top-level context docs so they describe the game rather than the abandoned workshop platform.
+Give the single-product game repo a conventional, navigable layout and remove accumulated clutter.
 
 ## Progress
 
 ### Done
 
-- PHASE-01: Archived deployment artifacts and wrote SALVAGE-NOTES.md mapping 6 pattern categories to Sprint 4.
-- PHASE-02: Moved platform/ to archive/otree-platform/runnable/, created root requirements.txt, cleaned .gitignore, updated engine keywords. 83 tests passing.
-- PHASE-03: Rewrote README.md, AGENTS.md, activeContext.md. Replaced project-plan.md with game roadmap index. Archived divergent plans.
+- PHASE-01: Removed duplicate worktree, archived 18 obsolete reports, deleted runtime DBs, extended .gitignore.
+- PHASE-02: Renamed carbonsim_engine/ → engine/, mayor_api/ → server/, mayor_web/ → web/. Updated 26 import sites, packaging config, web-dir resolution, and docs. 83 tests passing.
+- PHASE-03: Updated README project layout, created docs/STRUCTURE.md, cross-linked from AGENTS.md.
 
 ### In Progress
 
@@ -32,17 +32,15 @@ Declare the Climate Mayor game stack (`carbonsim_engine` + `mayor_api` + `mayor_
 
 ## Key Decisions
 
-- Q-001: Archive (not delete) the oTree platform — keep it runnable for Sprint 4 reference.
-- Q-002: Use requirements.txt (not pyproject.toml) for the root dependency manifest.
+- Q-001: Adopted src/-style grouping (engine/, server/, web/).
+- Q-002: Archive (not delete) obsolete reports — kept in archive/reports/.
 
 ## Relevant Files
 
-- `README.md` — rewritten for game stack
-- `AGENTS.md` — rewritten for game stack
-- `plans/2026-05-29-game-focus-roadmap-index.md` — sprint roadmap index
-- `archive/otree-platform/SALVAGE-NOTES.md` — pattern mapping for Sprint 4
-- `archive/otree-platform/runnable/` — archived oTree platform
+- `docs/STRUCTURE.md` — new directory layout guide
+- `README.md` — updated project layout table
+- `AGENTS.md` — cross-linked to docs/STRUCTURE.md
 
 ## Next Sprint
 
-Sprint 2 — Repository Reorganization & Clutter Purge (`plans/2026-05-29-repo-reorganization-cleanup-plan.md`)
+Sprint 3 — Engine Trim, Modularization & Test Unification (`plans/2026-05-29-engine-trim-test-unification-plan.md`)
