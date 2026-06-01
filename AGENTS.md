@@ -20,9 +20,9 @@ Do not invent ETS rules if the local research already answers the question.
 
 ## Technical Stack
 
-- **Engine:** `carbonsim_engine/` — Python compliance engine
-- **Server:** `mayor_api/` — FastAPI with WebSocket support
-- **Frontend:** `mayor_web/` — static HTML/CSS/JS (vanilla, no build step)
+- **Engine:** `engine/` — Python compliance engine
+- **Server:** `server/` — FastAPI with WebSocket support
+- **Frontend:** `web/` — static HTML/CSS/JS (vanilla, no build step)
 - **Database:** SQLite (dev), Postgres (production)
 - **Testing:** pytest
 
@@ -117,7 +117,7 @@ Use `plans/2026-05-29-game-focus-roadmap-index.md` as the execution roadmap. The
 - Prefer deterministic fixtures for cap, allocation, abatement, offsets, and penalties
 - Add scenario tests that simulate a full three-year session
 - Verify edge cases around offset caps, banking carry-forward, and non-compliance
-- Run `pytest mayor_api/tests/test_api.py carbonsim_engine/tests/ -q` before committing
+- Run `pytest server/tests/test_api.py engine/tests/ -q` before committing
 
 ## Guardrails For Future Agents
 

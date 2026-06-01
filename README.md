@@ -4,21 +4,21 @@ A single-player and multiplayer carbon compliance game built with FastAPI and va
 
 ## Architecture
 
-- **Engine:** `carbonsim_engine/` — deterministic compliance engine (year cycle, abatement, offsets, banking, penalties, cards, tutorial, achievements, playtest)
-- **Server:** `mayor_api/` — FastAPI backend serving the API and static frontend, with WebSocket support for co-op mode
-- **Web:** `mayor_web/` — static HTML/CSS/JS frontend (game UI, co-op UI, summary screens)
+- **Engine:** `engine/` — deterministic compliance engine (year cycle, abatement, offsets, banking, penalties, cards, tutorial, achievements, playtest)
+- **Server:** `server/` — FastAPI backend serving the API and static frontend, with WebSocket support for co-op mode
+- **Web:** `web/` — static HTML/CSS/JS frontend (game UI, co-op UI, summary screens)
 
 ## Local Setup
 
 ```bash
 pip install -r requirements.txt
-pip install -e carbonsim_engine/
+pip install -e engine/
 ```
 
 ## Running the Server
 
 ```bash
-uvicorn mayor_api.main:create_app --factory --reload
+uvicorn server.main:create_app --factory --reload
 ```
 
 Open `http://localhost:8000` in a browser.
@@ -26,16 +26,16 @@ Open `http://localhost:8000` in a browser.
 ## Running Tests
 
 ```bash
-pytest mayor_api/tests/test_api.py carbonsim_engine/tests/ -q
+pytest server/tests/test_api.py engine/tests/ -q
 ```
 
 ## Project Layout
 
 | Directory | Purpose |
 |-----------|---------|
-| `carbonsim_engine/` | Compliance engine, cards, tutorial, achievements, playtest |
-| `mayor_api/` | FastAPI server, routes, WebSocket, database, models |
-| `mayor_web/` | Static HTML/CSS/JS frontend |
+| `engine/` | Compliance engine, cards, tutorial, achievements, playtest |
+| `server/` | FastAPI server, routes, WebSocket, database, models |
+| `web/` | Static HTML/CSS/JS frontend |
 | `plans/` | Sprint plans and roadmap |
 | `research/` | Vietnam ETS research and product framing |
 | `reports/` | Phase and final reports |

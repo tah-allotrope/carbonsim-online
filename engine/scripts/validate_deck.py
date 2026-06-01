@@ -133,7 +133,7 @@ def validate_deck(filepath: str) -> int:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: python -m carbonsim_engine.scripts.validate_deck <deck.json>")
+        print("Usage: python -m engine.scripts.validate_deck <deck.json>")
         sys.exit(1)
     rc = validate_deck(sys.argv[1])
     sys.exit(rc)

@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from fastapi import WebSocket, WebSocketDisconnect
 
-from carbonsim_engine import participant_snapshot, set_participant_connection
+from engine import participant_snapshot, set_participant_connection
 
 from .db import decompress_state, get_game as db_get_game, update_game_state as db_update_game_state
 

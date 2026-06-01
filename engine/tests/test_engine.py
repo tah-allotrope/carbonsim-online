@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import unittest
 
-from carbonsim_engine import engine
+from engine import engine
 
 
 def utc(year=2026, month=1, day=1, second=0):

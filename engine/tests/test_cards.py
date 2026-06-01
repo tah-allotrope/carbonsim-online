@@ -5,9 +5,9 @@ import random
 import unittest
 from pathlib import Path
 
-from carbonsim_engine.cards import CardDeck, draw_cards, resolve_card
-from carbonsim_engine.engine import create_initial_state, start_simulation, force_advance_phase
-from carbonsim_engine.scenarios import SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES
+from engine.cards import CardDeck, draw_cards, resolve_card
+from engine.engine import create_initial_state, start_simulation, force_advance_phase
+from engine.scenarios import SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES
 
 
 SAMPLE_CARDS = [
@@ -287,7 +287,7 @@ class TestNewShockTypes(unittest.TestCase):
         self.now = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
     def test_tech_unlock_adds_measure_to_companies(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         before_count = len(self.state["companies"][0]["abatement_menu"])
         self.state = apply_shock(
             self.state,
@@ -308,7 +308,7 @@ class TestNewShockTypes(unittest.TestCase):
         self.assertEqual(new_measure["label"], "Test Measure")
 
     def test_tech_unlock_sector_specific(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         self.state["companies"][0]["sector"] = "steel"
         self.state["companies"][1]["sector"] = "cement"
         before_steel = len(self.state["companies"][0]["abatement_menu"])
@@ -324,7 +324,7 @@ class TestNewShockTypes(unittest.TestCase):
         self.assertEqual(len(self.state["companies"][1]["abatement_menu"]), before_cement)
 
     def test_fdi_proposal_boosts_cash(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         before = [c["cash"] for c in self.state["companies"]]
         self.state = apply_shock(self.state, shock_type="fdi_proposal", magnitude=0.1, now=self.now)
         after = [c["cash"] for c in self.state["companies"]]
@@ -332,13 +332,13 @@ class TestNewShockTypes(unittest.TestCase):
             self.assertAlmostEqual(a, round(b * 1.1, 2))
 
     def test_cbam_threat_increases_penalty_rate(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         before = self.state["penalty_rate"]
         self.state = apply_shock(self.state, shock_type="cbam_threat", magnitude=0.15, now=self.now)
         self.assertAlmostEqual(self.state["penalty_rate"], round(before * 1.15, 2))
 
     def test_election_pressure_modifies_allocation_factors(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         self.state["current_year"] = 2
         self.state["allocation_factors"] = {2: 0.9, 3: 0.85}
         self.state = apply_shock(self.state, shock_type="election_pressure", magnitude=-0.05, now=self.now)
@@ -346,7 +346,7 @@ class TestNewShockTypes(unittest.TestCase):
         self.assertAlmostEqual(self.state["allocation_factors"][3], 0.80)
 
     def test_allowance_boost_adds_allowances(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         before = [c["allowances"] for c in self.state["companies"]]
         self.state = apply_shock(self.state, shock_type="allowance_boost", magnitude=0.1, now=self.now)
         after = [c["allowances"] for c in self.state["companies"]]
@@ -354,7 +354,7 @@ class TestNewShockTypes(unittest.TestCase):
             self.assertAlmostEqual(a, round(b * 1.1, 2))
 
     def test_cash_boost_adds_cash(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         before = [c["cash"] for c in self.state["companies"]]
         self.state = apply_shock(self.state, shock_type="cash_boost", magnitude=0.08, now=self.now)
         after = [c["cash"] for c in self.state["companies"]]
@@ -362,13 +362,13 @@ class TestNewShockTypes(unittest.TestCase):
             self.assertAlmostEqual(a, round(b * 1.08, 2))
 
     def test_shock_appears_in_active_shocks(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         self.state = apply_shock(self.state, shock_type="tech_unlock", magnitude=0.1, shock_params={"sector": "all", "measure_label": "Test", "abatement_amount": 5.0, "cost": 10000.0, "activation_timing": "immediate"}, now=self.now)
         self.assertEqual(len(self.state["active_shocks"]), 1)
         self.assertEqual(self.state["active_shocks"][0]["shock_type"], "tech_unlock")
 
     def test_unknown_shock_type_raises(self):
-        from carbonsim_engine.engine import apply_shock
+        from engine.engine import apply_shock
         with self.assertRaises(ValueError):
             apply_shock(self.state, shock_type="nonexistent", magnitude=0.1, now=self.now)
 

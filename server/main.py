@@ -41,7 +41,7 @@ def create_app() -> FastAPI:
     async def coop_ws(websocket: WebSocket, game_id: str, participant_id: str):
         await coop_ws_endpoint(websocket, game_id, participant_id)
 
-    web_dir = Path(__file__).parent.parent / "mayor_web"
+    web_dir = Path(__file__).parent.parent / "web"
     css_dir = web_dir / "css"
     js_dir = web_dir / "js"
 

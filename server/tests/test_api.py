@@ -5,8 +5,8 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-from mayor_api.main import create_app
-from mayor_api.db import init_db, DB_PATH
+from server.main import create_app
+from server.db import init_db, DB_PATH
 
 
 @pytest.fixture(autouse=True)

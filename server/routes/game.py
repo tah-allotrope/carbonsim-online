@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from carbonsim_engine import (
+from engine import (
     apply_company_decision,
     apply_shock,
     build_player_snapshot,
@@ -20,11 +20,11 @@ from carbonsim_engine import (
     run_bot_turns,
     start_simulation,
 )
-from carbonsim_engine.achievements import compute_achievements
-from carbonsim_engine.cards import CardDeck, draw_cards, resolve_card
-from carbonsim_engine.playtest import run_playtest_batch
-from carbonsim_engine.solo import create_solo_game, solo_player_company
-from carbonsim_engine.tutorial import TUTORIAL_CARDS, tutorial_notes_for_year
+from engine.achievements import compute_achievements
+from engine.cards import CardDeck, draw_cards, resolve_card
+from engine.playtest import run_playtest_batch
+from engine.solo import create_solo_game, solo_player_company
+from engine.tutorial import TUTORIAL_CARDS, tutorial_notes_for_year
 
 from ..db import (
     create_game as db_create_game,
@@ -59,10 +59,10 @@ STARTER_DECK_PATH = None
 EXPANSION_DECK_PATH = None
 try:
     from pathlib import Path
-    _p = Path(__file__).parent.parent.parent / "carbonsim_engine" / "data" / "starter_deck.json"
+    _p = Path(__file__).parent.parent.parent / "engine" / "data" / "starter_deck.json"
     if _p.exists():
         STARTER_DECK_PATH = str(_p)
-    _exp = Path(__file__).parent.parent.parent / "carbonsim_engine" / "data" / "expansion_deck.json"
+    _exp = Path(__file__).parent.parent.parent / "engine" / "data" / "expansion_deck.json"
     if _exp.exists():
         EXPANSION_DECK_PATH = str(_exp)
 except Exception:

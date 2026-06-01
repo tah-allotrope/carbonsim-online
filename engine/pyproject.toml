@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "carbonsim_engine"
+name = "engine"
 version = "0.1.0"
 description = "Standalone compliance engine for CarbonSim climate policy simulations"
 readme = "README.md"
@@ -21,4 +21,4 @@ classifiers = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["carbonsim_engine*"]
+include = ["engine*"]
