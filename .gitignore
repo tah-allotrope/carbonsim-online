@@ -5,7 +5,6 @@
 .venv/
 **/__pycache__/
 *.pyc
-platform/db.sqlite3
 # reports/  # unignored for committed artifacts
 
 # Environment and deployment secrets
@@ -18,11 +17,8 @@ pgdata/
 # Python package build artifacts
 *.egg-info/
 
-# Mayor API database
+# Runtime databases
+db.sqlite3
 mayor_api/*.db
 mayor_api/*.db-wal
 mayor_api/*.db-shm
-
-# oTree runtime files
-platform/otree_*.log
-platform/otree_*.pid

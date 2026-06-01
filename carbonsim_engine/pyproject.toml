@@ -9,7 +9,7 @@ description = "Standalone compliance engine for CarbonSim climate policy simulat
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-keywords = ["climate", "carbon", "ets", "simulation", "workshop"]
+keywords = ["climate", "carbon", "ets", "simulation", "game"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
