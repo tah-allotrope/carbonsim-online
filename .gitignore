@@ -19,6 +19,13 @@ pgdata/
 
 # Runtime databases
 db.sqlite3
-mayor_api/*.db
-mayor_api/*.db-wal
-mayor_api/*.db-shm
+*.db
+*.db-wal
+*.db-shm
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+
+# Claude worktrees
+.claude/worktrees/
