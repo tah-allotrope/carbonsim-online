@@ -1,113 +1,61 @@
 # CarbonSim Online
 
-A Vietnam-aligned, workshop-ready online CarbonSim platform for ETS training, built on oTree.
+A single-player and multiplayer carbon compliance game built with FastAPI and vanilla JS.
 
-## What is implemented
+## Architecture
 
-- `plan/project-plan.md` defines the multi-phase roadmap.
-- `platform/` contains an `oTree` project with the `carbonsim_phase12` app.
-- **Phase 1**: Working room/session scaffold, participant join flow, facilitator-controlled launch, company dashboard.
-- **Phase 2**: Deterministic year engine with year-start allocation, emissions growth, banking, year-end surrender, penalties, and an audit log.
-- **Phase 3**: Sector-specific abatement menus, immediate vs. next-year activation timing, offset holdings with a configurable surrender cap, and dashboard projections.
-- **Phase 4**: Sealed-bid, uniform-price primary auction with auction scheduling, bid validation, deterministic clearing, settlement, public result display, and facilitator controls.
-- **Phase 5**: Bilateral secondary trading with trade proposals, buyer accept/reject, server-side validation, expiration handling, and a public trade feed.
-- **Phase 6**: Facilitator tools (pause/resume/advance), participant status tracking, session data export, and session summary for debriefing.
-- **Phase 7**: Three scenario packs (vietnam_pilot, high_pressure, generous), bot strategies (conservative, moderate, aggressive), and four shock event types.
-- **Phase 8**: Deployment hardening (Docker, env-based configuration, production settings), health checks, session recovery/reconnection, structured audit logging, facilitator runbook.
-- **Phase 9**: Session replay and visualization data for facilitator debriefs, including audit-event timelines, year markers, and market path exports.
-- **Phase 10**: Expanded facilitator analytics with sector breakdowns, year metrics, and company cost summaries surfaced in both the facilitator panel and exports.
+- **Engine:** `carbonsim_engine/` — deterministic compliance engine (year cycle, abatement, offsets, banking, penalties, cards, tutorial, achievements, playtest)
+- **Server:** `mayor_api/` — FastAPI backend serving the API and static frontend, with WebSocket support for co-op mode
+- **Web:** `mayor_web/` — static HTML/CSS/JS frontend (game UI, co-op UI, summary screens)
 
-## Project layout
-
-- `research/` - Local source-of-truth reports and markdown conversions
-- `plan/` - Markdown project roadmap
-- `platform/` - Runnable `oTree` prototype
-- `platform/carbonsim_phase12/` - Main oTree app (engine, pages, deployment module)
-- `platform/tests/` - Unit test suite (92 tests)
-- `platform/FACILITATOR_RUNBOOK.md` - Workshop operations guide
-- `activeContext.md` - Current implementation tracking
-
-## Local setup
-
-Use Python 3.12 for oTree. The default Python 3.14 runtime on this machine is too new.
+## Local Setup
 
 ```bash
-uv venv .venv --python "C:\Users\tukum\AppData\Roaming\uv\python\cpython-3.12.13-windows-x86_64-none\python.exe"
-.venv/Scripts/python.exe -m ensurepip --upgrade
-.venv/Scripts/python.exe -m pip install --upgrade pip
-.venv/Scripts/python.exe -m pip install -r platform/requirements.txt
+pip install -r requirements.txt
+pip install -e carbonsim_engine/
 ```
 
-## Running tests
-
-From `platform/`:
+## Running the Server
 
 ```bash
-../.venv/Scripts/python.exe -m unittest tests.test_engine tests.test_deployment
+uvicorn mayor_api.main:create_app --factory --reload
 ```
 
-## Running the prototype
+Open `http://localhost:8000` in a browser.
 
-For a clean local database, delete `platform/db.sqlite3` first. Then start the server:
+## Running Tests
 
 ```bash
-set PATH=C:\Users\tukum\Downloads\carbonsim-online\.venv\Scripts;%PATH%
-cd platform
-otree devserver 8000
+pytest mayor_api/tests/test_api.py carbonsim_engine/tests/ -q
 ```
 
-Open the demo or room pages from the running server and use one of the session configs.
+## Project Layout
 
-## Docker deployment
+| Directory | Purpose |
+|-----------|---------|
+| `carbonsim_engine/` | Compliance engine, cards, tutorial, achievements, playtest |
+| `mayor_api/` | FastAPI server, routes, WebSocket, database, models |
+| `mayor_web/` | Static HTML/CSS/JS frontend |
+| `plans/` | Sprint plans and roadmap |
+| `research/` | Vietnam ETS research and product framing |
+| `reports/` | Phase and final reports |
+| `archive/` | Archived oTree platform and obsolete plans |
 
-```bash
-cd platform
-copy .env.production.example .env
-# Edit .env with production values.
-docker compose up -d
-docker compose logs -f web
-```
+## Sprint Roadmap
 
-## Free-tier deployment
+See `plans/2026-05-29-game-focus-roadmap-index.md` for the 5-sprint execution plan:
 
-Primary target: Oracle Cloud Always Free.
+1. **Canonical Game Stack Consolidation** — declare game stack canonical, archive oTree, rewrite docs
+2. **Repository Reorganization & Clutter Purge** — conventional layout, delete duplicates
+3. **Engine Trim, Modularization & Test Unification** — clean tested core, fix failing tests
+4. **Single-Player Polish & Multiplayer Build-Out** — lobby, room codes, host controls, reconnection
+5. **Visual Step-Change** — design system, signature animated visual
 
-Fallback target: Fly.io.
+## Research Documents
 
-The repo includes these deployment artifacts:
-
-- `platform/.env.production.example`
-- `platform/Caddyfile`
-- `platform/fly.toml`
-- `platform/docker-compose.yml`
-
-For the full workshop operations and deployment steps, use `platform/FACILITATOR_RUNBOOK.md`.
-
-## Oracle deployment outline
-
-```bash
-cd platform
-copy .env.production.example .env
-# Fill in OTREE_ADMIN_PASSWORD, SECRET_KEY, DATABASE_URL, and Postgres values
-docker compose up -d
-```
-
-## Session configs
-
-| Config | Scenario | Description |
-|--------|----------|-------------|
-| `carbonsim_workshop_phase12` | Vietnam Pilot | Default three-year arc, moderate pressure |
-| `carbonsim_high_pressure` | High Pressure | Sharper cap decline, higher penalties, fewer offsets |
-| `carbonsim_generous` | Generous Allocation | Gentler decline, lower penalties, more offsets |
-| `carbonsim_workshop_with_bots` | Vietnam Pilot + Bots | Same as Vietnam Pilot with 3 bot participants |
-
-## Research documents
-
-The original research corpus remains in `research/`, including:
-
+- `research/2026-04-13_online-carbonsim-platform-create.md`
 - `research/20260213_Recommendation_20Report_EN.md`
 - `research/20250708_Impact-Assessing-and-Modeling-Report_EN.md`
-- `research/2026-04-13_online-carbonsim-platform-create.md`
 - `research/carbonsim prelim research.md`
 
-See individual documents for licensing and attribution information.
+See individual documents for licensing and attribution.

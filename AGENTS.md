@@ -2,81 +2,29 @@
 
 ## Mission
 
-Build an online, workshop-ready CarbonSim-style platform for Vietnam-focused ETS training.
+Build a polished single-player and multiplayer carbon compliance game that teaches ETS mechanics through strategic decision-making across compressed simulation years.
 
-The product goal is not a generic carbon game. The goal is a credible, legible compliance-market simulator that helps 10-20 participants understand cap setting, free allocation, abatement, limited offsets, trading, banking, surrender, and penalties across compressed simulation years.
+The product is a game first. It uses Vietnam-pilot-aligned rules as its domain foundation, but its primary goal is an engaging, legible learning experience — not a workshop platform replica.
 
 ## Source Of Truth Order
 
 When implementation decisions conflict, use this precedence order:
 
-1. `research/2026-04-13_online-carbonsim-platform-create.md`
-2. `research/20260213_Recommendation_20Report_EN.md`
-3. `research/20250708_Impact-Assessing-and-Modeling-Report_EN.md`
-4. `research/carbonsim prelim research.md`
-5. `research/2026-04-06_online-carbonsim-platform.md`
+1. `reports/2026-05-29-single-multiplayer-game-gap-analysis.md`
+2. `research/2026-04-13_online-carbonsim-platform-create.md`
+3. `research/20260213_Recommendation_20Report_EN.md`
+4. `research/20250708_Impact-Assessing-and-Modeling-Report_EN.md`
+5. `research/carbonsim prelim research.md`
 
 Do not invent ETS rules if the local research already answers the question.
 
-## Product Positioning
+## Technical Stack
 
-### V1 Product Shape
-
-V1 is a compliance-market simulator first.
-
-It should feel close to CarbonSim in learning flow, but its rule design should be anchored to Vietnam's pilot posture rather than to a highly financialized exchange.
-
-### Primary Users
-
-- Workshop participants learning ETS mechanics
-- Facilitators running live sessions
-- Policy, academic, and capacity-building teams needing exportable session data
-
-### Default Session Shape
-
-- 10-20 human participants
-- 3 compressed virtual years
-- 20-30 minutes per virtual year unless testing proves a better default
-- Facilitator-controlled room/session start
-- Server-authoritative timing and state changes
-
-## Non-Negotiable V1 Rules
-
-### Include In V1
-
-- Free allocation at the start of each year
-- Firm or sector-specific emissions baseline and growth assumptions
-- Sector-specific abatement menus with marginal cost logic
-- Limited offset use with a configurable cap
-- Banking of unused allowances
-- Year-end surrender and penalty logic
-- A simple, legible trading layer
-- Facilitator/admin controls
-- Data export for post-session analysis
-
-### Exclude From V1 By Default
-
-- Continuous double-auction order book as the main market
-- Derivatives or speculative financial features
-- Borrowing, unless later product requirements explicitly demand it
-- Complex settlement replicas beyond what is needed for pedagogy
-- Heavy custom front-end architecture before core rules are stable
-
-## Recommended Technical Direction
-
-### Default Stack
-
-- Framework: `oTree`
-- Core language: Python
-- Real-time interaction: `oTree` live pages / `live_method`
-- Persistence: start with the simplest supported database for development, then move to Postgres for deployed sessions if needed
-- Hosting target: low-cost deployment suitable for workshop usage, not premature scale infrastructure
-
-### Why `oTree`
-
-`oTree` is the default because it already provides the session, room, admin, export, and synchronized multiplayer primitives this project needs.
-
-Do not move to `Empirica`, `Colyseus`, or a custom real-time stack unless V1 is blocked by a demonstrated limitation in `oTree`.
+- **Engine:** `carbonsim_engine/` — Python compliance engine
+- **Server:** `mayor_api/` — FastAPI with WebSocket support
+- **Frontend:** `mayor_web/` — static HTML/CSS/JS (vanilla, no build step)
+- **Database:** SQLite (dev), Postgres (production)
+- **Testing:** pytest
 
 ## Architecture Principles
 
@@ -90,7 +38,7 @@ All timers, allocations, auction results, trade validation, surrender, penalties
 
 ### 3. Simple And Explainable First
 
-Prefer features that are easy for facilitators and participants to understand during a live workshop.
+Prefer features that are easy for players and hosts to understand.
 
 ### 4. Research-Grounded Defaults
 
@@ -102,96 +50,80 @@ Model the game as a clear state machine: lobby, year start, action windows, year
 
 ### 6. Auditability Matters
 
-Persist the decisions and outcomes needed to reconstruct what happened in a session: allocations, bids, trades, abatement choices, surrender, penalties, rankings, and facilitator actions.
+Persist the decisions and outcomes needed to reconstruct what happened in a session.
 
 ## V1 Domain Defaults
-
-These are implementation defaults unless a phase plan or explicit product decision changes them:
 
 - Three compressed years
 - Free allocation at year start
 - Banking allowed
 - Borrowing disabled
 - Offsets allowed only within a configurable cap
-- Trading centered on sealed-bid auctions plus simple bilateral or facilitator-mediated secondary trading
+- Trading centered on sealed-bid auctions plus simple bilateral trading
 - Penalty high enough that intentional non-compliance is never rational
-- Price discovery driven by abatement cost, cap pressure, offset availability, and participant decisions
 
-## V1 Feature Priorities
+## Feature Priorities
 
 ### Must Have
 
-- Session creation and room join flow
-- Participant company assignment
+- Single-player game loop (create, decisions, advance years, completion, summary)
+- Multiplayer with lobby, room codes, host controls, and reconnection
 - Company dashboard with emissions, allocation, holdings, cash, and compliance position
-- Abatement decision flow
+- Abatement decision flow with sector-specific menus
 - Year-start allocation and year-end compliance engine
 - Auction flow
-- Simple secondary trading flow
+- Simple secondary trading
 - Offset usage logic
 - Banking and penalty handling
-- Facilitator controls and exports
 - Leaderboard or outcome summary
 
-### Nice To Have If Cheap
+### Nice To Have
 
 - Shock events between years
 - Basic bot participants for liquidity support
 - Public trade feed
-- Explainers or helper text inside the UI
+- Tutorial mode and helper text
+- Achievement system
 
 ### Defer To V2+
 
 - Continuous order book
 - Advanced AI agents
-- Rich visual market charts beyond what helps learning
 - Multi-market or cross-border scenarios
-- Sophisticated registry or settlement simulation layers
+- Sophisticated registry or settlement simulation
 
 ## User Experience Rules
 
 - Favor clarity over realism when the two are in tension.
 - Every major player action should answer: what is my obligation, what are my options, what happens if I do nothing?
-- The facilitator experience is a first-class product surface, not an afterthought.
+- The host/facilitator experience is a first-class product surface.
 - Avoid cluttered trader UIs that assume professional market knowledge.
-- Keep mobile usability acceptable, but optimize first for facilitator-led desktop or laptop workshops.
+- Optimize for desktop/laptop; mobile usability is acceptable but secondary.
+- Visual quality should be a clear step above table-based simulators.
 
-## Delivery Rules
+## Sprint Roadmap
 
-### Build Order
+Use `plans/2026-05-29-game-focus-roadmap-index.md` as the execution roadmap. The five sprints are dependency-ordered:
 
-1. Prove the framework and session flow
-2. Implement the compliance and year-state engine
-3. Add abatement and offsets
-4. Add auctions
-5. Add simple secondary trading
-6. Add facilitator tools, exports, and analytics
-7. Add bots, shocks, and richer market behavior only after the core loop is stable
+1. Canonical Game Stack Consolidation
+2. Repository Reorganization & Clutter Purge
+3. Engine Trim, Modularization & Test Unification
+4. Single-Player Polish & Multiplayer Build-Out
+5. Visual Step-Change
 
-### Testing Expectations
+## Testing Expectations
 
 - Write tests for the rules engine before or alongside implementation
 - Prefer deterministic fixtures for cap, allocation, abatement, offsets, and penalties
 - Add scenario tests that simulate a full three-year session
 - Verify edge cases around offset caps, banking carry-forward, and non-compliance
-- Run manual facilitator dry-runs before calling a phase complete
-
-### Documentation Expectations
-
-- Keep rules, assumptions, and formulas close to the code they govern
-- Update this file when scope or architecture decisions materially change
-- Record deviations from the research with a short rationale
+- Run `pytest mayor_api/tests/test_api.py carbonsim_engine/tests/ -q` before committing
 
 ## Guardrails For Future Agents
 
-- Do not start with a continuous exchange UI just because CarbonSim can support one.
-- Do not overfit to foreign ETS market structure if it conflicts with Vietnam pilot evidence.
-- Do not add front-end complexity before the rules engine and facilitator flow are proven.
-- Do not treat AI bots as mandatory for the very first playable prototype; introduce them when liquidity and pedagogy demand it.
-- Do not mark a phase done without a runnable end-to-end workshop scenario.
-
-## Phase Reference
-
-Use `project-plan.md` as the execution roadmap.
-
-If a task conflicts with the roadmap, update the roadmap first or explicitly document why the deviation is necessary.
+- Do not reintroduce oTree or the archived workshop platform.
+- Do not add a build step to the frontend unless explicitly justified.
+- Do not add front-end complexity before the rules engine and multiplayer flow are proven.
+- Do not treat AI bots as mandatory; introduce them when liquidity and pedagogy demand it.
+- Do not mark a sprint done without a runnable end-to-end scenario.
+- Visual work is bounded to Sprint 5's plan — do not over-engineer the frontend before then.
