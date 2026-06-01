@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: Sprint 2 — Repository Reorganization &amp; Clutter Purge</title>
+  <meta name="color-scheme" content="dark light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) {
+        return;
+      }
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'base',
+        securityLevel: 'loose',
+        themeVariables: {
+          primaryColor: '#f3ead9',
+          primaryTextColor: '#1f1912',
+          primaryBorderColor: '#9d6b37',
+          lineColor: '#3b6f76',
+          secondaryColor: '#efe4d0',
+          tertiaryColor: '#ffffff',
+          background: '#fbf7f1',
+          mainBkg: '#fbf7f1',
+          nodeBorder: '#9d6b37',
+          clusterBkg: '#f7efdf',
+          clusterBorder: '#3b6f76',
+          edgeLabelBackground: '#fbf7f1'
+        }
+      });
+
+      await mermaid.run({ nodes: blocks });
+    }
+
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  </script>
+  <style>
+    :root {
+      --paper: #fbf7f1;
+      --paper-strong: #fffdf9;
+      --ink: #1f1912;
+      --ink-soft: #5f564c;
+      --line: #dccdb6;
+      --line-strong: #bfa37d;
+      --accent: #9d6b37;
+      --accent-soft: #efe4d0;
+      --accent-2: #3b6f76;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08);
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --page-width: 1040px;
+      --display-font: Georgia, "Times New Roman", serif;
+      --body-font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono-font: "Cascadia Code", Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(157, 107, 55, 0.09), transparent 26%),
+        radial-gradient(circle at 88% 10%, rgba(59, 111, 118, 0.08), transparent 22%),
+        linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%);
+      font-family: var(--body-font);
+      line-height: 1.65;
+      letter-spacing: 0.01em;
+    }
+
+    a {
+      color: var(--accent-2);
+    }
+
+    code,
+    pre,
+    .technical,
+    .meta-chip,
+    .section-index,
+    .eyebrow,
+    .stat-label,
+    .stat-value,
+    .mermaid {
+      font-family: var(--mono-font);
+    }
+
+    .page-shell {
+      width: min(var(--page-width), calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid rgba(159, 123, 79, 0.28);
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(157, 107, 55, 0.1), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.86)),
+        var(--paper-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.85fr);
+      gap: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin: 0;
+      max-width: 12ch;
+      font-family: var(--display-font);
+      font-size: clamp(2.8rem, 5vw, 4.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin: 18px 0 0;
+      max-width: 60ch;
+      color: var(--ink-soft);
+      font-size: 1rem;
+    }
+
+    .takeaway {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: rgba(59, 111, 118, 0.08);
+      color: #20373a;
+      font-size: 1.02rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .meta-card,
+    .section,
+    .subcard,
+    .empty-state {
+      border: 1px solid rgba(95, 72, 46, 0.12);
+      background: rgba(255, 253, 249, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .meta-card {
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+    }
+
+    .meta-label {
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .meta-chip {
+      margin-top: 8px;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .section {
+      margin-top: 22px;
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px 18px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-index {
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: var(--display-font);
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      line-height: 1.05;
+    }
+
+    .summary-grid,
+    .dual-grid,
+    .phase-grid,
+    .stat-grid,
+    .appendix-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .summary-grid,
+    .dual-grid,
+    .phase-grid,
+    .appendix-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .subcard {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .subcard h3,
+    .subcard h4 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .subcard p:first-child,
+    .subcard ul:first-child,
+    .subcard ol:first-child {
+      margin-top: 0;
+    }
+
+    .stat-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 16px;
+    }
+
+    .stat {
+      padding: 14px 16px;
+      border: 1px solid rgba(59, 111, 118, 0.16);
+      border-radius: var(--radius-sm);
+      background: rgba(59, 111, 118, 0.06);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .stat-label {
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      color: var(--accent-2);
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    .narrative,
+    .chart-frame,
+    .technical-frame,
+    .diagram-frame,
+    .viz-frame {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.54);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .diagram-frame {
+      overflow-x: auto;
+      overflow-y: auto;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: contain;
+      max-height: min(70vh, 720px);
+    }
+
+    .chart-frame,
+    .viz-frame {
+      overflow: hidden;
+    }
+
+    .mermaid {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      color: var(--ink);
+    }
+
+    .mermaid svg {
+      display: block;
+      width: auto !important;
+      min-width: 100%;
+      max-width: none !important;
+      height: auto !important;
+    }
+
+    .diagram-frame.compact-diagram {
+      padding: 12px;
+      max-height: min(62vh, 560px);
+    }
+
+    .diagram-frame.compact-diagram .mermaid {
+      min-width: 900px;
+    }
+
+    .chart-frame canvas,
+    .technical-frame > canvas,
+    .viz-frame canvas,
+    canvas.report-chart {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      height: 300px !important;
+      min-height: 300px;
+      max-height: 300px;
+    }
+
+    .technical-frame table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .technical-frame th,
+    .technical-frame td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .technical-frame th {
+      color: var(--accent);
+      font-size: 0.76rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .empty-state {
+      padding: 20px;
+      border-radius: var(--radius-md);
+      text-align: center;
+      color: var(--ink-soft);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+      font-size: 0.84rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    p:last-child,
+    li:last-child {
+      margin-bottom: 0;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: rgba(95, 86, 76, 0.74);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: right;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid,
+      .summary-grid,
+      .dual-grid,
+      .phase-grid,
+      .stat-grid,
+      .appendix-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .title {
+        max-width: none;
+      }
+
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        width: min(100vw - 20px, var(--page-width));
+        padding-top: 16px;
+        padding-bottom: 36px;
+      }
+
+      .hero,
+      .section {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      .title {
+        font-size: clamp(2.1rem, 12vw, 3.2rem);
+      }
+
+    }
+
+    @media print {
+      :root {
+        --paper: #ffffff;
+        --paper-strong: #ffffff;
+        --ink: #111111;
+        --ink-soft: #444444;
+        --line: #d6d1c8;
+      }
+
+      @page {
+        size: A4;
+        margin: 14mm;
+      }
+
+      body {
+        background: #ffffff;
+      }
+
+      .page-shell {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      .meta-card,
+      .section,
+      .subcard,
+      .narrative,
+      .chart-frame,
+      .technical-frame,
+      .diagram-frame,
+      .viz-frame,
+      .empty-state,
+      .stat {
+        background: #ffffff;
+        box-shadow: none;
+      }
+
+      .hero,
+      .section {
+        margin-top: 0;
+        margin-bottom: 10mm;
+      }
+
+      .diagram-frame {
+        overflow: visible;
+        max-height: none;
+      }
+
+      .diagram-frame.compact-diagram .mermaid {
+        min-width: 0;
+      }
+
+      .section-header,
+      .takeaway {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="title-hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Final Report / Sprint 2 — Repository Reorganization &amp; Clutter Purge</p>
+          <h1 class="title">Sprint 2 Complete</h1>
+          <p class="lede">
+            The repo now has a conventional, navigable layout. The duplicate worktree is gone, 18 obsolete reports are archived, the code directories are renamed to engine/, server/, web/, all imports are updated, and the layout is documented.
+          </p>
+          <div class="takeaway">Sprint 2 gave the repo a conventional, navigable layout. The duplicate worktree is gone, 18 obsolete reports are archived, the code directories are renamed to engine/, server/, web/, all imports are updated, and the layout is documented. 83 tests passing throughout.</div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">Project</div>
+            <div class="meta-chip">CarbonSim Online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Repository</div>
+            <div class="meta-chip">carbonsim-online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Date</div>
+            <div class="meta-chip">2026-06-02</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="executive-summary">
+      <div class="section-header">
+        <div>
+          <div class="section-index">01 / Executive Summary</div>
+          <h2 class="section-title">Executive Summary</h2>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="subcard">
+          <h3>What was done</h3>
+          <p>Sprint 2 of the 5-sprint game-focus roadmap was executed in full. Three phases delivered:</p>
+          <ul>
+            <li><strong>PHASE-01 (Purge):</strong> Removed the 2.3 MB duplicate git worktree, archived 18 obsolete oTree phase reports, deleted stray runtime databases, extended .gitignore with cache and worktree patterns.</li>
+            <li><strong>PHASE-02 (Layout):</strong> Renamed carbonsim_engine/ to engine/, mayor_api/ to server/, mayor_web/ to web/ using git mv (history preserved). Updated 26 import sites across 6 files, engine packaging config, web-dir resolution in server/main.py, and all documentation references. Deleted the obsolete scripts/start_otree.py.</li>
+            <li><strong>PHASE-03 (Document):</strong> Created docs/STRUCTURE.md describing every top-level directory. Updated README project layout table. Cross-linked from AGENTS.md.</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Why it matters</h3>
+          <p>Before Sprint 2, the repo had three sibling top-level code dirs with legacy names (carbonsim_engine, mayor_api, mayor_web), a 2.3 MB duplicate worktree, 18 obsolete oTree reports cluttering reports/, stray runtime databases, and no structure documentation. Now the tree is clean, conventional, and self-documenting.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="background-objective">
+      <div class="section-header">
+        <div>
+          <div class="section-index">02 / Background &amp; Objective</div>
+          <h2 class="section-title">Background &amp; Objective</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p>The gap analysis identified GAP-06: the repo had no conventional layout, accumulated clutter (duplicate worktree, obsolete reports, build artifacts, runtime DBs), and no structure documentation. Sprint 2 was designed to resolve this after Sprint 1 removed the oTree stack, so the reorganization is one-directional and import-path churn happens only once.</p>
+      </div>
+    </section>
+
+    <section class="section" id="inputs-scope">
+      <div class="section-header">
+        <div>
+          <div class="section-index">03 / Inputs &amp; Scope</div>
+          <h2 class="section-title">Inputs &amp; Scope</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Inputs</h3>
+          <ul>
+            <li><code>plans/2026-05-29-repo-reorganization-cleanup-plan.md</code> — the sprint plan</li>
+            <li><code>.claude/worktrees/hardcore-wu-70aa3d/</code> — 2.3 MB duplicate worktree</li>
+            <li><code>reports/</code> — 30 files, 18 obsolete</li>
+            <li><code>carbonsim_engine/</code>, <code>mayor_api/</code>, <code>mayor_web/</code> — legacy directory names</li>
+            <li>User decisions: Q-001 = src/-style grouping, Q-002 = archive (not delete)</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Scope</h3>
+          <ul>
+            <li><strong>In scope:</strong> Purge clutter, adopt target layout, fix all paths/imports, document layout</li>
+            <li><strong>Out of scope:</strong> Engine trimming (Sprint 3), multiplayer features (Sprint 4), visual work (Sprint 5)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="assumptions-constraints">
+      <div class="section-header">
+        <div>
+          <div class="section-index">04 / Assumptions &amp; Constraints</div>
+          <h2 class="section-title">Assumptions &amp; Constraints</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Assumptions</h3>
+          <ul>
+            <li>Sprint 1 is complete: platform/ is gone and a root dependency manifest exists</li>
+            <li>server/main.py resolves the web directory via a relative path that must be updated</li>
+            <li>engine is pip-installed; a rename requires updating pyproject.toml and reinstalling</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Constraints</h3>
+          <ul>
+            <li>Reorg must land in a single commit with passing tests to avoid a half-migrated tree</li>
+            <li>git mv used to preserve file history</li>
+            <li>Obsolete reports archived (not deleted) per Q-002</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="methodology">
+      <div class="section-header">
+        <div>
+          <div class="section-index">05 / Methodology</div>
+          <h2 class="section-title">Methodology</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p>The sprint followed a strict three-phase dependency chain:</p>
+        <ol>
+          <li><strong>Purge first</strong> — remove everything that adds noise but not code, so the subsequent move operates on a clean tree.</li>
+          <li><strong>Move second</strong> — rename directories and fix all paths/imports in one mechanical pass, proven by a green test run.</li>
+          <li><strong>Document third</strong> — make the new structure self-explaining so it doesn't drift back.</li>
+        </ol>
+        <p>Each phase was gated on exit criteria: PHASE-01 required no duplicate worktree, no build artifacts, no runtime DBs; PHASE-02 required all 83 tests passing from the new layout; PHASE-03 required README matching ls of the repo root.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Phases</div>
+          <div class="stat-value">3</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Commits</div>
+          <div class="stat-value">3</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Tests Passing</div>
+          <div class="stat-value">83</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="phase-analysis">
+      <div class="section-header">
+        <div>
+          <div class="section-index">06 / Phase-by-Phase Analysis</div>
+          <h2 class="section-title">Phase-by-Phase Analysis</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="subcard">
+          <h3>PHASE-01: Purge Clutter</h3>
+          <ul>
+            <li>Removed <code>.claude/worktrees/hardcore-wu-70aa3d/</code> via <code>git worktree remove --force</code> (had 1 untracked file, branch preserved in history)</li>
+            <li>Archived 18 obsolete oTree phase reports to <code>archive/reports/</code> via <code>git mv</code> (history preserved)</li>
+            <li>Deleted <code>db.sqlite3</code> and <code>mayor_api/mayor.db</code> from working tree</li>
+            <li>Extended <code>.gitignore</code>: added <code>*.db</code>/<code>*.db-wal</code>/<code>*.db-shm</code> at root, <code>.pytest_cache/</code>, <code>.ruff_cache/</code>, <code>.claude/worktrees/</code></li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>PHASE-02: Adopt Target Layout &amp; Fix Paths</h3>
+          <ul>
+            <li><code>git mv carbonsim_engine/</code> → <code>engine/</code> (20 files, history preserved)</li>
+            <li><code>git mv mayor_api/</code> → <code>server/</code> (13 files, history preserved)</li>
+            <li><code>git mv mayor_web/</code> → <code>web/</code> (11 files, history preserved)</li>
+            <li>Updated <code>engine/pyproject.toml</code>: name=engine, include=["engine*"]</li>
+            <li>Updated 26 import sites across 6 Python files (engine/tests/, server/routes/, server/ws.py, server/tests/)</li>
+            <li>Updated server/main.py web-dir resolution: "mayor_web" → "web"</li>
+            <li>Updated server/routes/game.py data path references: "carbonsim_engine" → "engine"</li>
+            <li>Deleted obsolete <code>scripts/start_otree.py</code></li>
+            <li>Reinstalled engine package via <code>pip install -e engine/</code></li>
+            <li>All 83 tests passing</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>PHASE-03: Document the Layout</h3>
+          <ul>
+            <li>Created <code>docs/STRUCTURE.md</code> with code directories, documentation, archive, utilities, and "where new code belongs" sections</li>
+            <li>Updated <code>README.md</code> project layout table to include <code>docs/</code> and <code>scripts/</code></li>
+            <li>Cross-linked <code>docs/STRUCTURE.md</code> from <code>AGENTS.md</code></li>
+            <li>Reset <code>activeContext.md</code> to track Sprint 2 completion</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Cross-Phase Outcomes</h3>
+          <ul>
+            <li>3 commits pushed to <code>master</code> (one per phase)</li>
+            <li>3 phase reports generated in <code>reports/</code></li>
+            <li>Zero regressions — 83 tests passing throughout</li>
+            <li>44 files moved with full git history preserved</li>
+          </ul>
+        </div>
+      </div>
+      <div class="diagram-frame" style="margin-top: 16px;">
+        <div class="mermaid">flowchart LR
+    subgraph PHASE-01
+        A1[Remove worktree dup] --> A2[Archive obsolete reports]
+        A2 --> A3[Delete runtime DBs]
+        A3 --> A4[Extend .gitignore]
+    end
+    subgraph PHASE-02
+        B1[git mv directories] --> B2[Update imports]
+        B2 --> B3[Update packaging]
+        B3 --> B4[Update docs]
+        B4 --> B5[Tests: 83 pass]
+    end
+    subgraph PHASE-03
+        C1[Create STRUCTURE.md] --> C2[Update README]
+        C2 --> C3[Cross-link AGENTS]
+    end
+    PHASE-01 --> PHASE-02 --> PHASE-03
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="findings-recommendation">
+      <div class="section-header">
+        <div>
+          <div class="section-index">07 / Findings &amp; Recommendation</div>
+          <h2 class="section-title">Findings &amp; Recommendation</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p><strong>Finding 1:</strong> The directory rename was mechanical and clean. git mv preserved history for all 44 files. The import update was straightforward — 26 sites across 6 files, all found via grep.</p>
+        <p><strong>Finding 2:</strong> The package name "engine" is generic but acceptable for a monorepo where the package is only consumed internally. If the engine is ever published to PyPI, a more specific name would be needed.</p>
+        <p><strong>Finding 3:</strong> The structure documentation (docs/STRUCTURE.md) fills a gap that existed since the project started — there was no guide for where new code belongs.</p>
+        <p><strong>Recommendation:</strong> Proceed to Sprint 3 (Engine Trim, Modularization &amp; Test Unification) to inventory engine surfaces, fix the 2 known-failing tests, strengthen API assertions, and trim dead code.</p>
+      </div>
+    </section>
+
+    <section class="section" id="implementation-path">
+      <div class="section-header">
+        <div>
+          <div class="section-index">08 / Implementation Path</div>
+          <h2 class="section-title">Implementation Path</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="subcard">
+          <h3>Sprint 3: Engine Trim &amp; Test Unification</h3>
+          <p><strong>Plan:</strong> <code>plans/2026-05-29-engine-trim-test-unification-plan.md</code></p>
+          <ul>
+            <li>Inventory engine surfaces vs. real game usage</li>
+            <li>Fix the 2 known-failing engine tests</li>
+            <li>Strengthen API test assertions</li>
+            <li>Trim dead code, optionally modularize the monolith</li>
+          </ul>
+          <p><strong>Depends on:</strong> Sprint 2 completion (done)</p>
+          <p><strong>Open questions:</strong> Q-001 (split engine monolith now or just trim?), Q-002 (workshop surfaces: multiplayer candidate or dead?)</p>
+        </div>
+        <div class="subcard">
+          <h3>Sprint 4: Multiplayer Build-Out</h3>
+          <p><strong>Plan:</strong> <code>plans/2026-05-29-singleplayer-multiplayer-buildout-plan.md</code></p>
+          <ul>
+            <li>Lobby, room codes, host controls</li>
+            <li>Server-authoritative year cycle over WebSocket</li>
+            <li>Reconnection and resilience</li>
+            <li>Uses patterns salvaged in Sprint 1 PHASE-01</li>
+          </ul>
+          <p><strong>Depends on:</strong> Sprint 3 completion</p>
+        </div>
+        <div class="subcard">
+          <h3>Sprint 5: Visual Step-Change</h3>
+          <p><strong>Plan:</strong> <code>plans/2026-05-29-visual-step-change-plan.md</code></p>
+          <ul>
+            <li>Design system, reskin all screens, signature animated visual</li>
+          </ul>
+          <p><strong>Depends on:</strong> Sprint 4 completion</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="risks-open-questions">
+      <div class="section-header">
+        <div>
+          <div class="section-index">09 / Risks / Open Questions</div>
+          <h2 class="section-title">Risks / Open Questions</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Risks</h3>
+          <ul>
+            <li>The generic package name "engine" could conflict if the engine is ever published to PyPI or used in a shared environment.</li>
+            <li>Historical sprint plans (Sprint 3, 4, 5) still reference old directory names (carbonsim_engine/, mayor_api/, mayor_web/). These will be naturally updated as those sprints are executed.</li>
+            <li>The archive/ directory now contains three subdirectories which grow over time. Consider pruning after the next release.</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Open Questions</h3>
+          <ul>
+            <li><strong>Sprint 3 Q-001:</strong> Split the engine monolith into modules now, or just trim dead code?</li>
+            <li><strong>Sprint 3 Q-002:</strong> Are the workshop-only surfaces (facilitator snapshot, session analytics, export, multi-company auctions) wanted for Sprint 4 multiplayer, or truly dead?</li>
+            <li><strong>Sprint 4 Q-001:</strong> What is the multiplayer shape — co-op, competitive, or facilitator-led?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="appendices-evidence">
+      <div class="section-header">
+        <div>
+          <div class="section-index">10 / Appendices / Evidence Notes</div>
+          <h2 class="section-title">Appendices / Evidence Notes</h2>
+        </div>
+      </div>
+      <div class="appendix-grid">
+        <div class="subcard">
+          <h3>Commit Log</h3>
+          <div class="technical-frame">
+            <table>
+              <thead>
+                <tr><th>Commit</th><th>Phase</th><th>Files Changed</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>f992eaf</code></td><td>PHASE-01</td><td>21 files (worktree removal, report archival, .gitignore)</td></tr>
+                <tr><td><code>0afe0b6</code></td><td>PHASE-02</td><td>46 files (directory renames, import updates, docs)</td></tr>
+                <tr><td><code>b540453</code></td><td>PHASE-03</td><td>5 files (STRUCTURE.md, README, AGENTS, activeContext)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="subcard">
+          <h3>Generated Reports</h3>
+          <ul>
+            <li><code>reports/2026-06-02-sprint2-phase01-purge-clutter.html</code></li>
+            <li><code>reports/2026-06-02-sprint2-phase02-adopt-layout.html</code></li>
+            <li><code>reports/2026-06-02-sprint2-phase03-document-layout.html</code></li>
+            <li><code>reports/2026-06-02-final-sprint2-repo-reorganization.html</code> (this report)</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Test Results</h3>
+          <div class="technical-frame">
+            <table>
+              <thead>
+                <tr><th>Suite</th><th>Tests</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>server/tests/test_api.py</td><td>25</td><td>Passed</td></tr>
+                <tr><td>engine/tests/</td><td>58</td><td>Passed</td></tr>
+                <tr><td><strong>Total</strong></td><td><strong>83</strong></td><td><strong>All passing</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="subcard">
+          <h3>Key Files Changed</h3>
+          <ul>
+            <li><code>engine/</code> — renamed from carbonsim_engine/ (20 files)</li>
+            <li><code>server/</code> — renamed from mayor_api/ (13 files)</li>
+            <li><code>web/</code> — renamed from mayor_web/ (11 files)</li>
+            <li><code>docs/STRUCTURE.md</code> — new</li>
+            <li><code>README.md</code> — updated layout table</li>
+            <li><code>AGENTS.md</code> — cross-linked structure doc</li>
+            <li><code>.gitignore</code> — extended with cache/worktree patterns</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">designed for html first, printable without reconstruction</div>
+    </section>
+  </main>
+  <script>
+    (function() {
+      const chartCanvases = document.querySelectorAll('canvas');
+      chartCanvases.forEach((canvas) => {
+        canvas.classList.add('report-chart');
+        const parent = canvas.parentElement;
+        if (parent && parent.classList.contains('technical-frame') && !parent.classList.contains('chart-frame')) {
+          parent.classList.add('chart-frame');
+        }
+      });
+    })();
+
+    if (window.Chart) {
+      Chart.defaults.devicePixelRatio = 1;
+      Chart.defaults.animation = false;
+      Chart.defaults.resizeDelay = 150;
+      Chart.defaults.normalized = true;
+      Chart.defaults.maintainAspectRatio = false;
+      Chart.defaults.responsive = true;
+      window.__REPORT_CHART_DEFAULTS__ = {
+        animation: false,
+        resizeDelay: 150,
+        normalized: true,
+        maintainAspectRatio: false,
+        responsive: true
+      };
+    }
+  </script>
+</body>
+</html>
