@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: Sprint 1 — Canonical Game Stack Consolidation</title>
+  <meta name="color-scheme" content="dark light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) {
+        return;
+      }
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'base',
+        securityLevel: 'loose',
+        themeVariables: {
+          primaryColor: '#f3ead9',
+          primaryTextColor: '#1f1912',
+          primaryBorderColor: '#9d6b37',
+          lineColor: '#3b6f76',
+          secondaryColor: '#efe4d0',
+          tertiaryColor: '#ffffff',
+          background: '#fbf7f1',
+          mainBkg: '#fbf7f1',
+          nodeBorder: '#9d6b37',
+          clusterBkg: '#f7efdf',
+          clusterBorder: '#3b6f76',
+          edgeLabelBackground: '#fbf7f1'
+        }
+      });
+
+      await mermaid.run({ nodes: blocks });
+    }
+
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  </script>
+  <style>
+    :root {
+      --paper: #fbf7f1;
+      --paper-strong: #fffdf9;
+      --ink: #1f1912;
+      --ink-soft: #5f564c;
+      --line: #dccdb6;
+      --line-strong: #bfa37d;
+      --accent: #9d6b37;
+      --accent-soft: #efe4d0;
+      --accent-2: #3b6f76;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08);
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --page-width: 1040px;
+      --display-font: Georgia, "Times New Roman", serif;
+      --body-font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono-font: "Cascadia Code", Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(157, 107, 55, 0.09), transparent 26%),
+        radial-gradient(circle at 88% 10%, rgba(59, 111, 118, 0.08), transparent 22%),
+        linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%);
+      font-family: var(--body-font);
+      line-height: 1.65;
+      letter-spacing: 0.01em;
+    }
+
+    a {
+      color: var(--accent-2);
+    }
+
+    code,
+    pre,
+    .technical,
+    .meta-chip,
+    .section-index,
+    .eyebrow,
+    .stat-label,
+    .stat-value,
+    .mermaid {
+      font-family: var(--mono-font);
+    }
+
+    .page-shell {
+      width: min(var(--page-width), calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid rgba(159, 123, 79, 0.28);
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(157, 107, 55, 0.1), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.86)),
+        var(--paper-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.85fr);
+      gap: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin: 0;
+      max-width: 12ch;
+      font-family: var(--display-font);
+      font-size: clamp(2.8rem, 5vw, 4.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin: 18px 0 0;
+      max-width: 60ch;
+      color: var(--ink-soft);
+      font-size: 1rem;
+    }
+
+    .takeaway {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: rgba(59, 111, 118, 0.08);
+      color: #20373a;
+      font-size: 1.02rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .meta-card,
+    .section,
+    .subcard,
+    .empty-state {
+      border: 1px solid rgba(95, 72, 46, 0.12);
+      background: rgba(255, 253, 249, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .meta-card {
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+    }
+
+    .meta-label {
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .meta-chip {
+      margin-top: 8px;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .section {
+      margin-top: 22px;
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px 18px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-index {
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: var(--display-font);
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      line-height: 1.05;
+    }
+
+    .summary-grid,
+    .dual-grid,
+    .phase-grid,
+    .stat-grid,
+    .appendix-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .summary-grid,
+    .dual-grid,
+    .phase-grid,
+    .appendix-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .subcard {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .subcard h3,
+    .subcard h4 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .subcard p:first-child,
+    .subcard ul:first-child,
+    .subcard ol:first-child {
+      margin-top: 0;
+    }
+
+    .stat-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 16px;
+    }
+
+    .stat {
+      padding: 14px 16px;
+      border: 1px solid rgba(59, 111, 118, 0.16);
+      border-radius: var(--radius-sm);
+      background: rgba(59, 111, 118, 0.06);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .stat-label {
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      color: var(--accent-2);
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    .narrative,
+    .chart-frame,
+    .technical-frame,
+    .diagram-frame,
+    .viz-frame {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.54);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .diagram-frame {
+      overflow-x: auto;
+      overflow-y: auto;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: contain;
+      max-height: min(70vh, 720px);
+    }
+
+    .chart-frame,
+    .viz-frame {
+      overflow: hidden;
+    }
+
+    .mermaid {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      color: var(--ink);
+    }
+
+    .mermaid svg {
+      display: block;
+      width: auto !important;
+      min-width: 100%;
+      max-width: none !important;
+      height: auto !important;
+    }
+
+    .diagram-frame.compact-diagram {
+      padding: 12px;
+      max-height: min(62vh, 560px);
+    }
+
+    .diagram-frame.compact-diagram .mermaid {
+      min-width: 900px;
+    }
+
+    .chart-frame canvas,
+    .technical-frame > canvas,
+    .viz-frame canvas,
+    canvas.report-chart {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      height: 300px !important;
+      min-height: 300px;
+      max-height: 300px;
+    }
+
+    .technical-frame table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .technical-frame th,
+    .technical-frame td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .technical-frame th {
+      color: var(--accent);
+      font-size: 0.76rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .empty-state {
+      padding: 20px;
+      border-radius: var(--radius-md);
+      text-align: center;
+      color: var(--ink-soft);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+      font-size: 0.84rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    p:last-child,
+    li:last-child {
+      margin-bottom: 0;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: rgba(95, 86, 76, 0.74);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: right;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid,
+      .summary-grid,
+      .dual-grid,
+      .phase-grid,
+      .stat-grid,
+      .appendix-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .title {
+        max-width: none;
+      }
+
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        width: min(100vw - 20px, var(--page-width));
+        padding-top: 16px;
+        padding-bottom: 36px;
+      }
+
+      .hero,
+      .section {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      .title {
+        font-size: clamp(2.1rem, 12vw, 3.2rem);
+      }
+
+    }
+
+    @media print {
+      :root {
+        --paper: #ffffff;
+        --paper-strong: #ffffff;
+        --ink: #111111;
+        --ink-soft: #444444;
+        --line: #d6d1c8;
+      }
+
+      @page {
+        size: A4;
+        margin: 14mm;
+      }
+
+      body {
+        background: #ffffff;
+      }
+
+      .page-shell {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      .meta-card,
+      .section,
+      .subcard,
+      .narrative,
+      .chart-frame,
+      .technical-frame,
+      .diagram-frame,
+      .viz-frame,
+      .empty-state,
+      .stat {
+        background: #ffffff;
+        box-shadow: none;
+      }
+
+      .hero,
+      .section {
+        margin-top: 0;
+        margin-bottom: 10mm;
+      }
+
+      .diagram-frame {
+        overflow: visible;
+        max-height: none;
+      }
+
+      .diagram-frame.compact-diagram .mermaid {
+        min-width: 0;
+      }
+
+      .section-header,
+      .takeaway {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="title-hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Final Report / Sprint 1 — Canonical Game Stack Consolidation</p>
+          <h1 class="title">Sprint 1 Complete</h1>
+          <p class="lede">
+            The Climate Mayor game stack is now the single canonical product. The orphaned oTree workshop platform has been archived, the game has its own dependency manifest, and all context documents describe the game rather than the abandoned workshop platform.
+          </p>
+          <div class="takeaway">Sprint 1 established one source of truth: the FastAPI game stack. All 3 phases delivered on schedule with 83 tests passing and zero regressions.</div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">Project</div>
+            <div class="meta-chip">CarbonSim Online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Repository</div>
+            <div class="meta-chip">carbonsim-online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Date</div>
+            <div class="meta-chip">2026-06-02</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="executive-summary">
+      <div class="section-header">
+        <div>
+          <div class="section-index">01 / Executive Summary</div>
+          <h2 class="section-title">Executive Summary</h2>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="subcard">
+          <h3>What was done</h3>
+          <p>Sprint 1 of the 5-sprint game-focus roadmap was executed in full. Three phases delivered:</p>
+          <ul>
+            <li><strong>PHASE-01 (Salvage):</strong> Extracted 6 deployment artifacts and mapped 6 reusable pattern categories from the oTree platform into a self-documenting archive.</li>
+            <li><strong>PHASE-02 (Remove):</strong> Archived the entire platform to <code>archive/otree-platform/runnable/</code>, created a root <code>requirements.txt</code>, cleaned <code>.gitignore</code>, and fixed a pre-existing dependency conflict. All 83 tests pass.</li>
+            <li><strong>PHASE-03 (Rewrite):</strong> Rewrote README.md, AGENTS.md, and activeContext.md to describe the game stack. Replaced the oTree roadmap with a pointer to the sprint index. Archived 4 divergent plans.</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Why it matters</h3>
+          <p>Before Sprint 1, the repo had two parallel product stacks sharing one engine, and every context document described the wrong product. This meant:</p>
+          <ul>
+            <li>AI agents reading AGENTS.md were told to use oTree and avoid custom stacks</li>
+            <li>README.md listed oTree Phases 1-10 with zero mention of the actual game</li>
+            <li>The project-plan.md was a 439-line oTree workshop roadmap</li>
+            <li>Contributors could not install or run the game from the docs</li>
+          </ul>
+          <p>All of this is now fixed. The game stack is the single source of truth.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="background-objective">
+      <div class="section-header">
+        <div>
+          <div class="section-index">02 / Background &amp; Objective</div>
+          <h2 class="section-title">Background &amp; Objective</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p>CarbonSim Online began as a Vietnam-aligned workshop simulation built on oTree, a Python framework for multiplayer behavioral experiments. Over 10 phases, the platform grew to include a full compliance engine, facilitator controls, auctions, bilateral trading, bots, shocks, and session analytics.</p>
+        <p>In parallel, a separate game product — "Climate Mayor" — was built on FastAPI with a static HTML/JS frontend and the same <code>carbonsim_engine</code> compliance core. This game stack received 100% of recent development effort, while the oTree platform became orphaned: its engine was reduced to a one-line re-export shim, and nothing in the game stack imported it.</p>
+        <p>The gap analysis on 2026-05-29 identified this as the highest-severity issue: two parallel stacks, docs describing the wrong product, and no clear single source of truth. Sprint 1 was designed to resolve this by declaring the game stack canonical, archiving the oTree platform, and rewriting all context documents.</p>
+      </div>
+    </section>
+
+    <section class="section" id="inputs-scope">
+      <div class="section-header">
+        <div>
+          <div class="section-index">03 / Inputs &amp; Scope</div>
+          <h2 class="section-title">Inputs &amp; Scope</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Inputs</h3>
+          <ul>
+            <li><code>reports/2026-05-29-single-multiplayer-game-gap-analysis.md</code> — source of GAP-01, GAP-02, GAP-07</li>
+            <li><code>plans/2026-05-29-canonical-game-stack-consolidation-plan.md</code> — the sprint plan</li>
+            <li><code>platform/</code> directory — 18 entries, oTree workshop product</li>
+            <li>Existing README.md, AGENTS.md, activeContext.md, project-plan.md</li>
+            <li>4 divergent plans to archive</li>
+            <li>User decisions: Q-001 = archive (not delete), Q-002 = requirements.txt (not pyproject.toml)</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Scope</h3>
+          <ul>
+            <li><strong>In scope:</strong> Salvage patterns, archive platform, create dependency manifest, rewrite docs, consolidate plans</li>
+            <li><strong>Out of scope:</strong> Engine trimming (Sprint 3), directory reorganization (Sprint 2), multiplayer features (Sprint 4), visual work (Sprint 5)</li>
+            <li><strong>Key constraint:</strong> No behavior changes to the game — this is a structural and documentation sprint only</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="assumptions-constraints">
+      <div class="section-header">
+        <div>
+          <div class="section-index">04 / Assumptions &amp; Constraints</div>
+          <h2 class="section-title">Assumptions &amp; Constraints</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Assumptions</h3>
+          <ul>
+            <li>The oTree workshop product is retired in favor of the game (confirmed by Q-001 answer)</li>
+            <li><code>mayor_api/main.py</code> already serves both API and static frontend, so removing platform removes no runtime capability</li>
+            <li><code>carbonsim_engine</code> import path remains unchanged through this sprint</li>
+            <li>The game stack is the go-forward product (established by 6 weeks of momentum)</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Constraints</h3>
+          <ul>
+            <li>Platform archived (not deleted) per user decision — kept runnable for Sprint 4 reference</li>
+            <li>Root dependency manifest uses <code>requirements.txt</code> per user decision</li>
+            <li>No engine behavior changes — tests must pass at the same level before and after</li>
+            <li>Historical plans and research documents retain oTree references as appropriate context</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="methodology">
+      <div class="section-header">
+        <div>
+          <div class="section-index">05 / Methodology</div>
+          <h2 class="section-title">Methodology</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p>The sprint followed a strict three-phase dependency chain:</p>
+        <ol>
+          <li><strong>Salvage first</strong> — before any removal, extract reusable patterns and deployment artifacts into a self-documenting archive. This ensures Sprint 4 (multiplayer) has reference material without maintaining the oTree codebase.</li>
+          <li><strong>Remove second</strong> — archive the platform using <code>git mv</code> to preserve history, create the game's own dependency manifest, and prove nothing breaks with a full test run.</li>
+          <li><strong>Rewrite third</strong> — only after the stack decision is real (platform is gone, game has its own manifest), rewrite the context documents. This prevents docs from claiming a decision that hasn't been executed.</li>
+        </ol>
+        <p>Each phase was gated on exit criteria: PHASE-01 required zero inbound imports confirmed by grep; PHASE-02 required all 83 tests passing; PHASE-03 required residual oTree references confined to historical plans and research documents only.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Phases</div>
+          <div class="stat-value">3</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Commits</div>
+          <div class="stat-value">3</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Tests Passing</div>
+          <div class="stat-value">83</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="phase-analysis">
+      <div class="section-header">
+        <div>
+          <div class="section-index">06 / Phase-by-Phase Analysis</div>
+          <h2 class="section-title">Phase-by-Phase Analysis</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="subcard">
+          <h3>PHASE-01: Salvage oTree Platform</h3>
+          <p>Read all platform source files and identified 6 pattern categories worth porting to Sprint 4 multiplayer:</p>
+          <ul>
+            <li><strong>Room/Session Flow</strong> — Welcome page join flow, company assignment, session config</li>
+            <li><strong>Facilitator Controls</strong> — pause/resume/advance, shock application, bot turns, export</li>
+            <li><strong>Live Broadcast</strong> — per-action snapshot refresh, broadcast to all participants</li>
+            <li><strong>Reconnection</strong> — minimal state restore on dropped connection</li>
+            <li><strong>Trade/Auction UI</strong> — bilateral trade proposal/inbox, sealed-bid auction board</li>
+            <li><strong>Deployment Stack</strong> — Docker Compose, Caddy, Fly.io configs</li>
+          </ul>
+          <p>Copied 6 deployment artifacts to <code>archive/otree-platform/</code> and wrote <code>SALVAGE-NOTES.md</code> mapping each pattern to its Sprint 4 target. Confirmed zero inbound imports from game stack to platform.</p>
+        </div>
+        <div class="subcard">
+          <h3>PHASE-02: Remove oTree Stack</h3>
+          <p>Moved <code>platform/</code> to <code>archive/otree-platform/runnable/</code> via <code>git mv</code> (preserving history). Created root <code>requirements.txt</code> with the game's actual dependencies (fastapi, uvicorn, pydantic, pytest, httpx). Cleaned <code>.gitignore</code> by removing platform-specific rules and adding <code>db.sqlite3</code> at root. Updated engine keyword from "workshop" to "game".</p>
+          <p>Fixed a pre-existing starlette/fastapi version conflict caused by otree pinning starlette 0.14.1. Upgraded both packages; the otree conflict is now irrelevant since oTree is removed from the dependency set.</p>
+          <p>All 83 tests passing (25 API + 58 engine).</p>
+        </div>
+        <div class="subcard">
+          <h3>PHASE-03: Rewrite Context Docs</h3>
+          <p>Rewrote 4 documents:</p>
+          <ul>
+            <li><strong>README.md</strong> — game stack architecture, install/run/test instructions, sprint roadmap link</li>
+            <li><strong>AGENTS.md</strong> — game-first mission, FastAPI stack, architecture principles, sprint roadmap, updated guardrails (visual polish now in-scope for Sprint 5)</li>
+            <li><strong>activeContext.md</strong> — tracks Sprint 1 completion, points to Sprint 2</li>
+            <li><strong>project-plan.md</strong> — replaced 439-line oTree roadmap with pointer to sprint index</li>
+          </ul>
+          <p>Archived 4 divergent plans to <code>archive/plans/</code>: free-tier deployment, Vietnam market testing, Carbon Crunch Daily, co-op facilitator workshop.</p>
+          <p>Grep confirmed residual oTree references are confined to historical plans, research documents, and the sprint plans themselves — all appropriate locations.</p>
+        </div>
+        <div class="subcard">
+          <h3>Cross-Phase Outcomes</h3>
+          <ul>
+            <li>3 commits pushed to <code>master</code> (one per phase)</li>
+            <li>3 phase reports generated in <code>reports/</code></li>
+            <li>Zero regressions — 83 tests passing throughout</li>
+            <li>Game stack is now installable and runnable from its own <code>requirements.txt</code></li>
+          </ul>
+        </div>
+      </div>
+      <div class="diagram-frame" style="margin-top: 16px;">
+        <div class="mermaid">flowchart LR
+    subgraph PHASE-01
+        A1[Read platform] --> A2[Grep imports]
+        A2 --> A3[Copy artifacts]
+        A3 --> A4[Write SALVAGE-NOTES]
+    end
+    subgraph PHASE-02
+        B1[git mv platform/] --> B2[Create requirements.txt]
+        B2 --> B3[Clean .gitignore]
+        B3 --> B4[Run tests: 83 pass]
+    end
+    subgraph PHASE-03
+        C1[Rewrite README] --> C2[Rewrite AGENTS]
+        C2 --> C3[Reset activeContext]
+        C3 --> C4[Archive plans]
+        C4 --> C5[Grep residual refs]
+    end
+    PHASE-01 --> PHASE-02 --> PHASE-03
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="findings-recommendation">
+      <div class="section-header">
+        <div>
+          <div class="section-index">07 / Findings &amp; Recommendation</div>
+          <h2 class="section-title">Findings &amp; Recommendation</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p><strong>Finding 1:</strong> The oTree platform was cleanly severable. Zero inbound imports from the game stack confirmed that the platform was already a dead dependency — its engine was a one-line re-export shim, and no game-stack file referenced it.</p>
+        <p><strong>Finding 2:</strong> The platform contains valuable multiplayer patterns. The facilitator panel, live broadcast mechanism, reconnection flow, and trade/auction UI are well-designed and directly inform Sprint 4's multiplayer implementation. Archiving (not deleting) was the right call.</p>
+        <p><strong>Finding 3:</strong> The documentation was actively misleading. AGENTS.md mandated oTree and forbade custom real-time stacks — directly conflicting with the FastAPI game that already existed. This would have caused any AI agent or new contributor to build on the wrong stack.</p>
+        <p><strong>Recommendation:</strong> Proceed to Sprint 2 (Repository Reorganization & Clutter Purge) to adopt a conventional directory layout, remove the duplicate worktree, archive obsolete reports, and fix import paths. This should be a mechanical pass that makes the tree navigable for Sprints 3-5.</p>
+      </div>
+    </section>
+
+    <section class="section" id="implementation-path">
+      <div class="section-header">
+        <div>
+          <div class="section-index">08 / Implementation Path</div>
+          <h2 class="section-title">Implementation Path</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="subcard">
+          <h3>Sprint 2: Repository Reorganization</h3>
+          <p><strong>Plan:</strong> <code>plans/2026-05-29-repo-reorganization-cleanup-plan.md</code></p>
+          <ul>
+            <li>Purge clutter: duplicate worktree, obsolete reports, build artifacts, runtime DBs</li>
+            <li>Adopt target layout: <code>engine/</code>, <code>server/</code>, <code>web/</code> grouping (pending Q-001)</li>
+            <li>Fix all import paths and packaging in one mechanical pass</li>
+            <li>Document the new layout</li>
+          </ul>
+          <p><strong>Open questions:</strong> Q-001 (src-style grouping vs. keep current names), Q-002 (archive vs. delete obsolete reports)</p>
+        </div>
+        <div class="subcard">
+          <h3>Sprint 3: Engine Trim &amp; Test Unification</h3>
+          <p><strong>Plan:</strong> <code>plans/2026-05-29-engine-trim-test-unification-plan.md</code></p>
+          <ul>
+            <li>Inventory engine surfaces vs. real game usage</li>
+            <li>Fix the 2 known-failing engine tests</li>
+            <li>Strengthen API test assertions</li>
+            <li>Trim dead code, optionally modularize the monolith</li>
+          </ul>
+          <p><strong>Depends on:</strong> Sprint 2 completion</p>
+        </div>
+        <div class="subcard">
+          <h3>Sprint 4: Multiplayer Build-Out</h3>
+          <p><strong>Plan:</strong> <code>plans/2026-05-29-singleplayer-multiplayer-buildout-plan.md</code></p>
+          <ul>
+            <li>Lobby, room codes, host controls</li>
+            <li>Server-authoritative year cycle over WebSocket</li>
+            <li>Reconnection and resilience</li>
+            <li>Uses patterns salvaged in Sprint 1 PHASE-01</li>
+          </ul>
+          <p><strong>Depends on:</strong> Sprint 3 completion</p>
+        </div>
+        <div class="subcard">
+          <h3>Sprint 5: Visual Step-Change</h3>
+          <p><strong>Plan:</strong> <code>plans/2026-05-29-visual-step-change-plan.md</code></p>
+          <ul>
+            <li>Design system (tokens, components, iconography)</li>
+            <li>Reskin all screens onto the design system</li>
+            <li>Signature animated visual (reactive city skyline recommended)</li>
+            <li>Polish, responsiveness, performance pass</li>
+          </ul>
+          <p><strong>Depends on:</strong> Sprint 4 completion</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="risks-open-questions">
+      <div class="section-header">
+        <div>
+          <div class="section-index">09 / Risks / Open Questions</div>
+          <h2 class="section-title">Risks / Open Questions</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Risks</h3>
+          <ul>
+            <li><strong>Archived platform drift:</strong> The archived oTree platform will not receive engine updates. Sprint 4 should port patterns, not maintain the archive.</li>
+            <li><strong>Dependency version drift:</strong> <code>requirements.txt</code> uses minimum version constraints. A future <code>pip install</code> may pull breaking versions. Consider adding a lock file later.</li>
+            <li><strong>Historical plan confusion:</strong> Climate Mayor plans still in <code>plans/</code> reference oTree in their context sections. These are historical — future sprints may archive them once superseded.</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Open Questions</h3>
+          <ul>
+            <li><strong>Sprint 2 Q-001:</strong> Adopt <code>src/</code>-style grouping (<code>engine/</code>, <code>server/</code>, <code>web/</code>) or keep current top-level names?</li>
+            <li><strong>Sprint 2 Q-002:</strong> Archive or delete obsolete reports?</li>
+            <li><strong>Sprint 3 Q-001:</strong> Split the engine monolith now, or just trim dead code?</li>
+            <li><strong>Sprint 4 Q-001:</strong> Multiplayer shape — co-op, competitive, or facilitator-led?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="appendices-evidence">
+      <div class="section-header">
+        <div>
+          <div class="section-index">10 / Appendices / Evidence Notes</div>
+          <h2 class="section-title">Appendices / Evidence Notes</h2>
+        </div>
+      </div>
+      <div class="appendix-grid">
+        <div class="subcard">
+          <h3>Commit Log</h3>
+          <div class="technical-frame">
+            <table>
+              <thead>
+                <tr><th>Commit</th><th>Phase</th><th>Files Changed</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>24541d7</code></td><td>PHASE-01</td><td>8 files (archive artifacts + report)</td></tr>
+                <tr><td><code>300249c</code></td><td>PHASE-02</td><td>26 files (platform move + requirements + report)</td></tr>
+                <tr><td><code>c235e51</code></td><td>PHASE-03</td><td>9 files (doc rewrites + plan archival + report)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="subcard">
+          <h3>Generated Reports</h3>
+          <ul>
+            <li><code>reports/2026-06-02-sprint1-phase01-salvage-otree.html</code></li>
+            <li><code>reports/2026-06-02-sprint1-phase02-remove-otree.html</code></li>
+            <li><code>reports/2026-06-02-sprint1-phase03-rewrite-docs.html</code></li>
+            <li><code>reports/2026-06-02-final-sprint1-canonical-game-stack.html</code> (this report)</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Test Results</h3>
+          <div class="technical-frame">
+            <table>
+              <thead>
+                <tr><th>Suite</th><th>Tests</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>mayor_api/tests/test_api.py</td><td>25</td><td>Passed</td></tr>
+                <tr><td>carbonsim_engine/tests/</td><td>58</td><td>Passed</td></tr>
+                <tr><td><strong>Total</strong></td><td><strong>83</strong></td><td><strong>All passing</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="subcard">
+          <h3>Key Files Changed</h3>
+          <ul>
+            <li><code>README.md</code> — full rewrite</li>
+            <li><code>AGENTS.md</code> — full rewrite</li>
+            <li><code>activeContext.md</code> — reset to Sprint 1</li>
+            <li><code>plans/project-plan.md</code> — replaced with pointer</li>
+            <li><code>requirements.txt</code> — new root manifest</li>
+            <li><code>.gitignore</code> — cleaned platform rules</li>
+            <li><code>archive/otree-platform/SALVAGE-NOTES.md</code> — new</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">designed for html first, printable without reconstruction</div>
+    </section>
+  </main>
+  <script>
+    (function() {
+      const chartCanvases = document.querySelectorAll('canvas');
+      chartCanvases.forEach((canvas) => {
+        canvas.classList.add('report-chart');
+        const parent = canvas.parentElement;
+        if (parent && parent.classList.contains('technical-frame') && !parent.classList.contains('chart-frame')) {
+          parent.classList.add('chart-frame');
+        }
+      });
+    })();
+
+    if (window.Chart) {
+      Chart.defaults.devicePixelRatio = 1;
+      Chart.defaults.animation = false;
+      Chart.defaults.resizeDelay = 150;
+      Chart.defaults.normalized = true;
+      Chart.defaults.maintainAspectRatio = false;
+      Chart.defaults.responsive = true;
+      window.__REPORT_CHART_DEFAULTS__ = {
+        animation: false,
+        resizeDelay: 150,
+        normalized: true,
+        maintainAspectRatio: false,
+        responsive: true
+      };
+    }
+  </script>
+</body>
+</html>
