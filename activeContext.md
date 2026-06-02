@@ -23,11 +23,18 @@ Turn the 1,943-line engine.py monolith into a clean, well-tested core for the ga
 
 ### In Progress
 
-- PHASE-03: Trim dead code, optionally modularize, verify playtest baseline.
+- None. Sprint 3 complete.
 
 ### Blocked
 
 - None.
+
+## Sprint 3 Results
+
+- 88 tests passing (27 engine + 31 API tests)
+- 2 dead surfaces removed (`build_company_specs`, `_decision_summary`)
+- Playtest baseline verified — metrics match pre-trim values exactly
+- Modularization deferred (clean seams exist but splitting 1,943-line file is low-value vs. risk)
 
 ## Key Decisions
 

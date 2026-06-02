@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: Sprint 3 — Engine Trim, Modularization &amp; Test Unification</title>
+  <meta name="color-scheme" content="dark light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) return;
+      mermaid.initialize({ startOnLoad: false, theme: 'base', securityLevel: 'loose', themeVariables: { primaryColor: '#f3ead9', primaryTextColor: '#1f1912', primaryBorderColor: '#9d6b37', lineColor: '#3b6f76', secondaryColor: '#efe4d0', tertiaryColor: '#ffffff', background: '#fbf7f1', mainBkg: '#fbf7f1', nodeBorder: '#9d6b37', clusterBkg: '#f7efdf', clusterBorder: '#3b6f76', edgeLabelBackground: '#fbf7f1' } });
+      await mermaid.run({ nodes: blocks });
+    }
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', run, { once: true }); } else { run(); }
+  </script>
+  <style>
+    :root { --bg: #fbf7f1; --bg-soft: #f7efdf; --panel: rgba(251, 247, 241, 0.92); --panel-strong: rgba(251, 247, 241, 0.98); --line: rgba(157, 107, 55, 0.22); --line-strong: rgba(59, 111, 118, 0.32); --text: #1f1912; --muted: #6b5e50; --accent-blue: #3b6f76; --accent-green: #5a8a42; --shadow: 0 14px 40px rgba(0, 0, 0, 0.08); --radius-lg: 22px; --radius-md: 16px; --radius-sm: 12px; }
+    * { box-sizing: border-box; }
+    body { position: relative; margin: 0; min-height: 100vh; overflow-x: hidden; background: linear-gradient(180deg, #fbf7f1 0%, #f3ead9 100%); color: var(--text); font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: 1.6; }
+    code, pre, .technical, .meta-chip, .section-kicker, .pill, .metric-label, .metric-value, .repo-tag, .mermaid { font-family: "Cascadia Code", "Fira Code", Consolas, "Liberation Mono", monospace; }
+    a { color: var(--accent-blue); }
+    .page-shell { width: min(1180px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 72px; position: relative; z-index: 1; }
+    .hero { position: relative; padding: 28px; margin-bottom: 24px; border: 1px solid var(--line); border-radius: 28px; background: linear-gradient(145deg, rgba(157, 107, 55, 0.06), transparent 28%), var(--panel-strong); box-shadow: var(--shadow); }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.85fr); gap: 22px; align-items: end; }
+    .section-kicker { margin: 0 0 12px; color: var(--accent-green); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.22em; }
+    .phase-title { margin: 0; max-width: 20ch; font-size: clamp(2.5rem, 5vw, 4.7rem); line-height: 0.94; letter-spacing: -0.05em; color: #1f1912; text-transform: uppercase; text-wrap: balance; }
+    .hero-summary { margin: 18px 0 0; max-width: 60ch; color: var(--muted); font-size: 0.98rem; }
+    .hero-meta { display: grid; gap: 12px; }
+    .meta-card { padding: 16px 18px; border: 1px solid rgba(90, 138, 66, 0.2); border-radius: 18px; background: rgba(0, 0, 0, 0.02); }
+    .meta-label { margin-bottom: 6px; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.16em; }
+    .meta-chip { color: var(--accent-blue); font-size: 1rem; font-weight: 700; letter-spacing: 0.02em; word-break: break-word; }
+    .repo-tag { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 12px; border: 1px solid rgba(59, 111, 118, 0.24); border-radius: 999px; background: rgba(59, 111, 118, 0.06); color: var(--accent-blue); font-size: 0.82rem; letter-spacing: 0.04em; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px; border: 1px solid rgba(90, 138, 66, 0.22); border-radius: 999px; background: rgba(90, 138, 66, 0.06); color: #3a5a28; font-size: 0.8rem; }
+    .section { position: relative; margin-top: 22px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--panel); box-shadow: var(--shadow); }
+    .section::before { content: ""; position: absolute; left: 24px; right: 24px; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(157, 107, 55, 0.6), rgba(59, 111, 118, 0.6), transparent); transform: translateY(-1px); }
+    .section-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 18px; align-items: end; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
+    .section-title { margin: 0; font-size: clamp(1.2rem, 2vw, 1.7rem); line-height: 1.1; color: #1f1912; }
+    .section-index { display: inline-flex; align-items: center; gap: 10px; color: var(--accent-green); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+    .section-index::after { content: ""; width: 44px; height: 1px; background: linear-gradient(90deg, rgba(90, 138, 66, 0.6), transparent); }
+    .summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .column-card { padding: 18px; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.6); min-height: 120px; }
+    .column-label { margin: 0 0 12px; color: var(--accent-blue); font-size: 0.83rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; }
+    .column-card ul { margin: 0; padding-left: 20px; }
+    .column-card li { margin-bottom: 8px; }
+    .diagram-frame { padding: 18px; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.6); overflow-x: auto; max-height: min(70vh, 720px); }
+    .mermaid { width: 100%; max-width: 100%; min-width: 0; color: var(--text); }
+    .mermaid svg { display: block; width: auto !important; min-width: 100%; max-width: none !important; height: auto !important; }
+    .technical-frame { padding: 18px; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.6); }
+    .technical-frame table { width: 100%; border-collapse: collapse; }
+    .technical-frame th, .technical-frame td { padding: 12px 10px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); vertical-align: top; }
+    .technical-frame th { color: var(--accent-green); font-size: 0.76rem; text-align: left; letter-spacing: 0.12em; text-transform: uppercase; }
+    .metric-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .metric { padding: 14px 16px; border: 1px solid rgba(59, 111, 118, 0.18); border-radius: var(--radius-sm); background: rgba(59, 111, 118, 0.04); }
+    .metric-label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.16em; }
+    .metric-value { margin-top: 8px; color: var(--accent-green); font-size: 1.2rem; font-weight: 700; }
+    .question-frame { padding: 18px; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.6); }
+    .question-frame ul { margin: 0; padding-left: 20px; }
+    .question-frame li { margin-bottom: 8px; }
+    .chart-frame { padding: 18px; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.6); overflow: hidden; }
+    .chart-frame canvas { display: block; width: 100% !important; max-width: 100%; height: 280px !important; min-height: 280px; max-height: 280px; }
+    .footer-note { margin-top: 18px; text-align: right; color: rgba(107, 94, 80, 0.72); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    @media (max-width: 900px) { .hero-grid, .summary-grid, .metric-strip { grid-template-columns: 1fr; } .phase-title { max-width: none; } }
+    @media (max-width: 640px) { .page-shell { width: min(100vw - 20px, 1180px); padding-top: 16px; padding-bottom: 42px; } .hero, .section { padding: 18px; border-radius: 20px; } .section::before { left: 18px; right: 18px; } }
+    @media print { body { background: white; } .hero, .section { box-shadow: none; border: 1px solid #ddd; } }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="title-hero">
+      <div class="hero-grid">
+        <div>
+          <p class="section-kicker">Sprint 3 — Final Report</p>
+          <h1 class="phase-title">Engine Trim, Modularization &amp; Test Unification</h1>
+          <p class="hero-summary">Turned the 1,943-line engine monolith into a clean, well-tested core by mapping 53 surfaces, removing 2 dead functions, hardening 6 API tests with state assertions, and verifying behavioral baseline. 88 tests pass, playtest metrics unchanged.</p>
+          <div class="pill-row">
+            <span class="pill">project :: CarbonSim Online</span>
+            <span class="pill">date :: 2026-06-02</span>
+            <span class="pill">3 phases complete</span>
+          </div>
+          <div class="repo-tag">repo :: carbonsim-online</div>
+        </div>
+        <div class="hero-meta">
+          <div class="meta-card"><div class="meta-label">Sprint</div><div class="meta-chip">3 of 5</div></div>
+          <div class="meta-card"><div class="meta-label">Tests</div><div class="meta-chip">88 passing (0 failures)</div></div>
+          <div class="meta-card"><div class="meta-label">Dead Code Removed</div><div class="meta-chip">2 functions + 1 test</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="executive-summary">
+      <div class="section-header">
+        <div><div class="section-index">02 / Executive Summary</div><h2 class="section-title">Executive Summary</h2></div>
+      </div>
+      <p>Sprint 3 delivered a cleaner, better-tested engine without changing any game behavior. The key finding: the 2 "known failing tests" cited in the plan were already resolved during Sprint 2's layout migration, so PHASE-02 focused on hardening API assertions instead. Two dead functions were removed, 6 new state-asserting tests were added, and playtest metrics were verified identical before and after trimming. The engine monolith was <em>not</em> split into modules — clean seams exist but the risk/benefit ratio favors deferring until Sprint 4 or 5 demands it.</p>
+    </section>
+
+    <section class="section" id="background-objective">
+      <div class="section-header">
+        <div><div class="section-index">03 / Background &amp; Objective</div><h2 class="section-title">Background &amp; Objective</h2></div>
+      </div>
+      <p>The engine (<code>engine/engine.py</code>, 1,943 LOC) was a dual-purpose monolith bundling game-loop logic with workshop-platform constructs from the now-removed oTree product. Sprint 3's objective: inventory real usage, remove dead code, fix 2 failing tests, harden API assertions, unify test suites, and optionally modularize — all without changing observable game behavior.</p>
+    </section>
+
+    <section class="section" id="inputs-scope">
+      <div class="section-header">
+        <div><div class="section-index">04 / Inputs &amp; Scope</div><h2 class="section-title">Inputs &amp; Scope</h2></div>
+      </div>
+      <div class="summary-grid">
+        <div class="column-card">
+          <p class="column-label">In Scope</p>
+          <ul>
+            <li>Engine surface inventory across 9 modules</li>
+            <li>Dead code removal</li>
+            <li>Test hardening and unification</li>
+            <li>Playtest baseline verification</li>
+            <li>Optional modularization (deferred)</li>
+          </ul>
+        </div>
+        <div class="column-card">
+          <p class="column-label">Out of Scope</p>
+          <ul>
+            <li>New multiplayer features (Sprint 4)</li>
+            <li>Visual work (Sprint 5)</li>
+            <li>Behavior/balance changes</li>
+            <li>Full engine module split (deferred)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="assumptions-constraints">
+      <div class="section-header">
+        <div><div class="section-index">05 / Assumptions &amp; Constraints</div><h2 class="section-title">Assumptions &amp; Constraints</h2></div>
+      </div>
+      <div class="question-frame">
+        <ul>
+          <li><strong>ASM-001:</strong> Sprints 1-2 complete — platform/ gone, tree reorganized to engine/server/web.</li>
+          <li><strong>ASM-002:</strong> Workshop surfaces (auctions, facilitator, analytics) are MULTIPLAYER-CANDIDATE — quarantine, don't delete.</li>
+          <li><strong>DEC-001:</strong> Behavior-preserving refactor only — no scenario/balance changes.</li>
+          <li><strong>Q-001 default:</strong> Trim now; split only if surface map shows clean seams.</li>
+          <li><strong>Q-002 default:</strong> Treat workshop surfaces as MULTIPLAYER-CANDIDATE.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="methodology">
+      <div class="section-header">
+        <div><div class="section-index">06 / Methodology</div><h2 class="section-title">Methodology</h2></div>
+      </div>
+      <div class="technical-frame">
+        <table>
+          <tr><th>Phase</th><th>Method</th><th>Outcome</th></tr>
+          <tr><td>PHASE-01</td><td>Read all 9 engine modules, grep callers in server/ and web/, classify each surface</td><td>53 surfaces mapped: 38 GAME-USED, 13 MULTIPLAYER-CANDIDATE, 2 DEAD</td></tr>
+          <tr><td>PHASE-02</td><td>Run playtest baseline (3 seeds × 3 difficulties), run full test suite, add state-asserting API tests</td><td>83 → 89 tests (later 88 after dead code removal), playtest baseline locked</td></tr>
+          <tr><td>PHASE-03</td><td>Remove dead functions + their tests, re-run tests, re-run playtest, compare metrics</td><td>2 functions removed, 88 tests pass, playtest metrics match exactly</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="phase-analysis">
+      <div class="section-header">
+        <div><div class="section-index">07 / Phase-by-Phase Analysis</div><h2 class="section-title">Phase-by-Phase Analysis</h2></div>
+      </div>
+      <div class="diagram-frame">
+        <div class="mermaid">
+flowchart LR
+    A[PHASE-01 Surface Inventory] -->|53 surfaces classified| B[PHASE-02 Lock Behavior]
+    B -->|playtest baseline + 83 tests pass| C[2 known failures already fixed in Sprint 2]
+    C --> D[Add 6 state-asserting API tests]
+    D -->|89 tests| E[PHASE-03 Trim Dead Code]
+    E -->|remove build_company_specs + _decision_summary| F[88 tests pass]
+    F --> G[Playtest re-run: metrics match]
+    G --> H[Sprint 3 Complete]
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="findings-recommendation">
+      <div class="section-header">
+        <div><div class="section-index">08 / Findings &amp; Recommendation</div><h2 class="section-title">Findings &amp; Recommendation</h2></div>
+      </div>
+      <div class="metric-strip">
+        <div class="metric"><div class="metric-label">Tests Passing</div><div class="metric-value">88</div></div>
+        <div class="metric"><div class="metric-label">Dead Code Removed</div><div class="metric-value">2</div></div>
+        <div class="metric"><div class="metric-label">Lines Removed</div><div class="metric-value">~49</div></div>
+      </div>
+      <div class="chart-frame" style="margin-top:18px">
+        <canvas id="surfaceChart"></canvas>
+      </div>
+      <p style="margin-top:18px"><strong>Recommendation:</strong> Proceed to Sprint 4 (Single-Player Polish &amp; Multiplayer Build-Out) on the now-clean engine foundation. Defer modularization until Sprint 4's multiplayer surfaces clarify which engine modules are actually needed.</p>
+    </section>
+
+    <section class="section" id="implementation-path">
+      <div class="section-header">
+        <div><div class="section-index">09 / Implementation Path</div><h2 class="section-title">Implementation Path</h2></div>
+      </div>
+      <div class="technical-frame">
+        <table>
+          <tr><th>Next Step</th><th>Dependency</th><th>Owner</th></tr>
+          <tr><td>Sprint 4 PHASE-01: Confirm single-player end-to-end, pick multiplayer shape</td><td>Sprint 3 complete</td><td>Next session</td></tr>
+          <tr><td>Sprint 4 PHASE-02: Lobby, room code, join flow</td><td>Sprint 4 PHASE-01</td><td>Next session</td></tr>
+          <tr><td>Sprint 4 PHASE-03: Server-authoritative year cycle + host controls</td><td>Sprint 4 PHASE-02</td><td>Next session</td></tr>
+          <tr><td>Sprint 4 PHASE-04: Reconnection &amp; resilience</td><td>Sprint 4 PHASE-03</td><td>Next session</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="risks-open-questions">
+      <div class="section-header">
+        <div><div class="section-index">10 / Risks / Open Questions</div><h2 class="section-title">Risks / Open Questions</h2></div>
+      </div>
+      <div class="question-frame">
+        <ul>
+          <li><strong>Risk:</strong> API decision endpoint accepts requests outside decision_window phase but ignores them silently. The route returns <code>{"status": "applied"}</code> regardless. This is a latent bug — decisions should be rejected with 400 when phase != decision_window.</li>
+          <li><strong>Open:</strong> Should the engine monolith be split before Sprint 4? Clean seams exist (core vs. market vs. analytics) but splitting adds import churn risk. Recommendation: defer until Sprint 4 clarifies which surfaces multiplayer actually needs.</li>
+          <li><strong>Open:</strong> <code>num_years</code> model validation requires >= 5, but the plan references 3-year games. This is a mismatch between the engine's solo scenarios (3-year vietnam_pilot) and the API model constraint.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="appendices">
+      <div class="section-header">
+        <div><div class="section-index">11 / Appendices / Evidence</div><h2 class="section-title">Appendices / Evidence Notes</h2></div>
+      </div>
+      <div class="technical-frame">
+        <h3 style="margin-top:0;color:var(--accent-blue);font-size:1rem;">Playtest Baseline Comparison (Pre vs. Post Trim)</h3>
+        <table>
+          <tr><th>Seed</th><th>Difficulty</th><th>Years</th><th>Final Cash</th><th>Penalties</th><th>Gap</th></tr>
+          <tr><td>1</td><td>easy</td><td>20</td><td>625,626</td><td>288,537</td><td>107.48</td></tr>
+          <tr><td>1</td><td>standard</td><td>15</td><td>498,632</td><td>379,098</td><td>116.76</td></tr>
+          <tr><td>1</td><td>hard</td><td>10</td><td>538,667</td><td>423,834</td><td>114.35</td></tr>
+          <tr><td>2</td><td>easy</td><td>20</td><td>682,720</td><td>326,143</td><td>114.10</td></tr>
+          <tr><td>2</td><td>standard</td><td>15</td><td>250,686</td><td>404,110</td><td>114.65</td></tr>
+          <tr><td>2</td><td>hard</td><td>10</td><td>235,406</td><td>419,865</td><td>117.30</td></tr>
+          <tr><td>3</td><td>easy</td><td>20</td><td>1,269,606</td><td>334,490</td><td>129.83</td></tr>
+          <tr><td>3</td><td>standard</td><td>15</td><td>1,014,456</td><td>430,302</td><td>109.37</td></tr>
+          <tr><td>3</td><td>hard</td><td>10</td><td>878,875</td><td>483,342</td><td>114.35</td></tr>
+        </table>
+        <p style="margin-top:12px;color:var(--muted);font-size:0.85rem;">All values match pre-trim baseline exactly. No behavioral regression.</p>
+        <h3 style="margin-top:24px;color:var(--accent-blue);font-size:1rem;">Commits</h3>
+        <ul>
+          <li><code>0552ecb</code> sprint3/phase01: engine surface inventory — 53 surfaces classified, 2 dead identified</li>
+          <li><code>d63c0ab</code> sprint3/phase02: harden API assertions — 6 new state-asserting tests, 89 total passing</li>
+          <li><code>c8e5e73</code> sprint3/phase03: trim dead code — remove build_company_specs and _decision_summary, 88 tests pass, playtest baseline verified</li>
+        </ul>
+      </div>
+      <div class="footer-note">artifact generated for reflection, not presentation theater</div>
+    </section>
+  </main>
+  <script>
+    (function() {
+      if (window.Chart) {
+        Chart.defaults.devicePixelRatio = 1;
+        Chart.defaults.animation = false;
+        Chart.defaults.resizeDelay = 150;
+        Chart.defaults.normalized = true;
+        Chart.defaults.maintainAspectRatio = false;
+        Chart.defaults.responsive = true;
+      }
+    })();
+    window.addEventListener('load', function() {
+      if (window.Chart) {
+        var ctx = document.getElementById('surfaceChart');
+        if (ctx) {
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: ['GAME-USED', 'MULTIPLAYER-CANDIDATE', 'DEAD (removed)'],
+              datasets: [{ data: [38, 13, 2], backgroundColor: ['#3b6f76', '#5a8a42', '#c0392b'], borderColor: '#fbf7f1', borderWidth: 3 }]
+            },
+            options: { animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false, responsive: true, plugins: { legend: { labels: { color: '#1f1912', font: { family: 'Cascadia Code, monospace', size: 13 } } } } }
+          });
+        }
+      }
+    });
+  </script>
+</body>
+</html>
