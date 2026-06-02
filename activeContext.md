@@ -18,12 +18,12 @@ Turn the 1,943-line engine.py monolith into a clean, well-tested core for the ga
 
 ### Done
 
-- PHASE-01: Enumerated all public engine surfaces across engine.py, solo.py, coop.py, cards.py, achievements.py, tutorial.py, playtest.py, scenarios.py, constants.py. Mapped callers in server/routes/game.py, server/routes/coop.py, engine/playtest.py. Wrote `docs/engine-surface-map.md` with GAME-USED/MULTIPLAYER-CANDIDATE/DEAD classifications. Identified 2 dead surfaces: `build_company_specs` (oTree artifact) and `_decision_summary` (unused internal helper).
-- PHASE-02 (partial): Playtest baseline locked across 3 seeds × 3 difficulties. Confirmed all 83 tests pass — the 2 "known failures" from the plan were already fixed during Sprint 2.
+- PHASE-01: Enumerated all public engine surfaces across 9 modules. Mapped callers in server/routes/game.py, server/routes/coop.py. Wrote `docs/engine-surface-map.md` with GAME-USED/MULTIPLAYER-CANDIDATE/DEAD classifications. Identified 2 dead surfaces: `build_company_specs` (oTree artifact) and `_decision_summary` (unused internal helper).
+- PHASE-02: Playtest baseline locked (3 seeds × 3 difficulties). Confirmed all 83 tests pass — the 2 "known failures" from the plan were already fixed during Sprint 2. Added 6 new state-asserting API tests (advance-year phase/year changes, end-year progression, offset purchase response, summary achievements, e2e full game loop, fast-forward year changes). Total: 89 tests passing. Unified test invocation via `pytest engine/tests/ server/tests/test_api.py`.
 
 ### In Progress
 
-- PHASE-02: Harden API assertions, unify test suite.
+- PHASE-03: Trim dead code, optionally modularize, verify playtest baseline.
 
 ### Blocked
 

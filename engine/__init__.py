@@ -1,5 +1,4 @@
 from .engine import (
-    build_company_specs,
     create_initial_state,
     build_abatement_menu,
     apply_company_decision,
@@ -69,7 +68,6 @@ from .coop import (
 from .solo import create_solo_game, solo_player_company
 
 __all__ = [
-    "build_company_specs",
     "create_initial_state",
     "build_abatement_menu",
     "apply_company_decision",

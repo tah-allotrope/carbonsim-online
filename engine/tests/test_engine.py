@@ -9,17 +9,6 @@ def utc(year=2026, month=1, day=1, second=0):
 
 
 class EngineTests(unittest.TestCase):
-    def test_build_company_specs_matches_requested_participant_count(self):
-        specs = engine.build_company_specs(5)
-
-        self.assertEqual(len(specs), 5)
-        self.assertEqual(len({spec["company_id"] for spec in specs}), 5)
-        self.assertTrue(
-            {"thermal_power", "steel", "cement"}.issubset(
-                {spec["sector"] for spec in specs}
-            )
-        )
-
     def test_start_simulation_initializes_year_one_allocations(self):
         state = engine.create_initial_state(participant_count=3)
 

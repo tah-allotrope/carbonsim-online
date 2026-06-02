@@ -33,22 +33,6 @@ COMPANY_LIBRARY = SCENARIO_PACKS["vietnam_pilot"]["company_library"]
 ABATEMENT_CATALOG = SCENARIO_PACKS["vietnam_pilot"]["abatement_catalog"]
 
 
-def build_company_specs(participant_count: int) -> list[dict[str, Any]]:
-    specs = []
-    for index in range(participant_count):
-        base = deepcopy(COMPANY_LIBRARY[index % len(COMPANY_LIBRARY)])
-        cohort = index // len(COMPANY_LIBRARY)
-        suffix = "" if cohort == 0 else f" {cohort + 1}"
-        base["company_id"] = f"C{index + 1:02d}"
-        base["company_name"] = f"{base['company_name']}{suffix}"
-        base["baseline_emissions"] = round(
-            base["baseline_emissions"] * (1 + (cohort * 0.04)), 2
-        )
-        base["cash"] = round(base["cash"] + (cohort * 175_000), 2)
-        specs.append(base)
-    return specs
-
-
 def create_initial_state(
     participant_count: int,
     *,
@@ -1911,22 +1895,6 @@ def _expire_trades(state: dict[str, Any], now: datetime) -> None:
             continue
         if _parse_time(trade["expires_at"]) <= current_time:
             trade["status"] = "expired"
-
-
-def _decision_summary(state: dict[str, Any], company: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "company_id": company["company_id"],
-        "company_name": company["company_name"],
-        "year": state["current_year"],
-        "allowances_held": company["allowances"],
-        "projected_emissions": company["projected_emissions"],
-        "compliance_gap": company["compliance_gap"],
-        "offset_holdings": company["offset_holdings"],
-        "banked_allowances": company["banked_allowances"],
-        "cash": company["cash"],
-        "active_abatement_ids": list(company["active_abatement_ids"]),
-        "pending_abatement_ids": list(company["pending_abatement_ids"]),
-    }
 
 
 def _serialize_time(value: datetime) -> str:
