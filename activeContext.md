@@ -2,29 +2,28 @@
 
 ## Current Sprint
 
-Sprint 2 — Repository Reorganization & Clutter Purge
+Sprint 3 — Engine Trim, Modularization & Test Unification
 
 ## Plan
 
-- [x] PHASE-01: Purge clutter (worktree dup, obsolete reports, runtime DBs, .gitignore)
-- [x] PHASE-02: Adopt src/-style layout (engine/, server/, web/) & fix all paths/imports
-- [x] PHASE-03: Document the new layout and conventions
+- [x] PHASE-01: Engine surface inventory — `docs/engine-surface-map.md` written, 38 GAME-USED / 13 MULTIPLAYER-CANDIDATE / 2 DEAD surfaces classified
+- [x] PHASE-02: Lock behavior (playtest baseline recorded), fix tests (2 "known failures" already resolved in Sprint 2), harden API assertions, unify test suite
+- [ ] PHASE-03: Trim dead code, optionally modularize, verify playtest baseline
 
 ## Goal
 
-Give the single-product game repo a conventional, navigable layout and remove accumulated clutter.
+Turn the 1,943-line engine.py monolith into a clean, well-tested core for the game.
 
 ## Progress
 
 ### Done
 
-- PHASE-01: Removed duplicate worktree, archived 18 obsolete reports, deleted runtime DBs, extended .gitignore.
-- PHASE-02: Renamed carbonsim_engine/ → engine/, mayor_api/ → server/, mayor_web/ → web/. Updated 26 import sites, packaging config, web-dir resolution, and docs. 83 tests passing.
-- PHASE-03: Updated README project layout, created docs/STRUCTURE.md, cross-linked from AGENTS.md.
+- PHASE-01: Enumerated all public engine surfaces across engine.py, solo.py, coop.py, cards.py, achievements.py, tutorial.py, playtest.py, scenarios.py, constants.py. Mapped callers in server/routes/game.py, server/routes/coop.py, engine/playtest.py. Wrote `docs/engine-surface-map.md` with GAME-USED/MULTIPLAYER-CANDIDATE/DEAD classifications. Identified 2 dead surfaces: `build_company_specs` (oTree artifact) and `_decision_summary` (unused internal helper).
+- PHASE-02 (partial): Playtest baseline locked across 3 seeds × 3 difficulties. Confirmed all 83 tests pass — the 2 "known failures" from the plan were already fixed during Sprint 2.
 
 ### In Progress
 
-- None.
+- PHASE-02: Harden API assertions, unify test suite.
 
 ### Blocked
 
@@ -32,15 +31,31 @@ Give the single-product game repo a conventional, navigable layout and remove ac
 
 ## Key Decisions
 
-- Q-001: Adopted src/-style grouping (engine/, server/, web/).
-- Q-002: Archive (not delete) obsolete reports — kept in archive/reports/.
+- Q-001: Trim now; split only if surface map shows clean seams.
+- Q-002: Treat workshop surfaces as MULTIPLAYER-CANDIDATE (quarantine, don't delete).
 
 ## Relevant Files
 
-- `docs/STRUCTURE.md` — new directory layout guide
-- `README.md` — updated project layout table
-- `AGENTS.md` — cross-linked to docs/STRUCTURE.md
+- `docs/engine-surface-map.md` — new surface classification
+- `engine/engine.py` — 1,943 LOC monolith (target for trim)
+- `engine/__init__.py` — public API surface
+- `server/routes/game.py` — primary caller of engine surfaces
+- `server/routes/coop.py` — co-op caller
+
+## Playtest Baseline (PHASE-02 TASK-02-01)
+
+| Seed | Difficulty | Years | Final Cash | Penalties | Gap |
+|---|---|---|---|---|---|
+| 1 | easy | 20 | 625,626 | 288,537 | 107.48 |
+| 1 | standard | 15 | 498,632 | 379,098 | 116.76 |
+| 1 | hard | 10 | 538,667 | 423,834 | 114.35 |
+| 2 | easy | 20 | 682,720 | 326,143 | 114.10 |
+| 2 | standard | 15 | 250,686 | 404,110 | 114.65 |
+| 2 | hard | 10 | 235,406 | 419,865 | 117.30 |
+| 3 | easy | 20 | 1,269,606 | 334,490 | 129.83 |
+| 3 | standard | 15 | 1,014,456 | 430,302 | 109.37 |
+| 3 | hard | 10 | 878,875 | 483,342 | 114.35 |
 
 ## Next Sprint
 
-Sprint 3 — Engine Trim, Modularization & Test Unification (`plans/2026-05-29-engine-trim-test-unification-plan.md`)
+Sprint 4 — Single-Player Polish & Multiplayer Build-Out (`plans/2026-05-29-singleplayer-multiplayer-buildout-plan.md`)

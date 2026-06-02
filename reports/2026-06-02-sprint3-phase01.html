@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: sprint3-phase01</title>
+  <meta name="color-scheme" content="dark">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) return;
+      mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose', themeVariables: { primaryColor: '#111111', primaryTextColor: '#e8f6ff', primaryBorderColor: '#00f5ff', lineColor: '#39ff14', secondaryColor: '#121a1a', tertiaryColor: '#111111', background: '#0d0d0d', mainBkg: '#0d0d0d', nodeBorder: '#00f5ff', clusterBkg: '#111111', clusterBorder: '#39ff14', edgeLabelBackground: '#0d0d0d' } });
+      await mermaid.run({ nodes: blocks });
+    }
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', run, { once: true }); } else { run(); }
+  </script>
+  <style>
+    :root { --bg: #0d0d0d; --bg-soft: #111111; --panel: rgba(13, 13, 13, 0.88); --panel-strong: rgba(19, 19, 19, 0.96); --line: rgba(0, 245, 255, 0.26); --line-strong: rgba(57, 255, 20, 0.38); --text: #e9f6ff; --muted: #8ea3ad; --accent-blue: #00f5ff; --accent-green: #39ff14; --glow-blue: 0 0 18px rgba(0, 245, 255, 0.42); --glow-green: 0 0 18px rgba(57, 255, 20, 0.28); --shadow: 0 14px 40px rgba(0, 0, 0, 0.32); --radius-lg: 22px; --radius-md: 16px; --radius-sm: 12px; }
+    * { box-sizing: border-box; }
+    body { position: relative; margin: 0; min-height: 100vh; overflow-x: hidden; background: radial-gradient(circle at top left, rgba(0, 245, 255, 0.12), transparent 28%), radial-gradient(circle at 85% 12%, rgba(57, 255, 20, 0.08), transparent 24%), linear-gradient(180deg, #050505 0%, #0d0d0d 36%, #090909 100%); color: var(--text); font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; line-height: 1.6; }
+    body::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.16; }
+    code, pre, .technical, .meta-chip, .section-kicker, .pill, .metric-label, .metric-value, .repo-tag, .mermaid { font-family: "Cascadia Code", "Fira Code", Consolas, "Liberation Mono", monospace; }
+    a { color: var(--accent-blue); }
+    .page-shell { width: min(1180px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 72px; position: relative; z-index: 1; }
+    .hero { position: relative; padding: 28px; margin-bottom: 24px; border: 1px solid var(--line); border-radius: 28px; background: linear-gradient(145deg, rgba(0, 245, 255, 0.08), transparent 28%), linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)), var(--panel-strong); box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.02); }
+    .hero::after { content: ""; position: absolute; inset: auto -10% -55% 42%; height: 280px; background: radial-gradient(circle, rgba(0, 245, 255, 0.18), transparent 64%); filter: blur(12px); pointer-events: none; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.85fr); gap: 22px; align-items: end; }
+    .section-kicker { margin: 0 0 12px; color: var(--accent-green); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.22em; text-shadow: var(--glow-green); }
+    .phase-title { margin: 0; max-width: 18ch; font-size: clamp(2.5rem, 5vw, 4.7rem); line-height: 0.94; letter-spacing: -0.05em; color: #f5feff; text-transform: uppercase; text-wrap: balance; text-shadow: 0 0 24px rgba(0, 245, 255, 0.2); }
+    .hero-summary { margin: 18px 0 0; max-width: 60ch; color: var(--muted); font-size: 0.98rem; }
+    .hero-meta { display: grid; gap: 12px; }
+    .meta-card { padding: 16px 18px; border: 1px solid rgba(57, 255, 20, 0.2); border-radius: 18px; background: rgba(255, 255, 255, 0.025); }
+    .meta-label { margin-bottom: 6px; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.16em; }
+    .meta-chip { color: var(--accent-blue); font-size: 1rem; font-weight: 700; letter-spacing: 0.02em; text-shadow: var(--glow-blue); word-break: break-word; }
+    .repo-tag { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 12px; border: 1px solid rgba(0, 245, 255, 0.24); border-radius: 999px; background: rgba(0, 245, 255, 0.08); color: var(--accent-blue); font-size: 0.82rem; letter-spacing: 0.04em; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px; border: 1px solid rgba(57, 255, 20, 0.22); border-radius: 999px; background: rgba(57, 255, 20, 0.06); color: #d9ffd0; font-size: 0.8rem; }
+    .section { position: relative; margin-top: 22px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--panel); box-shadow: var(--shadow); }
+    .section::before { content: ""; position: absolute; left: 24px; right: 24px; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.9), rgba(57, 255, 20, 0.9), transparent); transform: translateY(-1px); }
+    .section-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 18px; align-items: end; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+    .section-title { margin: 0; font-size: clamp(1.2rem, 2vw, 1.7rem); line-height: 1.1; color: #f0feff; }
+    .section-index { display: inline-flex; align-items: center; gap: 10px; color: var(--accent-green); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; text-shadow: var(--glow-green); }
+    .section-index::after { content: ""; width: 44px; height: 1px; background: linear-gradient(90deg, rgba(57, 255, 20, 0.9), transparent); }
+    .summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .column-card { padding: 18px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), rgba(7, 7, 7, 0.82); min-height: 120px; }
+    .column-label { margin: 0 0 12px; color: var(--accent-blue); font-size: 0.83rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; text-shadow: var(--glow-blue); }
+    .column-card ul { margin: 0; padding-left: 20px; }
+    .column-card li { margin-bottom: 8px; }
+    .diagram-frame { padding: 18px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), rgba(7, 7, 7, 0.82); overflow-x: auto; max-height: min(70vh, 720px); }
+    .mermaid { width: 100%; max-width: 100%; min-width: 0; color: var(--text); }
+    .mermaid svg { display: block; width: auto !important; min-width: 100%; max-width: none !important; height: auto !important; }
+    .technical-frame { padding: 18px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), rgba(7, 7, 7, 0.82); color: #d6f6ff; }
+    .technical-frame table { width: 100%; border-collapse: collapse; }
+    .technical-frame th, .technical-frame td { padding: 12px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); vertical-align: top; }
+    .technical-frame th { color: var(--accent-green); font-size: 0.76rem; text-align: left; letter-spacing: 0.12em; text-transform: uppercase; }
+    .metric-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .metric { padding: 14px 16px; border: 1px solid rgba(0, 245, 255, 0.18); border-radius: var(--radius-sm); background: rgba(0, 245, 255, 0.04); }
+    .metric-label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.16em; }
+    .metric-value { margin-top: 8px; color: var(--accent-green); font-size: 1.2rem; font-weight: 700; text-shadow: var(--glow-green); }
+    .question-frame { padding: 18px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), rgba(7, 7, 7, 0.82); }
+    .question-frame ul { margin: 0; padding-left: 20px; }
+    .question-frame li { margin-bottom: 8px; }
+    .empty-state { padding: 22px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); background: rgba(7, 7, 7, 0.82); }
+    .empty-state strong { display: block; margin-bottom: 6px; color: var(--accent-blue); font-size: 0.9rem; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: var(--glow-blue); }
+    .chart-frame { padding: 18px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), rgba(7, 7, 7, 0.82); overflow: hidden; }
+    .chart-frame canvas { display: block; width: 100% !important; max-width: 100%; height: 280px !important; min-height: 280px; max-height: 280px; }
+    .footer-note { margin-top: 18px; text-align: right; color: rgba(142, 163, 173, 0.72); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    @media (max-width: 900px) { .hero-grid, .summary-grid, .metric-strip { grid-template-columns: 1fr; } .phase-title { max-width: none; } }
+    @media (max-width: 640px) { .page-shell { width: min(100vw - 20px, 1180px); padding-top: 16px; padding-bottom: 42px; } .hero, .section { padding: 18px; border-radius: 20px; } .section::before { left: 18px; right: 18px; } }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="phase-header">
+      <div class="hero-grid">
+        <div>
+          <p class="section-kicker">Sprint 3 / Phase 01 — Personal Technical Artifact</p>
+          <h1 class="phase-title">Engine Surface Inventory</h1>
+          <p class="hero-summary">Mapped every public engine surface across 9 modules, classified by real-game usage (GAME-USED / MULTIPLAYER-CANDIDATE / DEAD), and documented callers in server routes and test suites.</p>
+          <div class="pill-row">
+            <span class="pill">project :: CarbonSim Online</span>
+            <span class="pill">date :: 2026-06-02</span>
+            <span class="pill">53 surfaces classified</span>
+          </div>
+          <div class="repo-tag">repo :: carbonsim-online</div>
+        </div>
+        <div class="hero-meta">
+          <div class="meta-card"><div class="meta-label">Sprint</div><div class="meta-chip">3 — Engine Trim, Modularization &amp; Test Unification</div></div>
+          <div class="meta-card"><div class="meta-label">Phase</div><div class="meta-chip">PHASE-01 — Surface Inventory</div></div>
+          <div class="meta-card"><div class="meta-label">Output</div><div class="meta-chip">docs/engine-surface-map.md</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section narrative" id="input-output-summary">
+      <div class="section-header">
+        <div><div class="section-index">01 / Input -> Output</div><h2 class="section-title">Input -> Output Summary</h2></div>
+      </div>
+      <div class="summary-grid">
+        <div class="column-card">
+          <p class="column-label">Input</p>
+          <ul>
+            <li><code>engine/engine.py</code> — 1,943 LOC monolith (30 public + 23 internal functions)</li>
+            <li><code>engine/solo.py</code>, <code>engine/coop.py</code>, <code>engine/cards.py</code>, <code>engine/achievements.py</code>, <code>engine/tutorial.py</code>, <code>engine/playtest.py</code>, <code>engine/scenarios.py</code>, <code>engine/constants.py</code></li>
+            <li><code>engine/__init__.py</code> — 70 exported symbols</li>
+            <li>Callers: <code>server/routes/game.py</code> (434 LOC), <code>server/routes/coop.py</code> (164 LOC), <code>web/js/api.js</code></li>
+            <li>Sprint 3 plan: <code>plans/2026-05-29-engine-trim-test-unification-plan.md</code></li>
+          </ul>
+        </div>
+        <div class="column-card">
+          <p class="column-label">Output</p>
+          <ul>
+            <li><code>docs/engine-surface-map.md</code> — definitive classification of all 53 surfaces</li>
+            <li>38 GAME-USED surfaces (core game loop)</li>
+            <li>13 MULTIPLAYER-CANDIDATE surfaces (Sprint 4 candidates)</li>
+            <li>2 DEAD surfaces identified for removal</li>
+            <li>Proposed actions per surface (remove / keep / quarantine)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="logic-flow">
+      <div class="section-header">
+        <div><div class="section-index">02 / Logic Flow</div><h2 class="section-title">Logic Flow</h2></div>
+      </div>
+      <div class="diagram-frame">
+        <div class="mermaid">
+flowchart LR
+    A[engine.py 1943 LOC] --> B[enumerate public surfaces]
+    B --> C[grep callers in server/ web/]
+    C --> D[classify: GAME-USED]
+    C --> E[classify: MULTIPLAYER-CANDIDATE]
+    C --> F[classify: DEAD]
+    D --> G[38 surfaces - core game]
+    E --> H[13 surfaces - Sprint 4]
+    F --> I[2 surfaces - remove]
+    G --> J[docs/engine-surface-map.md]
+    H --> J
+    I --> J
+    J --> K[PHASE-02: lock behavior + fix tests]
+        </div>
+      </div>
+    </section>
+
+    <section class="section narrative" id="math-algorithm-used">
+      <div class="section-header">
+        <div><div class="section-index">03 / Math / Algorithm Used</div><h2 class="section-title">Math / Algorithm Used</h2></div>
+      </div>
+      <div class="technical-frame">
+        <p>No mathematical algorithms used. Classification methodology:</p>
+        <ul>
+          <li><strong>GAME-USED:</strong> Surface has at least one caller in <code>server/routes/game.py</code>, <code>server/routes/coop.py</code>, <code>engine/solo.py</code>, <code>engine/coop.py</code>, <code>engine/cards.py</code>, or <code>engine/playtest.py</code>.</li>
+          <li><strong>MULTIPLAYER-CANDIDATE:</strong> Surface has no direct caller in the current game stack but is referenced in Sprint 4 plan (auctions, facilitator, analytics, export, pause/resume, reconnect, participant tracking).</li>
+          <li><strong>DEAD:</strong> Surface has zero callers anywhere in the codebase (confirmed via grep across all directories).</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="tools-formulas-methods">
+      <div class="section-header">
+        <div><div class="section-index">04 / Tools / Formulas / Methods</div><h2 class="section-title">Tools / Formulas / Methods</h2></div>
+      </div>
+      <div class="technical-frame">
+        <table>
+          <tr><th>Tool</th><th>Use</th></tr>
+          <tr><td><code>grep</code></td><td>Caller analysis across server/, web/, engine/ for each public surface</td></tr>
+          <tr><td><code>read</code></td><td>Full file reads of all 9 engine modules + 2 server route files</td></tr>
+          <tr><td><code>pytest</code></td><td>Verified 83 tests pass (2 "known failures" already fixed in Sprint 2)</td></tr>
+          <tr><td><code>playtest.py</code></td><td>Behavioral baseline: 3 seeds × 3 difficulties, metrics recorded</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="results-visualizations">
+      <div class="section-header">
+        <div><div class="section-index">05 / Results &amp; Visualizations</div><h2 class="section-title">Results &amp; Visualizations</h2></div>
+      </div>
+      <div class="metric-strip">
+        <div class="metric"><div class="metric-label">GAME-USED</div><div class="metric-value">38</div></div>
+        <div class="metric"><div class="metric-label">MULTIPLAYER-CANDIDATE</div><div class="metric-value">13</div></div>
+        <div class="metric"><div class="metric-label">DEAD (to remove)</div><div class="metric-value">2</div></div>
+      </div>
+      <div class="chart-frame" style="margin-top:18px">
+        <canvas id="surfaceChart"></canvas>
+      </div>
+    </section>
+
+    <section class="section narrative" id="limitations-second-best-alternative">
+      <div class="section-header">
+        <div><div class="section-index">06 / Limitations / Second-Best Alternative</div><h2 class="section-title">Limitations / Second-Best Alternative</h2></div>
+      </div>
+      <div class="question-frame">
+        <ul>
+          <li><strong>Dynamic dispatch blind spot:</strong> <code>from engine import *</code> and card-effect dispatch via string matching may hide indirect callers. Mitigation: included string/route-name searches in grep.</li>
+          <li><strong>2 "known failures" already fixed:</strong> The plan cited 2 failing tests, but all 83 tests pass. They were likely resolved during Sprint 2's layout migration. No additional test-fixing needed in PHASE-02.</li>
+          <li><strong>Second-best alternative:</strong> Use a coverage tool (pytest-cov) to automatically identify dead code. More accurate but requires setup time; manual grep was faster for this codebase size.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section narrative" id="errors-warnings-flags-encountered">
+      <div class="section-header">
+        <div><div class="section-index">07 / Errors / Warnings / Flags</div><h2 class="section-title">Errors / Warnings / Flags Encountered</h2></div>
+      </div>
+      <div class="question-frame technical">
+        <ul>
+          <li><strong>Flag:</strong> Two egg-info directories existed (<code>carbonsim_engine.egg-info</code> and <code>engine.egg-info</code>). Cleaned stale <code>carbonsim_engine</code> install; kept <code>engine</code> editable install.</li>
+          <li><strong>Warning:</strong> <code>StarletteDeprecationWarning</code> from httpx/starlette testclient — cosmetic, not blocking.</li>
+          <li><strong>Flag:</strong> <code>build_company_specs</code> has a test in <code>engine/tests/test_engine.py</code> but no production callers. The test exercises a dead function — will be removed with the function in PHASE-03.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section narrative" id="open-questions-next-phase-seeds">
+      <div class="section-header">
+        <div><div class="section-index">08 / Open Questions / Next Phase Seeds</div><h2 class="section-title">Open Questions / Next Phase Seeds</h2></div>
+      </div>
+      <div class="question-frame">
+        <ul>
+          <li><strong>PHASE-02:</strong> Harden API assertions — current <code>server/tests/test_api.py</code> tests check status codes but not state changes (cash, emissions, abatement). Add state-asserting tests.</li>
+          <li><strong>PHASE-02:</strong> Add one end-to-end test: create game → make decision → advance year → verify compliance affected.</li>
+          <li><strong>PHASE-03:</strong> Remove <code>build_company_specs</code> + <code>_decision_summary</code> + their tests. Quarantine MULTIPLAYER-CANDIDATE surfaces behind clear module boundaries.</li>
+          <li><strong>PHASE-03:</strong> Re-run playtest after trimming to confirm metrics match baseline (within tolerance).</li>
+        </ul>
+      </div>
+      <div class="footer-note">artifact generated for reflection, not presentation theater</div>
+    </section>
+  </main>
+  <script>
+    (function() {
+      if (window.Chart) {
+        Chart.defaults.devicePixelRatio = 1;
+        Chart.defaults.animation = false;
+        Chart.defaults.resizeDelay = 150;
+        Chart.defaults.normalized = true;
+        Chart.defaults.maintainAspectRatio = false;
+        Chart.defaults.responsive = true;
+      }
+    })();
+    window.addEventListener('load', function() {
+      if (window.Chart) {
+        var ctx = document.getElementById('surfaceChart');
+        if (ctx) {
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: ['GAME-USED', 'MULTIPLAYER-CANDIDATE', 'DEAD'],
+              datasets: [{ data: [38, 13, 2], backgroundColor: ['#00f5ff', '#39ff14', '#ff4444'], borderColor: '#0d0d0d', borderWidth: 3 }]
+            },
+            options: { animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false, responsive: true, plugins: { legend: { labels: { color: '#e9f6ff', font: { family: 'Cascadia Code, monospace', size: 13 } } } } }
+          });
+        }
+      }
+    });
+  </script>
+</body>
+</html>
