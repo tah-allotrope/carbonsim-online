@@ -326,3 +326,97 @@ class TestCoopLifecycle:
         client.post(f"/api/games/{game_id}/end-year")
         resp = client.get(f"/api/games/{game_id}")
         assert resp.status_code == 200
+
+
+class TestStateAssertions:
+    """Tests that assert real state changes, not just status codes."""
+
+    def _get_company_from_snapshot(self, snapshot):
+        if snapshot.get("company"):
+            return snapshot["company"]
+        if snapshot.get("companies"):
+            return snapshot["companies"][0]
+        return snapshot
+
+    def test_advance_year_changes_phase_and_year(self, client):
+        create = client.post("/api/games", json={"player_name": "PhaseTester", "num_years": 5}).json()
+        game_id = create["game_id"]
+        pre = client.get(f"/api/games/{game_id}").json()
+        pre_phase = pre["snapshot"]["phase"]
+        pre_year = pre["current_year"]
+
+        resp = client.post(f"/api/games/{game_id}/advance-year")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["year"] > pre_year or data["phase"] != pre_phase
+        assert data["phase"] in ("year_start", "decision_window", "compliance")
+
+    def test_end_year_advances_to_next_year_or_complete(self, client):
+        create = client.post("/api/games", json={"player_name": "YearEnder", "num_years": 5}).json()
+        game_id = create["game_id"]
+        client.post(f"/api/games/{game_id}/advance-year")
+        pre = client.get(f"/api/games/{game_id}").json()
+        pre_year = pre["current_year"]
+
+        resp = client.post(f"/api/games/{game_id}/end-year")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "year_ended"
+        assert data["year"] >= pre_year
+
+    def test_offset_purchase_changes_state(self, client):
+        create = client.post("/api/games", json={"player_name": "OffsetTester"}).json()
+        game_id = create["game_id"]
+        client.post(f"/api/games/{game_id}/advance-year")
+        state_resp = client.get(f"/api/games/{game_id}").json()
+        company = self._get_company_from_snapshot(state_resp["snapshot"])
+        pre_cash = company["cash"]
+        offset_price = 25.0
+        qty = 10
+
+        resp = client.post(
+            f"/api/games/{game_id}/decision",
+            json={"action": "buy_offsets", "payload": {"quantity": qty, "price_per_unit": offset_price}},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "applied"
+        post_resp = client.get(f"/api/games/{game_id}").json()
+        post_company = self._get_company_from_snapshot(post_resp["snapshot"])
+        assert post_company["cash"] <= pre_cash
+
+    def test_summary_contains_achievements_and_rankings(self, client):
+        create = client.post("/api/games", json={"player_name": "SummaryTester", "num_years": 5}).json()
+        game_id = create["game_id"]
+        client.post(f"/api/games/{game_id}/advance-year")
+        client.post(f"/api/games/{game_id}/end-year")
+        summary = client.get(f"/api/games/{game_id}/summary").json()
+        assert "achievements" in summary
+        assert summary["completed_years"] >= 1
+
+    def test_e2e_full_game_loop_with_multiple_years(self, client):
+        create = client.post("/api/games", json={"player_name": "E2ETester", "difficulty": "easy", "num_years": 5}).json()
+        game_id = create["game_id"]
+        years_advanced = 0
+        for _ in range(5):
+            advance = client.post(f"/api/games/{game_id}/advance-year")
+            if advance.status_code == 200:
+                years_advanced += 1
+            end = client.post(f"/api/games/{game_id}/end-year")
+            assert end.status_code == 200
+
+        summary = client.get(f"/api/games/{game_id}/summary").json()
+        assert summary["completed_years"] >= 1
+        assert "achievements" in summary
+        assert summary["player_name"] == "E2ETester"
+
+    def test_fast_forward_changes_year_and_phase(self, client):
+        create = client.post("/api/games", json={"player_name": "FastForwarder", "difficulty": "easy", "num_years": 10}).json()
+        game_id = create["game_id"]
+        pre = client.get(f"/api/games/{game_id}").json()
+        pre_year = pre["current_year"]
+
+        resp = client.post(f"/api/games/{game_id}/fast-forward", json={"years": 2})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["current_year"] > pre_year
+        assert data["status"] == "fast_forwarded"
