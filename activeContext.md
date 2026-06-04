@@ -30,3 +30,8 @@ Sprint 4 — Single-Player Polish & Multiplayer Build-Out
 - Auction support: open/bid/close flow for host and players
 - Reconnection: WS dedup by participant_id, auto-reconnect on page load
 - Frontend: lobby screen, game dashboard, summary screen with rankings
+- Report: `reports/2026-06-04-final-sprint4-competitive-multiplayer.html`
+
+## Next Sprint
+
+Sprint 5 — Visual Step-Change (`plans/2026-05-29-visual-step-change-plan.md`)

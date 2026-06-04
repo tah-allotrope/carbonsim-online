@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: Sprint 4 — Competitive Multiplayer Build-Out</title>
+  <meta name="color-scheme" content="dark light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+    async function initMermaid() {
+      const blocks = document.querySelectorAll('.mermaid');
+      if (!blocks.length) return;
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'base',
+        securityLevel: 'loose',
+        themeVariables: {
+          primaryColor: '#f3ead9',
+          primaryTextColor: '#1f1912',
+          primaryBorderColor: '#9d6b37',
+          lineColor: '#3b6f76',
+          secondaryColor: '#efe4d0',
+          tertiaryColor: '#ffffff',
+          background: '#fbf7f1',
+          mainBkg: '#fbf7f1',
+          nodeBorder: '#9d6b37',
+          clusterBkg: '#f7efdf',
+          clusterBorder: '#3b6f76',
+          edgeLabelBackground: '#fbf7f1'
+        }
+      });
+
+      await mermaid.run({ nodes: blocks });
+    }
+
+    const run = () => initMermaid().catch((error) => console.error('Mermaid render failed', error));
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  </script>
+  <style>
+    :root {
+      --paper: #fbf7f1;
+      --paper-strong: #fffdf9;
+      --ink: #1f1912;
+      --ink-soft: #5f564c;
+      --line: #dccdb6;
+      --line-strong: #bfa37d;
+      --accent: #9d6b37;
+      --accent-soft: #efe4d0;
+      --accent-2: #3b6f76;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08);
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --page-width: 1040px;
+      --display-font: Georgia, "Times New Roman", serif;
+      --body-font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono-font: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(157, 107, 55, 0.09), transparent 26%),
+        radial-gradient(circle at 88% 10%, rgba(59, 111, 118, 0.08), transparent 22%),
+        linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%);
+      font-family: var(--body-font);
+      line-height: 1.65;
+      letter-spacing: 0.01em;
+    }
+
+    a { color: var(--accent-2); }
+
+    code, pre, .technical, .meta-chip, .section-index, .eyebrow, .stat-label, .stat-value, .mermaid {
+      font-family: var(--mono-font);
+    }
+
+    .page-shell {
+      width: min(var(--page-width), calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .hero {
+      padding: 34px;
+      border: 1px solid rgba(159, 123, 79, 0.28);
+      border-radius: 30px;
+      background:
+        linear-gradient(135deg, rgba(157, 107, 55, 0.1), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.86)),
+        var(--paper-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.85fr);
+      gap: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin: 0;
+      max-width: 14ch;
+      font-family: var(--display-font);
+      font-size: clamp(2.8rem, 5vw, 4.8rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin: 18px 0 0;
+      max-width: 60ch;
+      color: var(--ink-soft);
+      font-size: 1rem;
+    }
+
+    .takeaway {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent-2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: rgba(59, 111, 118, 0.08);
+      color: #20373a;
+      font-size: 1.02rem;
+    }
+
+    .meta-grid { display: grid; gap: 12px; }
+
+    .meta-card, .section, .subcard, .empty-state {
+      border: 1px solid rgba(95, 72, 46, 0.12);
+      background: rgba(255, 253, 249, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .meta-card { padding: 16px 18px; border-radius: var(--radius-md); }
+
+    .meta-label {
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .meta-chip {
+      margin-top: 8px;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .section {
+      margin-top: 22px;
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px 18px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-index {
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: var(--display-font);
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      line-height: 1.05;
+    }
+
+    .summary-grid, .dual-grid, .phase-grid, .stat-grid, .appendix-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .summary-grid, .dual-grid, .phase-grid, .appendix-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .subcard {
+      padding: 18px;
+      border-radius: var(--radius-md);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .subcard h3, .subcard h4 { margin: 0 0 10px; font-size: 1rem; line-height: 1.2; }
+    .subcard p:first-child, .subcard ul:first-child, .subcard ol:first-child { margin-top: 0; }
+
+    .stat-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 16px;
+    }
+
+    .stat {
+      padding: 14px 16px;
+      border: 1px solid rgba(59, 111, 118, 0.16);
+      border-radius: var(--radius-sm);
+      background: rgba(59, 111, 118, 0.06);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .stat-label {
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      color: var(--accent-2);
+      font-size: 1.18rem;
+      font-weight: 700;
+    }
+
+    .narrative, .chart-frame, .technical-frame, .diagram-frame, .viz-frame {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.54);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .diagram-frame {
+      overflow-x: auto;
+      overflow-y: auto;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: contain;
+      max-height: min(70vh, 720px);
+    }
+
+    .chart-frame, .viz-frame { overflow: hidden; }
+
+    .mermaid { width: 100%; max-width: 100%; min-width: 0; color: var(--ink); }
+    .mermaid svg { display: block; width: auto !important; min-width: 100%; max-width: none !important; height: auto !important; }
+
+    .chart-frame canvas, .technical-frame > canvas, .viz-frame canvas, canvas.report-chart {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      height: 300px !important;
+      min-height: 300px;
+      max-height: 300px;
+    }
+
+    .technical-frame table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    .technical-frame th, .technical-frame td { padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+    .technical-frame th { color: var(--accent); font-size: 0.76rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    .empty-state {
+      padding: 20px;
+      border-radius: var(--radius-md);
+      text-align: center;
+      color: var(--ink-soft);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .empty-state strong { display: block; margin-bottom: 6px; color: var(--accent); font-size: 0.84rem; letter-spacing: 0.12em; text-transform: uppercase; }
+
+    ul, ol { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 8px; }
+    p:last-child, li:last-child { margin-bottom: 0; }
+
+    .footer-note {
+      margin-top: 18px;
+      color: rgba(95, 86, 76, 0.74);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: right;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid, .summary-grid, .dual-grid, .phase-grid, .stat-grid, .appendix-grid {
+        grid-template-columns: 1fr;
+      }
+      .title { max-width: none; }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell { width: min(100vw - 20px, var(--page-width)); padding-top: 16px; padding-bottom: 36px; }
+      .hero, .section { padding: 18px; border-radius: 20px; }
+      .title { font-size: clamp(2.1rem, 12vw, 3.2rem); }
+    }
+
+    @media print {
+      :root { --paper: #ffffff; --paper-strong: #ffffff; --ink: #111111; --ink-soft: #444444; --line: #d6d1c8; }
+      @page { size: A4; margin: 14mm; }
+      body { background: #ffffff; }
+      .page-shell { width: 100%; max-width: none; padding: 0; }
+      .hero, .meta-card, .section, .subcard, .narrative, .chart-frame, .technical-frame, .diagram-frame, .viz-frame, .empty-state, .stat {
+        background: #ffffff; box-shadow: none;
+      }
+      .hero, .section { margin-top: 0; margin-bottom: 10mm; }
+      .diagram-frame { overflow: visible; max-height: none; }
+      .section-header, .takeaway { break-after: avoid; page-break-after: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero" id="title-hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Final Report / Sprint 4 Implementation</p>
+          <h1 class="title">Competitive Multiplayer Build-Out</h1>
+          <p class="lede">
+            Sprint 4 of the Game-Focus Roadmap: transforming the co-op scaffold into a fully playable competitive multiplayer experience with room codes, host controls, auctions, leaderboard, and reconnection.
+          </p>
+          <div class="takeaway">Competitive multiplayer is now fully functional: 2-8 players join via a 6-character room code, the host paces the year cycle server-authoritatively, each player controls their own company independently, and a live leaderboard tracks rankings through auctions, trades, and compliance.</div>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">Project</div>
+            <div class="meta-chip">CarbonSim Online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Repository</div>
+            <div class="meta-chip">carbonsim-online</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Date</div>
+            <div class="meta-chip">2026-06-04</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="executive-summary">
+      <div class="section-header">
+        <div>
+          <div class="section-index">01 / Executive Summary</div>
+          <h2 class="section-title">Executive Summary</h2>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="subcard">
+          <h3>What Was Built</h3>
+          <p>A complete competitive multiplayer system layered on the existing FastAPI + WebSocket stack. Players join via room codes, the host controls pacing, each player makes independent compliance decisions, and a real-time leaderboard ranks participants by cash, penalties, and compliance gap.</p>
+        </div>
+        <div class="subcard">
+          <h3>Key Outcomes</h3>
+          <ul>
+            <li><strong>109 tests passing</strong> (88 original + 21 new multiplayer tests)</li>
+            <li><strong>Room code system</strong> with 6-char alphanumeric codes, case-insensitive join</li>
+            <li><strong>Server-authoritative year cycle</strong> with host-driven advance, pause, resume</li>
+            <li><strong>Per-player companies</strong> with independent abatement, offset, and auction decisions</li>
+            <li><strong>Live leaderboard</strong> broadcast via WebSocket to all participants</li>
+            <li><strong>Reconnection</strong> via WebSocket dedup by participant_id</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="background-objective">
+      <div class="section-header">
+        <div>
+          <div class="section-index">02 / Background &amp; Objective</div>
+          <h2 class="section-title">Background &amp; Objective</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p>The May 29 gap analysis identified multiplayer as a minimal scaffold: <code>coop.py</code> had participant tracking and ready-check logic, <code>ws.py</code> had WebSocket broadcast, and <code>coop.html</code> had a basic session view. But it lacked lobby flow, room codes, host controls, a full year-advance cycle, year-end compliance sync, and reconnection.</p>
+        <p>Sprint 4's objective was to promote this scaffold into a real, playable competitive multiplayer mode. The chosen shape was <strong>competitive shared-market</strong>: each player controls their own company, competing for the best compliance outcome. Auctions and bilateral trades add market interaction. The host controls pacing. Ephemeral identity (no accounts) keeps friction minimal.</p>
+        <p>This Sprint depended on Sprints 1-3 being complete: the oTree stack removed, the tree reorganized into <code>engine/</code>/<code>server/</code>/<code>web/</code>, and the engine trimmed with a green test suite and locked playtest baseline.</p>
+      </div>
+    </section>
+
+    <section class="section" id="inputs-scope">
+      <div class="section-header">
+        <div>
+          <div class="section-index">03 / Inputs &amp; Scope</div>
+          <h2 class="section-title">Inputs &amp; Scope</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Plan Inputs</h3>
+          <ul>
+            <li><code>plans/2026-05-29-singleplayer-multiplayer-buildout-plan.md</code></li>
+            <li><code>reports/2026-05-29-single-multiplayer-game-gap-analysis.md</code> (GAP-05)</li>
+            <li><code>reports/2026-05-23-climate-mayor-workshop-demo-gap-analysis.md</code></li>
+            <li><code>archive/otree-platform/SALVAGE-NOTES.md</code> (room/host/sync patterns)</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Scope</h3>
+          <ul>
+            <li><strong>In scope:</strong> Lobby, room codes, host controls, year cycle, auctions, leaderboard, reconnection, multiplayer tests</li>
+            <li><strong>Out of scope:</strong> Visual step-change (Sprint 5), new engine mechanics, build tooling</li>
+            <li><strong>Shape decision:</strong> Competitive shared-market (Q-001), 2-8 players (Q-002), ephemeral identity (Q-003)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="assumptions-constraints">
+      <div class="section-header">
+        <div>
+          <div class="section-index">04 / Assumptions &amp; Constraints</div>
+          <h2 class="section-title">Assumptions &amp; Constraints</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Assumptions</h3>
+          <ul>
+            <li>Sprints 1-3 complete: single product, clean tree, trimmed engine, green tests</li>
+            <li>Existing <code>ws.py</code> connection manager and <code>coop.py</code> participant model are sufficient (no new realtime framework)</li>
+            <li>Engine snapshots already contain fields needed for visualization (no backend changes for core visuals)</li>
+            <li>Auction/trade engine surfaces were kept as MULTIPLAYER-CANDIDATE in Sprint 3</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Constraints</h3>
+          <ul>
+            <li>State must be server-authoritative (timers, year cycle, compliance, results)</li>
+            <li>No accounts/auth — ephemeral participant_id per session</li>
+            <li>Keep static-served + FastAPI delivery model (no build step)</li>
+            <li>Behavior-preserving — no scenario/balance changes</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="methodology">
+      <div class="section-header">
+        <div>
+          <div class="section-index">05 / Methodology</div>
+          <h2 class="section-title">Methodology</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p>The Sprint followed the plan's four phases in dependency order. Each phase built on the previous: lobby flow first (so players can gather), then the year cycle (so the game can progress), then reconnection (so the experience survives network issues). Tests were written alongside implementation — the 21 new multiplayer tests cover room codes, lobby state, host authorization, per-player decisions, leaderboard, WebSocket broadcast, and full game cycles.</p>
+        <p>The architecture reused existing patterns: the <code>CoopConnectionManager</code> in <code>ws.py</code> was extended with participant_id-keyed connections for reconnection dedup. The engine's <code>force_advance_phase</code> and <code>apply_company_decision</code> were reused directly for the server-authoritative year cycle. The oTree salvage notes informed the room code and host control patterns.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Orientation</div>
+          <div class="stat-value">multi-phase</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Audience</div>
+          <div class="stat-value">stakeholder-safe</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Evidence Rule</div>
+          <div class="stat-value">no invented data</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="phase-analysis">
+      <div class="section-header">
+        <div>
+          <div class="section-index">06 / Phase-by-Phase Analysis</div>
+          <h2 class="section-title">Phase-by-Phase Analysis</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="subcard">
+          <h3>Phase 1: Confirmation &amp; Shape</h3>
+          <p>Verified the solo loop (88 tests pass). Documented the competitive shape decision: shared-market with auctions/trades/leaderboard, 2-8 players, ephemeral identity. Reviewed salvage notes from the oTree archive to inform room/host patterns.</p>
+        </div>
+        <div class="subcard">
+          <h3>Phase 2: Lobby &amp; Room Codes</h3>
+          <p>Added 6-char alphanumeric room code generation (excluding ambiguous chars O/0/1/I). Built lobby state management in <code>engine/coop.py</code> with game_status tracking. Created <code>/api/coop/join-by-code</code> endpoint for case-insensitive room code join. Rewrote <code>coop.html</code> with a lobby screen showing room code, participant list, and host start button. Updated <code>index.html</code> with room code input and player count selector.</p>
+        </div>
+        <div class="subcard">
+          <h3>Phase 3: Year Cycle &amp; Host Controls</h3>
+          <p>Implemented server-authoritative year advance via <code>/api/coop/{id}/advance-year</code> (host-only). Added pause/resume endpoints. Wired auction flow: open/bid/close routes using the existing engine auction surfaces. Built a live leaderboard (<code>build_leaderboard()</code>) that ranks players by penalties, gap, and cash. Added host control panel to <code>coop.html</code> with advance/pause/resume buttons. Game dashboard shows per-player company stats, abatement menu, offset market, and auction board.</p>
+        </div>
+        <div class="subcard">
+          <h3>Phase 4: Reconnection &amp; Tests</h3>
+          <p>Refactored <code>CoopConnectionManager</code> to key connections by <code>participant_id</code> instead of WebSocket set — on reconnect, the old connection is closed and replaced, and a full snapshot is broadcast. Auto-reconnect in <code>coop.html</code> on WebSocket close. Wrote 21 new tests in <code>server/tests/test_coop.py</code> covering: room code creation/join, lobby snapshots, host authorization, per-player decision isolation, leaderboard, WebSocket broadcast, full multi-year game cycles, and game completion.</p>
+        </div>
+      </div>
+      <div class="diagram-frame" style="margin-top:16px">
+        <div class="mermaid">
+flowchart LR
+    A[Phase 1<br>Confirm Solo<br>& Shape] --> B[Phase 2<br>Lobby +<br>Room Codes]
+    B --> C[Phase 3<br>Year Cycle +<br>Host Controls]
+    C --> D[Phase 4<br>Reconnection<br>+ Tests]
+    D --> E[109 Tests<br>Passing]
+    style A fill:#efe4d0,stroke:#9d6b37
+    style B fill:#efe4d0,stroke:#9d6b37
+    style C fill:#efe4d0,stroke:#9d6b37
+    style D fill:#efe4d0,stroke:#9d6b37
+    style E fill:#d4edda,stroke:#3b6f76
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="findings-recommendation">
+      <div class="section-header">
+        <div>
+          <div class="section-index">07 / Findings &amp; Recommendation</div>
+          <h2 class="section-title">Findings &amp; Recommendation</h2>
+        </div>
+      </div>
+      <div class="narrative">
+        <p><strong>Finding 1:</strong> The existing WebSocket scaffold was sufficient for competitive multiplayer. No new realtime framework was needed. The <code>CoopConnectionManager</code> pattern scaled cleanly from co-op broadcast to per-participant keyed connections for reconnection.</p>
+        <p><strong>Finding 2:</strong> The engine's auction and trade surfaces, quarantined as MULTIPLAYER-CANDIDATE in Sprint 3, integrated cleanly. The sealed-bid auction flow (open/bid/close) maps directly to the host-controlled competitive model.</p>
+        <p><strong>Finding 3:</strong> Room codes dramatically improve the join experience vs. UUID-based joining. The 6-char alphanumeric format (excluding ambiguous characters) is easy to share verbally or via chat.</p>
+        <p><strong>Finding 4:</strong> Server-authoritative year advance via host controls works well for the facilitated/competitive shape. The host paces the game, and all players see synchronized state via WebSocket broadcast.</p>
+        <p><strong>Recommendation:</strong> The competitive multiplayer system is production-ready for Sprint 5 (visual step-change). The next phase should focus on the visual layer: design system, signature animated visual, and responsive polish — without changing the multiplayer logic.</p>
+      </div>
+      <div class="viz-frame" style="margin-top:16px">
+        <canvas id="testGrowthChart"></canvas>
+      </div>
+    </section>
+
+    <section class="section" id="implementation-path">
+      <div class="section-header">
+        <div>
+          <div class="section-index">08 / Implementation Path</div>
+          <h2 class="section-title">Implementation Path</h2>
+        </div>
+      </div>
+      <div class="phase-grid">
+        <div class="subcard">
+          <h3>Files Modified (11)</h3>
+          <ul>
+            <li><code>engine/coop.py</code> — room codes, lobby state, competitive game creation, leaderboard</li>
+            <li><code>engine/__init__.py</code> — new exports</li>
+            <li><code>server/routes/coop.py</code> — room code join, host start/advance/pause/resume, auctions, leaderboard</li>
+            <li><code>server/models.py</code> — JoinByRoomCodeRequest, HostActionRequest</li>
+            <li><code>server/ws.py</code> — participant_id-keyed connections, reconnection dedup</li>
+            <li><code>web/coop.html</code> — full rewrite: lobby, game dashboard, summary with rankings</li>
+            <li><code>web/index.html</code> — room code input, player count selector</li>
+            <li><code>web/js/api.js</code> — new API methods for all multiplayer endpoints</li>
+            <li><code>server/tests/test_api.py</code> — updated coop test for new flow</li>
+            <li><code>server/tests/test_coop.py</code> — 21 new multiplayer tests (new file)</li>
+            <li><code>activeContext.md</code> — Sprint 4 tracking</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Lines of Code</h3>
+          <p><strong>966 insertions, 205 deletions</strong> across 11 files. Net addition of ~760 lines, including 21 comprehensive multiplayer tests.</p>
+          <h3 style="margin-top:16px">Test Coverage</h3>
+          <ul>
+            <li>Room code: creation, join, case-insensitivity, invalid code</li>
+            <li>Lobby: snapshot, join updates, cannot join after start, cannot join full game</li>
+            <li>Host controls: start, advance, pause/resume, non-host authorization</li>
+            <li>Gameplay: per-player companies, decision isolation, leaderboard</li>
+            <li>WebSocket: broadcast to all players</li>
+            <li>Full cycle: multi-year game, game completion</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="risks-open-questions">
+      <div class="section-header">
+        <div>
+          <div class="section-index">09 / Risks / Open Questions</div>
+          <h2 class="section-title">Risks / Open Questions</h2>
+        </div>
+      </div>
+      <div class="dual-grid">
+        <div class="subcard">
+          <h3>Risks</h3>
+          <ul>
+            <li><strong>Room code collisions:</strong> Mitigated by uniqueness check against active lobbies on generation. Regeneration on collision is implicit (random generation).</li>
+            <li><strong>Host disconnect:</strong> Currently no host reassignment. If the host drops, the game stalls. Future: auto-reassign host or pause on host disconnect.</li>
+            <li><strong>Large sessions (8 players):</strong> Broadcast fan-out is O(n) per state change. Acceptable for 8 players; may need throttling for 20+.</li>
+          </ul>
+        </div>
+        <div class="subcard">
+          <h3>Open Questions</h3>
+          <ul>
+            <li>Bilateral trade UI is not yet built in the frontend (engine support exists)</li>
+            <li>Shock events between years (deferred to post-Sprint 5)</li>
+            <li>Bot participants for liquidity support (deferred)</li>
+            <li>Persistent player identity / accounts (explicitly deferred — ephemeral is the design)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="appendices-evidence">
+      <div class="section-header">
+        <div>
+          <div class="section-index">10 / Appendices / Evidence Notes</div>
+          <h2 class="section-title">Appendices / Evidence Notes</h2>
+        </div>
+      </div>
+      <div class="appendix-grid">
+        <div class="subcard">
+          <h3>Test Suite Growth</h3>
+          <div class="technical-frame">
+            <table>
+              <tr><th>Sprint</th><th>Tests</th><th>Delta</th></tr>
+              <tr><td>Pre-Sprint 3</td><td>83</td><td>—</td></tr>
+              <tr><td>Sprint 3</td><td>88</td><td>+5</td></tr>
+              <tr><td>Sprint 4</td><td>109</td><td>+21</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="subcard">
+          <h3>API Endpoints Added</h3>
+          <div class="technical-frame">
+            <table>
+              <tr><th>Endpoint</th><th>Purpose</th></tr>
+              <tr><td><code>POST /api/coop/join-by-code</code></td><td>Join via room code</td></tr>
+              <tr><td><code>POST /api/coop/{id}/start</code></td><td>Host starts game</td></tr>
+              <tr><td><code>POST /api/coop/{id}/advance-year</code></td><td>Host advances year</td></tr>
+              <tr><td><code>POST /api/coop/{id}/pause</code></td><td>Host pauses</td></tr>
+              <tr><td><code>POST /api/coop/{id}/resume</code></td><td>Host resumes</td></tr>
+              <tr><td><code>POST /api/coop/{id}/auction/open</code></td><td>Host opens auction</td></tr>
+              <tr><td><code>POST /api/coop/{id}/auction/{aid}/bid</code></td><td>Player submits bid</td></tr>
+              <tr><td><code>POST /api/coop/{id}/auction/{aid}/close</code></td><td>Host closes auction</td></tr>
+              <tr><td><code>GET /api/coop/{id}/leaderboard</code></td><td>Get rankings</td></tr>
+              <tr><td><code>GET /api/coop/{id}/lobby</code></td><td>Get lobby state</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="footer-note">designed for html first, printable without reconstruction</div>
+    </section>
+  </main>
+  <script>
+    (function() {
+      const chartCanvases = document.querySelectorAll('canvas');
+      chartCanvases.forEach((canvas) => {
+        canvas.classList.add('report-chart');
+        const parent = canvas.parentElement;
+        if (parent && parent.classList.contains('technical-frame') && !parent.classList.contains('chart-frame')) {
+          parent.classList.add('chart-frame');
+        }
+      });
+    })();
+
+    if (window.Chart) {
+      Chart.defaults.devicePixelRatio = 1;
+      Chart.defaults.animation = false;
+      Chart.defaults.resizeDelay = 150;
+      Chart.defaults.normalized = true;
+      Chart.defaults.maintainAspectRatio = false;
+      Chart.defaults.responsive = true;
+
+      const ctx = document.getElementById('testGrowthChart');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Pre-Sprint 3', 'Sprint 3', 'Sprint 4'],
+            datasets: [{
+              label: 'Total Tests Passing',
+              data: [83, 88, 109],
+              backgroundColor: ['rgba(157, 107, 55, 0.3)', 'rgba(157, 107, 55, 0.5)', 'rgba(59, 111, 118, 0.6)'],
+              borderColor: ['#9d6b37', '#9d6b37', '#3b6f76'],
+              borderWidth: 2,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            animation: false,
+            resizeDelay: 150,
+            normalized: true,
+            maintainAspectRatio: false,
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              title: {
+                display: true,
+                text: 'Test Suite Growth Across Sprints',
+                font: { size: 14, family: 'Georgia, serif' },
+                color: '#1f1912'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 120,
+                grid: { color: 'rgba(220, 205, 182, 0.3)' },
+                ticks: { color: '#5f564c' }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: '#5f564c' }
+              }
+            }
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>
