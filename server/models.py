@@ -100,7 +100,7 @@ class CreateCoopGameRequest(BaseModel):
     host_name: str = Field(min_length=1, max_length=100)
     province_name: str = Field(default="default", max_length=100)
     difficulty: str = Field(default="standard", pattern=r"^(easy|standard|hard)$")
-    player_count: int = Field(default=2, ge=2, le=4)
+    player_count: int = Field(default=2, ge=2, le=8)
     num_years: int | None = Field(default=None, ge=5, le=25)
 
 
@@ -108,9 +108,18 @@ class JoinCoopRequest(BaseModel):
     player_name: str = Field(min_length=1, max_length=100)
 
 
+class JoinByRoomCodeRequest(BaseModel):
+    room_code: str = Field(min_length=4, max_length=10)
+    player_name: str = Field(min_length=1, max_length=100)
+
+
 class ReadyRequest(BaseModel):
     participant_id: str = Field(min_length=1, max_length=20)
     ready: bool = True
+
+
+class HostActionRequest(BaseModel):
+    participant_id: str = Field(min_length=1, max_length=20)
 
 
 class ErrorResponse(BaseModel):

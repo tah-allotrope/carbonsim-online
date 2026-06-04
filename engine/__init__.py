@@ -57,12 +57,18 @@ from .playtest import run_playtest, run_playtest_batch, summarize_playtests
 from .tutorial import TUTORIAL_CARDS, mark_tutorial_state, tutorial_notes_for_year
 from .coop import (
     add_coop_participant,
+    add_competitive_participant,
     all_participants_ready,
+    build_leaderboard,
     create_coop_game,
+    create_competitive_game,
+    generate_room_code,
+    lobby_snapshot,
     participant_snapshot,
     reset_ready_check,
     set_participant_connection,
     set_participant_ready,
+    start_competitive_game,
 )
 
 from .solo import create_solo_game, solo_player_company
@@ -128,12 +134,18 @@ __all__ = [
     "mark_tutorial_state",
     "tutorial_notes_for_year",
     "add_coop_participant",
+    "add_competitive_participant",
     "all_participants_ready",
+    "build_leaderboard",
     "create_coop_game",
+    "create_competitive_game",
+    "generate_room_code",
+    "lobby_snapshot",
     "participant_snapshot",
     "reset_ready_check",
     "set_participant_connection",
     "set_participant_ready",
+    "start_competitive_game",
     "create_solo_game",
     "solo_player_company",
 ]

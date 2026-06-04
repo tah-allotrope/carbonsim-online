@@ -12,23 +12,31 @@ from .db import decompress_state, get_game as db_get_game, update_game_state as 
 
 class CoopConnectionManager:
     def __init__(self) -> None:
-        self._rooms: dict[str, set[WebSocket]] = defaultdict(set)
+        self._rooms: dict[str, dict[str, WebSocket]] = defaultdict(dict)
 
     async def connect(self, game_id: str, participant_id: str, websocket: WebSocket) -> None:
         await websocket.accept()
-        self._rooms[game_id].add(websocket)
+        existing = self._rooms[game_id].get(participant_id)
+        if existing:
+            try:
+                await existing.close()
+            except Exception:
+                pass
+        self._rooms[game_id][participant_id] = websocket
         state = _load_state(game_id)
         set_participant_connection(state, participant_id=participant_id, connected=True)
         db_update_game_state(game_id, state)
         await self.broadcast_snapshot(game_id)
 
     async def disconnect(self, game_id: str, participant_id: str, websocket: WebSocket) -> None:
-        self._rooms[game_id].discard(websocket)
-        state = _load_state(game_id)
+        current = self._rooms[game_id].get(participant_id)
+        if current is websocket:
+            self._rooms[game_id].pop(participant_id, None)
         try:
+            state = _load_state(game_id)
             set_participant_connection(state, participant_id=participant_id, connected=False)
             db_update_game_state(game_id, state)
-        except ValueError:
+        except (ValueError, Exception):
             pass
         if self._rooms[game_id]:
             await self.broadcast_snapshot(game_id)
@@ -38,6 +46,8 @@ class CoopConnectionManager:
         payload = {
             "type": "snapshot",
             "game_id": game_id,
+            "game_status": state.get("game_status", "lobby"),
+            "room_code": state.get("room_code", ""),
             "participants": [
                 {
                     "participant_id": participant["participant_id"],
@@ -47,14 +57,17 @@ class CoopConnectionManager:
                 for participant in state.get("participants", [])
             ],
         }
-        stale: list[WebSocket] = []
-        for socket in list(self._rooms[game_id]):
+        stale: list[str] = []
+        for pid, socket in list(self._rooms[game_id].items()):
             try:
                 await socket.send_json(payload)
             except Exception:
-                stale.append(socket)
-        for socket in stale:
-            self._rooms[game_id].discard(socket)
+                stale.append(pid)
+        for pid in stale:
+            self._rooms[game_id].pop(pid, None)
+
+    def is_connected(self, game_id: str, participant_id: str) -> bool:
+        return participant_id in self._rooms.get(game_id, {})
 
 
 manager = CoopConnectionManager()

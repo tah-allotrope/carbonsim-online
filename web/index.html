@@ -58,11 +58,19 @@
         <div id="gameList"><p style="color:var(--muted)">Loading...</p></div>
       </div>
       <div class="card">
-        <div class="card-title">Co-op Session</div>
+        <div class="card-title">Competitive Multiplayer</div>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <button class="btn btn-primary" onclick="createCoop()">Create Co-op Game</button>
-          <input class="input" id="coopJoinId" placeholder="Enter co-op game ID">
-          <button class="btn" onclick="joinCoop()">Join Co-op Game</button>
+          <div style="display:flex;gap:8px;align-items:end">
+            <div style="flex:1"><label>Players</label><select id="coopPlayerCount"><option value="2">2 Players</option><option value="3">3 Players</option><option value="4">4 Players</option><option value="6">6 Players</option><option value="8">8 Players</option></select></div>
+            <button class="btn btn-primary" onclick="createCoop()" style="height:42px;white-space:nowrap">Create Game</button>
+          </div>
+          <div style="border-top:1px solid var(--line);padding-top:10px">
+            <label>Room Code</label>
+            <div style="display:flex;gap:8px">
+              <input class="input" id="coopRoomCode" placeholder="e.g. ABC123" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:0.15em">
+              <button class="btn" onclick="joinByCode()" style="white-space:nowrap">Join</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -104,7 +112,7 @@ async function createCoop() {
       host_name: document.getElementById('playerName').value || 'Host',
       province_name: document.getElementById('provinceName').value || 'default',
       difficulty: document.getElementById('difficulty').value,
-      player_count: 2,
+      player_count: parseInt(document.getElementById('coopPlayerCount').value) || 2,
     });
     navigateTo(`/coop.html?id=${data.game_id}&participant=${data.participant_id}`);
   } catch (e) {
@@ -112,14 +120,12 @@ async function createCoop() {
   }
 }
 
-async function joinCoop() {
-  const gameId = document.getElementById('coopJoinId').value.trim();
-  if (!gameId) {
-    alert('Enter a co-op game ID');
-    return;
-  }
+async function joinByCode() {
+  const code = document.getElementById('coopRoomCode').value.trim().toUpperCase();
+  if (!code) { alert('Enter a room code'); return; }
   try {
-    const data = await API.joinCoop(gameId, {
+    const data = await API.joinByRoomCode({
+      room_code: code,
       player_name: document.getElementById('playerName').value || 'Guest',
     });
     navigateTo(`/coop.html?id=${data.game_id}&participant=${data.participant_id}`);

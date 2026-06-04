@@ -234,6 +234,8 @@ class TestCoopLifecycle:
         created_data = created.json()
         game_id = created_data["game_id"]
         host_id = created_data["participant_id"]
+        assert "room_code" in created_data
+        assert len(created_data["room_code"]) == 6
 
         joined = client.post(f"/api/coop/{game_id}/join", json={"player_name": "Guest"})
         assert joined.status_code == 200
@@ -243,15 +245,19 @@ class TestCoopLifecycle:
         assert state.status_code == 200
         snapshot = state.json()["snapshot"]
         assert snapshot["coop_mode"] is True
+        assert snapshot["competitive_mode"] is True
         assert len(snapshot["participants"]) == 2
 
         ready_one = client.post(f"/api/coop/{game_id}/ready", json={"participant_id": host_id, "ready": True})
         assert ready_one.status_code == 200
-        assert ready_one.json()["advanced"] is False
+        assert ready_one.json()["status"] == "ready_recorded"
 
         ready_two = client.post(f"/api/coop/{game_id}/ready", json={"participant_id": guest_id, "ready": True})
         assert ready_two.status_code == 200
-        assert ready_two.json()["advanced"] is True
+
+        start_resp = client.post(f"/api/coop/{game_id}/start", json={"participant_id": host_id})
+        assert start_resp.status_code == 200
+        assert start_resp.json()["status"] == "started"
 
     def test_coop_websocket_broadcasts_snapshot(self, client):
         created = client.post(
