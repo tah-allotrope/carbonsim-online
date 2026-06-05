@@ -2,15 +2,32 @@
 
 ## Current Sprint
 
-Sprint 4 — Single-Player Polish & Multiplayer Build-Out
+Sprint 5 — Visual Step-Change (COMPLETE)
 
-## Multiplayer Shape Decision
+## Sprint 5 Results
 
-- **Shape:** Competitive shared-market (auctions, trades, leaderboard)
-- **Players:** 2-8 per session
-- **Identity:** Ephemeral participant_id, display name at join, no accounts
-- **Pacing:** Host-driven year advance with server-authoritative state
-- **Key features:** Room codes, lobby, host controls, per-player compliance, leaderboard, auctions, bilateral trades, reconnection
+- **Design system documented** — `docs/design-language.md` with full token/component reference
+- **Signature visual: animated city skyline** — `web/js/skyline.js` canvas-based scene
+  - Buildings represent companies, player's company highlighted with cyan glow
+  - Sky color shifts with compliance (blue=good, orange=warning, red=shortfall)
+  - Smog particles proportional to emissions, reduce with abatement
+  - Green particle burst on abatement activation, cyan sparkles on offset purchase
+  - Dawn/dusk cycle on year transition
+  - 30fps throttled, respects `prefers-reduced-motion`
+- **Integrated into all 4 screens** — game.html, coop.html, summary.html, index.html
+- **Accessibility polish** — focus-visible states on buttons, inputs, selects
+- **Reduced-motion support** — skyline hidden, all animations disabled
+- **109 tests passing** (unchanged from Sprint 4 — visual-only changes)
+
+## All 5 Sprints Complete
+
+| Sprint | Title | Status |
+|---|---|---|
+| 1 | Canonical Game Stack Consolidation | ✅ |
+| 2 | Repository Reorganization & Clutter Purge | ✅ |
+| 3 | Engine Trim, Modularization & Test Unification | ✅ |
+| 4 | Single-Player Polish & Multiplayer Build-Out | ✅ |
+| 5 | Visual Step-Change | ✅ |
 
 ## Plan
 

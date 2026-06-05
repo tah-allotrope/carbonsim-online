@@ -50,6 +50,7 @@ a:hover { text-decoration: none; color: #fff; text-shadow: var(--glow); }
 .btn-danger { border-color: var(--red); background: rgba(255,68,68,0.12); }
 .btn-danger:hover { background: rgba(255,68,68,0.25); border-color: var(--red); box-shadow: 0 4px 12px rgba(255,68,68,0.18); }
 .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; box-shadow: 0 0 12px rgba(0,245,255,0.3); }
 
 .input, select {
   background: rgba(13,13,13,0.85); border: 1px solid rgba(255,255,255,0.12);
@@ -58,6 +59,7 @@ a:hover { text-decoration: none; color: #fff; text-shadow: var(--glow); }
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 245, 255, 0.2); }
+.input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 select { cursor: pointer; }
 label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--mono); }
 

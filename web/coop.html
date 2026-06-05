@@ -6,6 +6,11 @@
 <title>Climate Mayor — Competitive</title>
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/animations.css">
+<style>
+.skyline-container { width:100%;height:180px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px;border:1px solid var(--line);position:relative;background:#0a0a0f }
+.skyline-container canvas { display:block;width:100%;height:100% }
+.skyline-overlay { position:absolute;bottom:6px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;font-family:var(--mono);font-size:0.65rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em }
+</style>
 </head>
 <body class="game-bg-animated page-fade-in">
 <div class="page">
@@ -22,6 +27,14 @@
       <button onclick="navigateTo('/')" class="btn">Menu</button>
     </div>
   </div>
+  <div class="skyline-container" id="skylineContainer">
+    <canvas id="skylineCanvas" aria-hidden="true"></canvas>
+    <div class="skyline-overlay">
+      <span id="skylineLabel">Multiplayer Arena</span>
+      <span id="skylineCompliance">--</span>
+    </div>
+  </div>
+
   <div id="coopContent"><div class="card"><p style="color:var(--muted)">Loading session...</p></div></div>
 </div>
 
@@ -29,6 +42,7 @@
 <script src="/js/effects.js"></script>
 <script src="/js/audio.js"></script>
 <script src="/js/shortcuts.js"></script>
+<script src="/js/skyline.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
@@ -48,6 +62,13 @@ async function refreshCoop() {
     const data = await API.getCoopState(GAME_ID, PARTICIPANT_ID);
     coopState = { game_id: GAME_ID, participant_id: PARTICIPANT_ID, snapshot: data.snapshot, game_status: data.game_status, room_code: data.room_code };
     renderCoop();
+    if (coopState.snapshot && window.Skyline) {
+      window.Skyline.update(coopState.snapshot);
+      const player = coopState.snapshot.player_company || {};
+      const ratio = player.projected_emissions > 0 ? Math.round((player.allowances / player.projected_emissions) * 100) : 100;
+      document.getElementById('skylineCompliance').textContent = `Compliance: ${ratio}%`;
+      document.getElementById('skylineLabel').textContent = `Room ${coopState.room_code} — Year ${coopState.snapshot.current_year || '?'}`;
+    }
   } catch (e) {
     document.getElementById('coopContent').innerHTML = `<div class="card"><p style="color:var(--red)">Error: ${e.message}</p></div>`;
   }
@@ -323,6 +344,7 @@ function startGame() {
 
 function advanceYear() {
   if (window.AudioManager) AudioManager.playSFX('click');
+  if (window.Skyline) window.Skyline.triggerYearTransition();
   API.hostAdvanceYear(GAME_ID, PARTICIPANT_ID).then(() => {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'refresh' }));
     refreshCoop();
@@ -339,6 +361,7 @@ function resumeGame() {
 
 function activateMeasure(measureId) {
   if (window.AudioManager) AudioManager.playSFX('activate');
+  if (window.Skyline) window.Skyline.triggerAbatementEffect();
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'activate_abatement',
     payload: { measure_id: measureId },
@@ -350,6 +373,7 @@ function buyOffsets() {
   const quantity = parseFloat(input.value);
   if (isNaN(quantity) || quantity <= 0) { alert('Enter a valid quantity'); return; }
   if (window.AudioManager) AudioManager.playSFX('activate');
+  if (window.Skyline) window.Skyline.triggerOffsetEffect();
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'buy_offsets',
     payload: { quantity },
@@ -399,7 +423,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-refreshCoop().then(connectWs);
+refreshCoop().then(() => {
+  connectWs();
+  if (coopState && coopState.snapshot && window.Skyline) {
+    window.Skyline.init('skylineCanvas', coopState.snapshot);
+  }
+});
 </script>
 </body>
 </html>
