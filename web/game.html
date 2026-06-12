@@ -98,12 +98,15 @@
 <script src="/js/api.js"></script>
 <script src="/js/effects.js"></script>
 <script src="/js/audio.js"></script>
-<script src="/js/progression.js"></script>
-<script src="/js/shortcuts.js"></script>
-<script src="/js/skyline.js"></script>
-<script>
+  <script src="/js/progression.js"></script>
+  <script src="/js/shortcuts.js"></script>
+  <script src="/js/assets.js"></script>
+  <script src="/js/skyline.js"></script>
+  <script src="/js/isocity.js"></script>
+  <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
+const CityRenderer = params.get('renderer') === 'isocity' ? window.Isocity : CityRenderer;
 let gameState = null;
 
 const GAMEPLAY_TIPS = [
@@ -129,8 +132,8 @@ setTimeout(() => {
     screen.style.opacity = '0';
     setTimeout(() => {
       screen.remove();
-      if (window.Skyline && gameState) {
-        window.Skyline.init('skylineCanvas', gameState.snapshot);
+      if (CityRenderer && gameState) {
+        CityRenderer.init('skylineCanvas', gameState.snapshot);
       }
     }, 400);
   }
@@ -149,8 +152,8 @@ async function refresh() {
   try {
     gameState = await API.getGame(GAME_ID);
     render();
-    if (gameState && window.Skyline) {
-      window.Skyline.update(gameState.snapshot);
+    if (gameState && CityRenderer) {
+      CityRenderer.update(gameState.snapshot);
       const player = gameState.snapshot?.player_company || gameState.snapshot?.companies?.[0];
       if (player) {
         const compliance = player.compliance_gap <= 0 ? 'Compliant' : 'Shortfall';
@@ -467,7 +470,7 @@ function doAdvanceYear() {
   }
 
   if (window.AudioManager) AudioManager.playSFX('year-advance');
-  if (window.Skyline) window.Skyline.triggerYearTransition();
+  if (CityRenderer) CityRenderer.triggerYearTransition();
 
   // Trigger year advanced wipe overlay
   const wipe = document.createElement('div');
@@ -535,9 +538,9 @@ function doDecision(action, payload, event) {
     }
   }
   if (window.AudioManager) AudioManager.playSFX('activate');
-  if (window.Skyline) {
-    if (action === 'activate_abatement') window.Skyline.triggerAbatementEffect();
-    if (action === 'buy_offsets') window.Skyline.triggerOffsetEffect();
+  if (CityRenderer) {
+    if (action === 'activate_abatement') CityRenderer.triggerAbatementEffect();
+    if (action === 'buy_offsets') CityRenderer.triggerOffsetEffect();
   }
   API.decision(GAME_ID, { action, payload }).then(r => {
     showToast('Decision applied', 'success');

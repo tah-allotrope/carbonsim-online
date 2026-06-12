@@ -98,11 +98,14 @@
 <script src="/js/api.js"></script>
 <script src="/js/effects.js"></script>
 <script src="/js/audio.js"></script>
-<script src="/js/progression.js"></script>
-<script src="/js/skyline.js"></script>
-<script>
+  <script src="/js/progression.js"></script>
+  <script src="/js/assets.js"></script>
+  <script src="/js/skyline.js"></script>
+  <script src="/js/isocity.js"></script>
+  <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
+const CityRenderer = params.get('renderer') === 'isocity' ? window.Isocity : CityRenderer;
 
 // Fade page out smoothly on transition
 function navigateTo(url) {
@@ -198,8 +201,8 @@ Achievements Unlocked: ${(summary.achievements || []).map(a => a.title).join(', 
       : '<p style="color:var(--muted)">No achievements unlocked this run.</p>';
 
     drawChart(s);
-    if (window.Skyline) {
-      window.Skyline.init('skylineCanvas', s);
+    if (CityRenderer) {
+      CityRenderer.init('skylineCanvas', s);
       const player = s.player_company || s.companies?.[0] || {};
       const ratio = player.projected_emissions > 0 ? Math.round((player.allowances / player.projected_emissions) * 100) : 100;
       document.getElementById('skylineCompliance').textContent = `Final Compliance: ${ratio}%`;

@@ -41,12 +41,15 @@
 <script src="/js/api.js"></script>
 <script src="/js/effects.js"></script>
 <script src="/js/audio.js"></script>
-<script src="/js/shortcuts.js"></script>
-<script src="/js/skyline.js"></script>
-<script>
+  <script src="/js/shortcuts.js"></script>
+  <script src="/js/assets.js"></script>
+  <script src="/js/skyline.js"></script>
+  <script src="/js/isocity.js"></script>
+  <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
 const PARTICIPANT_ID = params.get('participant');
+const CityRenderer = params.get('renderer') === 'isocity' ? window.Isocity : CityRenderer;
 let coopState = null;
 let ws = null;
 let wsReconnectTimer = null;
@@ -62,8 +65,8 @@ async function refreshCoop() {
     const data = await API.getCoopState(GAME_ID, PARTICIPANT_ID);
     coopState = { game_id: GAME_ID, participant_id: PARTICIPANT_ID, snapshot: data.snapshot, game_status: data.game_status, room_code: data.room_code };
     renderCoop();
-    if (coopState.snapshot && window.Skyline) {
-      window.Skyline.update(coopState.snapshot);
+    if (coopState.snapshot && CityRenderer) {
+      CityRenderer.update(coopState.snapshot);
       const player = coopState.snapshot.player_company || {};
       const ratio = player.projected_emissions > 0 ? Math.round((player.allowances / player.projected_emissions) * 100) : 100;
       document.getElementById('skylineCompliance').textContent = `Compliance: ${ratio}%`;
@@ -344,7 +347,7 @@ function startGame() {
 
 function advanceYear() {
   if (window.AudioManager) AudioManager.playSFX('click');
-  if (window.Skyline) window.Skyline.triggerYearTransition();
+  if (CityRenderer) CityRenderer.triggerYearTransition();
   API.hostAdvanceYear(GAME_ID, PARTICIPANT_ID).then(() => {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'refresh' }));
     refreshCoop();
@@ -361,7 +364,7 @@ function resumeGame() {
 
 function activateMeasure(measureId) {
   if (window.AudioManager) AudioManager.playSFX('activate');
-  if (window.Skyline) window.Skyline.triggerAbatementEffect();
+  if (CityRenderer) CityRenderer.triggerAbatementEffect();
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'activate_abatement',
     payload: { measure_id: measureId },
@@ -373,7 +376,7 @@ function buyOffsets() {
   const quantity = parseFloat(input.value);
   if (isNaN(quantity) || quantity <= 0) { alert('Enter a valid quantity'); return; }
   if (window.AudioManager) AudioManager.playSFX('activate');
-  if (window.Skyline) window.Skyline.triggerOffsetEffect();
+  if (CityRenderer) CityRenderer.triggerOffsetEffect();
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'buy_offsets',
     payload: { quantity },
@@ -425,8 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 refreshCoop().then(() => {
   connectWs();
-  if (coopState && coopState.snapshot && window.Skyline) {
-    window.Skyline.init('skylineCanvas', coopState.snapshot);
+  if (coopState && coopState.snapshot && CityRenderer) {
+    CityRenderer.init('skylineCanvas', coopState.snapshot);
   }
 });
 </script>
