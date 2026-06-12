@@ -1,0 +1,40 @@
+{
+  "version": "1.0.0",
+  "assets": {
+    "ground": {
+      "type": "image",
+      "path": "/assets/tiles/ground.png",
+      "width": 64,
+      "height": 64
+    },
+    "factory_dirty": {
+      "type": "image",
+      "path": "/assets/sprites/factory_dirty.png",
+      "width": 64,
+      "height": 64
+    },
+    "factory_clean": {
+      "type": "image",
+      "path": "/assets/sprites/factory_clean.png",
+      "width": 64,
+      "height": 64
+    },
+    "smog": {
+      "type": "image",
+      "path": "/assets/sprites/smog.png",
+      "width": 64,
+      "height": 64
+    },
+    "player_marker": {
+      "type": "image",
+      "path": "/assets/sprites/player_marker.png",
+      "width": 64,
+      "height": 64
+    },
+    "font_display": {
+      "type": "font",
+      "path": "/assets/fonts/PressStart2P-Regular.ttf",
+      "format": "truetype"
+    }
+  }
+}

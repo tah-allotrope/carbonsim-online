@@ -426,3 +426,31 @@ class TestStateAssertions:
         data = resp.json()
         assert data["current_year"] > pre_year
         assert data["status"] == "fast_forwarded"
+
+
+class TestStaticAssets:
+    def test_assets_manifest_returns_200(self, client):
+        resp = client.get("/assets/manifest.json")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "application/json"
+        data = resp.json()
+        assert "version" in data
+        assert "assets" in data
+        assert "ground" in data["assets"]
+
+    def test_assets_tile_returns_png(self, client):
+        resp = client.get("/assets/tiles/ground.png")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "image/png"
+
+    def test_assets_font_returns_ttf(self, client):
+        resp = client.get("/assets/fonts/PressStart2P-Regular.ttf")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "font/ttf"
+
+    def test_all_manifest_paths_exist(self, client):
+        manifest = client.get("/assets/manifest.json").json()
+        for name, entry in manifest.get("assets", {}).items():
+            path = entry["path"]
+            resp = client.get(path)
+            assert resp.status_code == 200, f"Manifest asset '{name}' at {path} returned {resp.status_code}"

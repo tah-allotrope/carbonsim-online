@@ -53,6 +53,10 @@ See `plans/2026-05-29-game-focus-roadmap-index.md` for the 5-sprint execution pl
 4. **Single-Player Polish & Multiplayer Build-Out** — lobby, room codes, host controls, reconnection
 5. **Visual Step-Change** — design system, signature animated visual
 
+## Asset Attributions
+
+See `ATTRIBUTIONS.md` for the source, author, and license of every asset under `web/assets/`.
+
 ## Research Documents
 
 - `research/2026-04-13_online-carbonsim-platform-create.md`
