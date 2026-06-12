@@ -1,19 +1,51 @@
-:root {
-  --bg: #0d0d0d; --bg-soft: #111111; --panel: rgba(13,13,13,0.88);
-  --line: rgba(0,245,255,0.26); --text: #e9f6ff; --muted: #8ea3ad;
-  --accent: #00f5ff; --green: #39ff14; --red: #ff4444; --orange: #ffaa00;
-  --glow: 0 0 18px rgba(0,245,255,0.42);
-  --radius: 14px; --font: "Segoe UI","Helvetica Neue",Arial,sans-serif;
-  --mono: "Cascadia Code","Fira Code",Consolas,monospace;
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("/assets/fonts/PressStart2P-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
+
+:root {
+  /* Retro tycoon palette */
+  --bg: #f7f1e7;
+  --bg-soft: #efe4d0;
+  --panel: #fffdf9;
+  --line: rgba(92, 77, 60, 0.28);
+  --text: #1f1912;
+  --muted: #6b5e4f;
+  --accent: #3b6f76;
+  --green: #5a8f4e;
+  --red: #b54a3f;
+  --orange: #d4883a;
+  --glow: 0 0 0 transparent;
+
+  /* Bevel chrome tokens */
+  --bevel-light: #fff8e7;
+  --bevel-dark: #8b7355;
+  --bevel-shadow: #4a3b2d;
+
+  /* Typography */
+  --font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Press Start 2P", cursive;
+  --mono: "Cascadia Code", "Fira Code", Consolas, monospace;
+
+  --radius: 8px;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+h1, h2, h3, .header-title, .brand {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
 body {
   background: var(--bg); color: var(--text); font-family: var(--font);
   min-height: 100vh; line-height: 1.5; letter-spacing: 0.01em;
   transition: background 0.5s ease;
 }
-a { color: var(--accent); text-decoration: none; transition: all 0.2s; }
-a:hover { text-decoration: none; color: #fff; text-shadow: var(--glow); }
+a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+a:hover { text-decoration: underline; color: var(--text); }
 
 .page { max-width: 1100px; margin: 0 auto; padding: 20px; position: relative; }
 
