@@ -12,6 +12,10 @@ const Isocity = (function () {
   let reducedMotion = false;
   let lastFrame = 0;
   const FPS_INTERVAL = 1000 / 30;
+  let time = 0;
+  let particles = [];
+  let flashOpacity = 0;
+  let flashColor = null;
 
   const TILE_W = 64;
   const TILE_H = 32;
@@ -213,24 +217,88 @@ const Isocity = (function () {
       ctx.ellipse(pos.x, pos.y, 28, 14, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
 
-    // Player marker above the building.
-    if (plot.isPlayer && images.player_marker) {
-      ctx.drawImage(images.player_marker, pos.x - 32, pos.y - 64);
+  function drawPlotMarker(plot) {
+    if (!manifestLoaded || !plot.isPlayer || !images.player_marker) return;
+    const pos = tileToScreen(plot.col, plot.row);
+    ctx.drawImage(images.player_marker, pos.x - 32, pos.y - 64);
+  }
+
+  function spawnParticles() {
+    if (reducedMotion || particles.length > 150) return;
+    plots.forEach(function (plot) {
+      if (plot.isDistrict) return;
+      const company = plot.company || {};
+      const emissions = company.projected_emissions || 0;
+      if (emissions <= 0) return;
+      const rate = Math.min(0.3, emissions / 600);
+      if (Math.random() > rate) return;
+      const pos = tileToScreen(plot.col, plot.row);
+      particles.push({
+        x: pos.x + (Math.random() - 0.5) * 24,
+        y: pos.y - 30 - Math.random() * 20,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -0.2 - Math.random() * 0.4,
+        life: 1,
+        decay: 0.005 + Math.random() * 0.01,
+        size: 1.5 + Math.random() * 2,
+        color: '120,100,90',
+      });
+    });
+  }
+
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx += (Math.random() - 0.5) * 0.05;
+      p.life -= p.decay;
+      if (p.life <= 0) particles.splice(i, 1);
     }
+  }
+
+  function drawParticles() {
+    particles.forEach(function (p) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + p.color + ',' + (p.life * 0.4) + ')';
+      ctx.fill();
+    });
+  }
+
+  function drawFlash() {
+    if (flashOpacity <= 0) return;
+    ctx.fillStyle = flashColor + flashOpacity + ')';
+    ctx.fillRect(0, 0, width, height);
+    flashOpacity -= 0.02;
+    if (flashOpacity < 0) flashOpacity = 0;
   }
 
   function draw() {
     if (!manifestLoaded) return;
     ctx.clearRect(0, 0, width, height);
-    // Simple back-to-front order by col+row.
+
+    // Layer 1: ground tiles, back to front.
     const sorted = plots.slice().sort(function (a, b) {
       return (a.col + a.row) - (b.col + b.row);
     });
-    sorted.forEach(function (plot) {
-      drawPlotGround(plot);
-      drawPlotStructure(plot);
-    });
+    sorted.forEach(drawPlotGround);
+
+    // Layer 2: structures (buildings, smog, tint).
+    sorted.forEach(drawPlotStructure);
+
+    // Layer 3: particles (smoke + effect bursts).
+    spawnParticles();
+    updateParticles();
+    drawParticles();
+
+    // Layer 4: player markers above everything.
+    sorted.forEach(drawPlotMarker);
+
+    // Layer 5: transition flash overlay.
+    drawFlash();
   }
 
   function drawStatic() {
@@ -242,6 +310,7 @@ const Isocity = (function () {
     const delta = timestamp - lastFrame;
     if (delta < FPS_INTERVAL) return;
     lastFrame = timestamp - (delta % FPS_INTERVAL);
+    time += delta * 0.001;
     draw();
   }
 
@@ -251,9 +320,38 @@ const Isocity = (function () {
     buildPlots(snapshot);
   }
 
-  function triggerAbatementEffect() {}
-  function triggerOffsetEffect() {}
-  function triggerYearTransition() {}
+  function burstParticles(plotFilter, color, count, speed) {
+    const targets = plots.filter(plotFilter);
+    if (targets.length === 0) return;
+    targets.forEach(function (plot) {
+      const pos = tileToScreen(plot.col, plot.row);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: pos.x,
+          y: pos.y - 30,
+          vx: (Math.random() - 0.5) * speed,
+          vy: -Math.random() * speed - 1,
+          life: 1,
+          decay: 0.02,
+          size: 2 + Math.random() * 2,
+          color: color,
+        });
+      }
+    });
+  }
+
+  function triggerAbatementEffect() {
+    burstParticles(function (p) { return p.isPlayer; }, '90,143,78', 16, 3);
+  }
+
+  function triggerOffsetEffect() {
+    burstParticles(function (p) { return p.isPlayer; }, '59,111,118', 14, 2.5);
+  }
+
+  function triggerYearTransition() {
+    flashColor = 'rgba(239,228,208,';
+    flashOpacity = 0.6;
+  }
 
   function destroy() {
     if (animId) cancelAnimationFrame(animId);
