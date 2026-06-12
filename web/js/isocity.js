@@ -1,7 +1,7 @@
 /**
  * Isocity — retro isometric city renderer for CarbonSim Online.
  *
- * Reuses the skyline.js lifecycle (RAF loop, throttle, DPR resize,
+ * Reuses the legacy renderer lifecycle (RAF loop, throttle, DPR resize,
  * reduced-motion fallback, public trigger API) and renders a tile-based
  * isometric city that reflects live engine state.
  */

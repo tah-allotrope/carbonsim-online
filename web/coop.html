@@ -43,13 +43,12 @@
 <script src="/js/audio.js"></script>
   <script src="/js/shortcuts.js"></script>
   <script src="/js/assets.js"></script>
-  <script src="/js/skyline.js"></script>
   <script src="/js/isocity.js"></script>
   <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
 const PARTICIPANT_ID = params.get('participant');
-const CityRenderer = params.get('renderer') === 'skyline' ? window.Skyline : window.Isocity;
+const CityRenderer = window.Isocity;
 let coopState = null;
 let ws = null;
 let wsReconnectTimer = null;

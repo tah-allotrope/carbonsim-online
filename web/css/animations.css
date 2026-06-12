@@ -346,5 +346,5 @@ body.game-bg-animated::after {
     animation: none !important;
     transition: none !important;
   }
-  .skyline-container { display: none; }
+
 }

@@ -101,12 +101,11 @@
   <script src="/js/progression.js"></script>
   <script src="/js/shortcuts.js"></script>
   <script src="/js/assets.js"></script>
-  <script src="/js/skyline.js"></script>
   <script src="/js/isocity.js"></script>
   <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
-const CityRenderer = params.get('renderer') === 'skyline' ? window.Skyline : window.Isocity;
+const CityRenderer = window.Isocity;
 let gameState = null;
 
 const GAMEPLAY_TIPS = [
