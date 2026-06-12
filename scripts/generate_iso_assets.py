@@ -147,6 +147,23 @@ def draw_player_marker() -> Image.Image:
     return img
 
 
+def draw_district() -> Image.Image:
+    """Industrial district tile representing aggregated companies."""
+    img, draw = new_tile()
+    cx, cy = TILE_W // 2, TILE_H // 2 + 4
+    iso_diamond(draw, cx, cy, 56, 28,
+                COLORS["ground_top"], COLORS["ground_left"],
+                COLORS["ground_right"], COLORS["ground_edge"])
+    # Cluster of small darker factories
+    wall = COLORS["factory_wall_dark"]
+    for offset in [(-12, -4), (4, -8), (-4, 4)]:
+        bx, by = cx + offset[0], cy + offset[1] - 8
+        draw.rectangle([bx - 6, by - 10, bx + 6, by], fill=wall)
+        draw.rectangle([bx - 7, by - 12, bx - 3, by - 10], fill=wall)
+        draw.rectangle([bx + 2, by - 12, bx + 6, by - 10], fill=wall)
+    return img
+
+
 def main() -> None:
     tiles_dir = ASSETS_DIR / "tiles"
     sprites_dir = ASSETS_DIR / "sprites"
@@ -158,6 +175,7 @@ def main() -> None:
     draw_factory(dirty=False).save(sprites_dir / "factory_clean.png")
     draw_smog().save(sprites_dir / "smog.png")
     draw_player_marker().save(sprites_dir / "player_marker.png")
+    draw_district().save(sprites_dir / "district.png")
 
     print("Generated assets:")
     for path in sorted(tiles_dir.iterdir()) + sorted(sprites_dir.iterdir()):

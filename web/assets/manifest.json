@@ -31,6 +31,12 @@
       "width": 64,
       "height": 64
     },
+    "district": {
+      "type": "image",
+      "path": "/assets/sprites/district.png",
+      "width": 64,
+      "height": 64
+    },
     "font_display": {
       "type": "font",
       "path": "/assets/fonts/PressStart2P-Regular.ttf",
