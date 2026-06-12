@@ -2,7 +2,7 @@
 
 ## Current Sprint
 
-Sprint 2 — Retro Design Token System & Chrome (`plans/2026-06-13-retro-design-tokens-plan.md`)
+Sprint 3 — Isometric Renderer & State Mapping (`plans/2026-06-13-isometric-renderer-plan.md`)
 
 ## Retro Isometric Tycoon Roadmap
 
@@ -10,30 +10,21 @@ Sprint 2 — Retro Design Token System & Chrome (`plans/2026-06-13-retro-design-
 |---|---|---|
 | 1 | Retro Asset Pipeline & Static Serving | ✅ complete |
 | 2 | Retro Design Token System & Chrome | ✅ complete |
-| 3 | Isometric Renderer & State Mapping | 🔒 |
+| 3 | Isometric Renderer & State Mapping | ⏳ in progress |
 | 4 | Retro Reskin Across All Screens | 🔒 |
 | 5 | Retro SFX & Perf/A11y Polish | 🔒 |
 
 ## Plan
 
-- [x] PHASE-01: Swap `:root` tokens to retro tycoon palette + wire pixel font
-- [x] PHASE-02: Reskin shared components to beveled retro chrome
-- [x] PHASE-03: Rewrite `docs/design-language.md` for retro tycoon system
+- [ ] PHASE-01: Iso projection + grid + sprite blitting scaffold
+- [ ] PHASE-02: Deterministic engine-state → city mapping (cap 16 + district tile)
+- [ ] PHASE-03: Depth/overlay layering + triggers/particles
+- [ ] PHASE-04: Feature-flagged swap + parity check in screens
 
-## Sprint 2 Results
+## Notes
 
-- 92 tests passing (unchanged — visual-only changes)
-- `web/css/style.css` `:root` swapped to parchment/teal retro tycoon palette
-- `@font-face` for Press Start 2P wired; display font applied to headings
-- New bevel tokens: `--bevel-light`, `--bevel-dark`, `--bevel-shadow`
-- Shared components reskinned: `.card`, `.btn`, `.badge`, `.input`/select, `.stat`, XP HUD
-- `web/css/animations.css` glows and backgrounds retuned to retro palette
-- `docs/design-language.md` rewritten for retro isometric tycoon system
-- Phase reports: `reports/2026-06-13-retro-design-tokens-phase-01/02/03.html`
-
-## Next Sprint
-
-Sprint 3 — Isometric Renderer & State Mapping (`plans/2026-06-13-isometric-renderer-plan.md`)
+- Q-001 answered: render all companies up to 16 plots, aggregate remainder into district tile.
+- Derived from `reports/2026-06-13-retro-isometric-tycoon-gap-analysis.md`
 
 ## Notes
 
