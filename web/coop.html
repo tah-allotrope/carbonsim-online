@@ -7,9 +7,9 @@
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/animations.css">
 <style>
-.skyline-container { width:100%;height:180px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px;border:1px solid var(--line);position:relative;background:#0a0a0f }
+.skyline-container { width:100%;height:260px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px;border:1px solid var(--bevel-dark);position:relative;background:var(--bg-soft);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--bevel-dark),0 4px 0 var(--bevel-shadow) }
 .skyline-container canvas { display:block;width:100%;height:100% }
-.skyline-overlay { position:absolute;bottom:6px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;font-family:var(--mono);font-size:0.65rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em }
+.skyline-overlay { position:absolute;bottom:6px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;font-family:var(--mono);font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em }
 </style>
 </head>
 <body class="game-bg-animated page-fade-in">
@@ -49,7 +49,7 @@
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
 const PARTICIPANT_ID = params.get('participant');
-const CityRenderer = params.get('renderer') === 'isocity' ? window.Isocity : CityRenderer;
+const CityRenderer = params.get('renderer') === 'skyline' ? window.Skyline : window.Isocity;
 let coopState = null;
 let ws = null;
 let wsReconnectTimer = null;
@@ -180,7 +180,7 @@ function renderGame(s) {
   let html = '';
 
   if (isHost) {
-    html += `<div class="card" style="border-color:rgba(0,245,255,0.4)">
+    html += `<div class="card">
       <div class="card-title">Host Controls</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="advanceYear()">Advance Year</button>
@@ -207,9 +207,9 @@ function renderGame(s) {
   for (const row of leaderboard) {
     if (row.is_bot) continue;
     const isYou = row.participant_id === PARTICIPANT_ID;
-    const rankColors = ['', 'var(--accent)', 'var(--muted)', '#cd7f32'];
+    const rankColors = ['', 'var(--accent)', 'var(--muted)', 'var(--orange)'];
     const rankColor = rankColors[row.rank] || 'var(--muted)';
-    html += `<div class="leaderboard-row" style="${isYou ? 'background:rgba(0,245,255,0.05);border-radius:6px;padding:6px 8px' : ''}">
+    html += `<div class="leaderboard-row" style="${isYou ? 'background:rgba(59,111,118,0.08);border-radius:6px;padding:6px 8px' : ''}">
       <span><span style="color:${rankColor};font-family:var(--mono);margin-right:8px">#${row.rank}</span>${row.player_name}${isYou ? ' (you)' : ''}</span>
       <span style="font-family:var(--mono);font-size:0.8rem">
         <span style="color:var(--green)">$${fmt(row.cash)}</span> ·

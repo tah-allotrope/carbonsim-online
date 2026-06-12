@@ -105,7 +105,7 @@
   <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
-const CityRenderer = params.get('renderer') === 'isocity' ? window.Isocity : CityRenderer;
+const CityRenderer = params.get('renderer') === 'skyline' ? window.Skyline : window.Isocity;
 
 // Fade page out smoothly on transition
 function navigateTo(url) {

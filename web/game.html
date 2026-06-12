@@ -7,9 +7,9 @@
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/animations.css">
 <style>
-.skyline-container { width:100%;height:220px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px;border:1px solid var(--line);position:relative;background:#0a0a0f }
+.skyline-container { width:100%;height:260px;border-radius:var(--radius);overflow:hidden;margin-bottom:16px;border:1px solid var(--bevel-dark);position:relative;background:var(--bg-soft);box-shadow:inset 1px 1px 0 var(--bevel-light),inset -1px -1px 0 var(--bevel-dark),0 4px 0 var(--bevel-shadow) }
 .skyline-container canvas { display:block;width:100%;height:100% }
-.skyline-overlay { position:absolute;bottom:8px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;font-family:var(--mono);font-size:0.7rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em }
+.skyline-overlay { position:absolute;bottom:8px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;font-family:var(--mono);font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em }
 </style>
 </head>
 <body class="game-bg-animated page-fade-in">
@@ -106,7 +106,7 @@
   <script>
 const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
-const CityRenderer = params.get('renderer') === 'isocity' ? window.Isocity : CityRenderer;
+const CityRenderer = params.get('renderer') === 'skyline' ? window.Skyline : window.Isocity;
 let gameState = null;
 
 const GAMEPLAY_TIPS = [
@@ -201,9 +201,9 @@ function renderContent() {
   if (phase === 'complete' || gameState.status === 'completed') {
     if (window.AudioManager) AudioManager.playSFX('success');
     el.innerHTML = `
-      <div class="card text-center" style="padding:40px;border-color:#b026ff;box-shadow: 0 0 30px rgba(176, 38, 255, 0.2)">
+      <div class="card text-center" style="padding:40px">
         <div style="font-size:3.5rem;margin-bottom:16px;animation: achPulseIcon 1.5s infinite ease-in-out">🏆</div>
-        <h2 style="margin-bottom:8px;font-family:var(--mono);color:#fff">Game Completed Successfully!</h2>
+        <h2 style="margin-bottom:8px;color:var(--text)">Game Completed!</h2>
         <p style="color:var(--muted);margin-bottom:20px">Congratulations! You successfully governed ${y} of ${total} years.</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
           <button onclick="navigateTo('/summary.html?id=${GAME_ID}')" class="btn btn-primary">View Final Grade Summary</button>
@@ -406,7 +406,7 @@ function renderContent() {
     html += `<table><tr><th>#</th><th>Company</th><th>Emissions</th><th>Allowances</th><th>Cash</th><th>Penalties</th></tr>`;
     leaderboardArr.slice(0, 10).forEach((c, i) => {
       const isPlayer = c.company_id === player.company_id;
-      html += `<tr style="${isPlayer ? 'background:rgba(0,245,255,0.05)' : ''}">
+      html += `<tr style="${isPlayer ? 'background:rgba(59,111,118,0.08)' : ''}">
         <td>${i+1}</td>
         <td>${c.company_name || c.name} ${isPlayer ? '(You)' : ''}</td>
         <td style="font-family:var(--mono)">${fmt(c.projected_emissions || c.emissions || 0)}</td>
