@@ -17,7 +17,7 @@ Sprint 1 — Retro Asset Pipeline & Static Serving (`plans/2026-06-13-retro-asse
 ## Plan
 
 - [x] PHASE-01: Source & license-vet isometric tilesets, building sprites, pixel font
-- [ ] PHASE-02: Create `web/assets/` tree and add `/assets` FastAPI mount
+- [x] PHASE-02: Create `web/assets/` tree and add `/assets` FastAPI mount
 - [ ] PHASE-03: Author `manifest.json`, image preloader, `ATTRIBUTIONS.md`, server test
 
 ## Notes
