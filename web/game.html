@@ -107,6 +107,14 @@ const params = new URLSearchParams(window.location.search);
 const GAME_ID = params.get('id');
 const CityRenderer = window.Isocity;
 let gameState = null;
+let cityInited = false;
+
+// Initialize the city renderer once, as soon as game data is available.
+function ensureCityRenderer() {
+  if (cityInited || !CityRenderer || !gameState) return;
+  CityRenderer.init('cityCanvas', gameState.snapshot);
+  cityInited = true;
+}
 
 const GAMEPLAY_TIPS = [
   "Abatement measures reduce emissions permanently every year. Prioritize them early!",
@@ -131,9 +139,7 @@ setTimeout(() => {
     screen.style.opacity = '0';
     setTimeout(() => {
       screen.remove();
-      if (CityRenderer && gameState) {
-        CityRenderer.init('cityCanvas', gameState.snapshot);
-      }
+      ensureCityRenderer();
     }, 400);
   }
 }, 1200);
@@ -152,6 +158,7 @@ async function refresh() {
     gameState = await API.getGame(GAME_ID);
     render();
     if (gameState && CityRenderer) {
+      ensureCityRenderer();
       CityRenderer.update(gameState.snapshot);
       const player = gameState.snapshot?.player_company || gameState.snapshot?.companies?.[0];
       if (player) {
@@ -361,15 +368,16 @@ function renderContent() {
       html += `<div class="card"><div class="card-title">Abatement Menu</div>`;
       html += `<table><tr><th>Measure</th><th>Reduction</th><th>Cost</th><th>Timing</th><th></th></tr>`;
       for (const m of menu) {
-        const isActive = activeIds.includes(m.measure_id);
-        const isPending = pendingIds.includes(m.measure_id);
-        const status = isActive ? 'badge-green Active' : isPending ? 'badge-orange Pending' : '';
+        const isActive = m.active || activeIds.includes(m.measure_id);
+        const isPending = m.pending || pendingIds.includes(m.measure_id);
+        const statusClass = isActive ? 'badge-green' : isPending ? 'badge-orange' : '';
+        const statusLabel = isActive ? 'Active' : isPending ? 'Pending' : '';
         html += `<tr>
           <td>${m.label}</td>
           <td style="font-family:var(--mono)">-${m.abatement_amount} t</td>
           <td style="font-family:var(--mono)">$${fmt(m.cost)}</td>
           <td>${m.activation_timing}</td>
-          <td>${status ? `<span class="badge ${status}"></span>` : `<button class="btn" id="abBtn-${m.measure_id}" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'}, event)" style="padding:6px 12px;font-size:0.8rem">Activate</button>`}</td>
+          <td>${statusLabel ? `<span class="badge ${statusClass}">${statusLabel}</span>` : `<button class="btn" id="abBtn-${m.measure_id}" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'}, event)" style="padding:6px 12px;font-size:0.8rem">Activate</button>`}</td>
         </tr>`;
       }
       html += `</table></div>`;

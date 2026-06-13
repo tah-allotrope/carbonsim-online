@@ -15,6 +15,19 @@ from .routes.health import router as health_router
 from .ws import coop_ws_endpoint
 
 
+class NoCacheStaticFiles(StaticFiles):
+    """StaticFiles that asks browsers to revalidate (via ETag) on every load.
+
+    The frontend is a no-build vanilla bundle, so without this browsers
+    heuristic-cache app JS/CSS and keep running stale code after a deploy.
+    """
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="CarbonSim Online API",
@@ -47,11 +60,11 @@ def create_app() -> FastAPI:
     assets_dir = web_dir / "assets"
 
     if css_dir.exists():
-        app.mount("/css", StaticFiles(directory=str(css_dir)), name="css")
+        app.mount("/css", NoCacheStaticFiles(directory=str(css_dir)), name="css")
     if js_dir.exists():
-        app.mount("/js", StaticFiles(directory=str(js_dir)), name="js")
+        app.mount("/js", NoCacheStaticFiles(directory=str(js_dir)), name="js")
     if assets_dir.exists():
-        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+        app.mount("/assets", NoCacheStaticFiles(directory=str(assets_dir)), name="assets")
 
     web_root = web_dir.resolve()
     index_path = web_root / "index.html"

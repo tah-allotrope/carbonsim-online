@@ -15,6 +15,7 @@ const Isocity = (function () {
   let particles = [];
   let motionQuery = null;
   let motionHandler = null;
+  let resizeObserver = null;
   let flashOpacity = 0;
   let flashColor = null;
 
@@ -62,6 +63,18 @@ const Isocity = (function () {
     doResize();
     window.addEventListener('resize', resize);
 
+    // Re-measure whenever the container actually gets/changes width. This is the
+    // robust fix for a blank city: init can run before layout settles (loading
+    // overlay, fonts, responsive changes), and without this the canvas would
+    // stay stuck at a wrong/zero size forever.
+    if (typeof ResizeObserver !== 'undefined' && canvas.parentElement) {
+      resizeObserver = new ResizeObserver(function () {
+        doResize();
+        draw();
+      });
+      resizeObserver.observe(canvas.parentElement);
+    }
+
     motionHandler = function (e) {
       reducedMotion = e.matches;
       if (reducedMotion) {
@@ -81,11 +94,12 @@ const Isocity = (function () {
 
     loadImages().then(function () {
       update(snapshot);
+      // Always paint an initial frame. The RAF loop early-returns while the tab
+      // is hidden, so don't rely on it for the first paint.
+      drawStatic();
       if (!reducedMotion) {
         lastFrame = performance.now();
         animId = requestAnimationFrame(loop);
-      } else {
-        drawStatic();
       }
     });
   }
@@ -93,6 +107,7 @@ const Isocity = (function () {
   function doResize() {
     if (!canvas) return;
     const rect = canvas.parentElement.getBoundingClientRect();
+    if (rect.width < 1) return;  // not laid out yet; the ResizeObserver re-fires when it is
     dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
     width = canvas.width = Math.floor(rect.width * dpr);
     height = canvas.height = Math.floor(260 * dpr);
@@ -404,6 +419,10 @@ const Isocity = (function () {
     if (animId) cancelAnimationFrame(animId);
     window.removeEventListener('resize', resize);
     if (resizeTimer) clearTimeout(resizeTimer);
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
     if (motionQuery && motionHandler) {
       if (motionQuery.removeEventListener) {
         motionQuery.removeEventListener('change', motionHandler);
@@ -422,3 +441,8 @@ const Isocity = (function () {
     triggerYearTransition,
   };
 })();
+
+// Expose globally — a top-level `const` is a lexical binding, NOT a window
+// property, so screens referencing `window.Isocity` would otherwise get
+// undefined and never initialize the renderer.
+window.Isocity = Isocity;
