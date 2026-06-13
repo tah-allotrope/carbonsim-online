@@ -76,14 +76,18 @@ def _utc() -> datetime:
 def _snapshot(state: dict[str, Any]) -> dict[str, Any]:
     player = solo_player_company(state)
     if player:
-        return build_player_snapshot(
+        snap = build_player_snapshot(
             state,
             company_id=player["company_id"],
             is_facilitator=False,
             participant_label=player.get("company_name", "Player"),
             now=_utc(),
         )
-    return {"companies": state.get("companies", [])}
+    else:
+        snap = {"companies": state.get("companies", [])}
+    # Surface tutorial mode so the frontend renders its guidance panel/hints.
+    snap["tutorial_mode"] = bool(state.get("tutorial_mode"))
+    return snap
 
 
 def _available_actions(state: dict[str, Any]) -> list[str]:
@@ -103,6 +107,48 @@ def _available_actions(state: dict[str, Any]) -> list[str]:
     return actions
 
 
+def _open_decision_window(
+    state: dict[str, Any], game_id: str, now: datetime
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Advance solo play into the current year's decision window, draw that
+    year's event cards, and clear the wall-clock deadline so the window does
+    not auto-expire.
+
+    Solo is turn-based: the engine only applies company decisions during
+    ``decision_window`` (engine.apply_company_decision), and ``_set_phase``
+    arms a timed deadline that ``advance_state`` uses to auto-advance phases.
+    Nulling ``phase_deadline_at`` keeps the window open until the player
+    explicitly advances, so their Activate/Buy actions are never silently
+    dropped. The shared engine timing is left intact for multiplayer.
+    """
+    if state.get("phase") == "lobby":
+        state = start_simulation(state, now=now)
+    if state.get("phase") == "year_start":
+        state = force_advance_phase(state, now=now)
+
+    drawn_cards: list[dict[str, Any]] = []
+    if state.get("phase") == "decision_window":
+        import random
+
+        if state.get("tutorial_mode"):
+            drawn_cards = [
+                card
+                for card in TUTORIAL_CARDS
+                if card.get("prerequisites", {}).get("min_year") == state.get("current_year")
+            ]
+        elif STARTER_DECK_PATH:
+            rng = random.Random(hash((game_id, state.get("current_year", 0))))
+            if EXPANSION_DECK_PATH:
+                deck = CardDeck.from_paths(STARTER_DECK_PATH, EXPANSION_DECK_PATH, rng=rng)
+            else:
+                deck = CardDeck.from_json(STARTER_DECK_PATH, rng=rng)
+            state, drawn_cards = draw_cards(state, deck, count=3, now=now)
+        state["drawn_cards"] = drawn_cards
+        state["phase_deadline_at"] = None  # turn-based: no timed expiry
+
+    return state, drawn_cards
+
+
 @router.post("", response_model=CreateGameResponse)
 async def create_game_route(req: CreateGameRequest):
     game_id = str(uuid.uuid4())
@@ -115,6 +161,8 @@ async def create_game_route(req: CreateGameRequest):
         tutorial_mode=req.tutorial_mode,
     )
     state["game_id"] = game_id
+    # Open year 1's decision window so the player lands in an actionable state.
+    state, _ = _open_decision_window(state, game_id, _utc())
     db_create_game(game_id, req.player_name, req.province_name, req.difficulty, num_years, state)
     return CreateGameResponse(
         game_id=game_id,
@@ -162,52 +210,47 @@ async def advance_year(game_id: str):
 
     now = _utc()
     phase = state.get("phase", "")
-    year = state.get("current_year", 0)
 
-    if year >= state.get("num_years", 15) and phase == "complete":
-        raise HTTPException(400, "Game already completed")
+    if phase == "lobby":
+        state = start_simulation(state, now=now)
+        phase = state.get("phase", "")
 
-    if phase in ("lobby", "complete"):
-        if phase == "lobby":
-            state = start_simulation(state, now=now)
-        if state.get("phase") == "complete":
-            state["game_status"] = "completed"
-            db_update_game_state(game_id, state)
-            raise HTTPException(400, "Game already completed")
+    if phase == "complete":
+        state["game_status"] = "completed"
+        db_update_game_state(game_id, state)
+        return AdvanceYearResponse(
+            game_id=game_id,
+            year=state.get("current_year", 0),
+            phase="complete",
+            drawn_cards=[],
+            snapshot=_snapshot(state),
+        )
 
-    state = force_advance_phase(state, now=now)
-    phase = state.get("phase", "")
-
-    drawn_cards = []
+    # In the decision window, "Advance Year" ends the turn: bots act, then the
+    # current year is closed and scored before the next window opens.
     if phase == "decision_window":
-        import random
-        if state.get("tutorial_mode"):
-            drawn_cards = [
-                card
-                for card in TUTORIAL_CARDS
-                if card.get("prerequisites", {}).get("min_year") == state.get("current_year")
-            ]
-        elif STARTER_DECK_PATH:
-            if EXPANSION_DECK_PATH:
-                deck = CardDeck.from_paths(
-                    STARTER_DECK_PATH,
-                    EXPANSION_DECK_PATH,
-                    rng=random.Random(hash((game_id, state.get("current_year", 0)))),
-                )
-            else:
-                deck = CardDeck.from_json(
-                    STARTER_DECK_PATH,
-                    rng=random.Random(hash((game_id, state.get("current_year", 0)))),
-                )
-            state, drawn_cards = draw_cards(state, deck, count=3, now=now)
-        state["drawn_cards"] = drawn_cards
+        state = run_bot_turns(state, now=now)
+        state["drawn_cards"] = []
+        state = force_advance_phase(state, now=now)  # decision_window -> compliance (closes & scores)
+        state = force_advance_phase(state, now=now)  # compliance -> next year_start (or complete)
 
-    state = force_advance_phase(state, now=now)
+    # Drain any residual compliance phase (e.g. entered mid-cycle).
+    guard = 0
+    while state.get("phase") == "compliance" and guard < 4:
+        state = force_advance_phase(state, now=now)
+        guard += 1
+
+    drawn_cards: list[dict[str, Any]] = []
+    if state.get("phase") == "complete":
+        state["game_status"] = "completed"
+    else:
+        # Open the current year's decision window so the player can act.
+        state, drawn_cards = _open_decision_window(state, game_id, now)
 
     db_update_game_state(game_id, state)
     return AdvanceYearResponse(
         game_id=game_id,
-        year=state.get("current_year", year + 1),
+        year=state.get("current_year", 0),
         phase=state.get("phase", ""),
         drawn_cards=drawn_cards,
         snapshot=_snapshot(state),
@@ -362,6 +405,9 @@ async def fast_forward(game_id: str, req: FastForwardRequest):
         if state.get("phase") == "complete":
             state["game_status"] = "completed"
             break
+
+    if state.get("phase") != "complete":
+        state, _ = _open_decision_window(state, game_id, _utc())
 
     db_update_game_state(game_id, state)
     return {

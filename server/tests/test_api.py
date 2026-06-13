@@ -189,18 +189,19 @@ class TestGameLifecycle:
         assert "snapshot" in data
         assert "achievements" in data
 
-    def test_advance_year_tutorial_draws_fixed_card(self, client):
+    def test_tutorial_draws_fixed_card_for_year_one(self, client):
+        # The year-1 decision window opens at creation, so the fixed tutorial
+        # card for year 1 is available immediately.
         create = client.post(
             "/api/games",
             json={"player_name": "Tutorial", "tutorial_mode": True, "num_years": 5},
         ).json()
         game_id = create["game_id"]
 
-        resp = client.post(f"/api/games/{game_id}/advance-year")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["drawn_cards"]
-        assert data["drawn_cards"][0]["card_id"] == "tutorial_001"
+        state = client.get(f"/api/games/{game_id}").json()
+        assert state["snapshot"]["phase"] == "decision_window"
+        assert state["drawn_cards"]
+        assert state["drawn_cards"][0]["card_id"] == "tutorial_001"
 
     def test_fast_forward_advances_game(self, client):
         create = client.post(
@@ -414,6 +415,47 @@ class TestStateAssertions:
         assert summary["completed_years"] >= 1
         assert "achievements" in summary
         assert summary["player_name"] == "E2ETester"
+
+    def test_new_game_opens_decision_window(self, client):
+        # Regression guard: a fresh solo game must land in the decision window
+        # so the player can actually act (not stuck in year_start).
+        create = client.post("/api/games", json={"player_name": "Fresh"}).json()
+        assert create["snapshot"]["phase"] == "decision_window"
+
+    def test_decision_in_window_changes_state(self, client):
+        # Regression guard for the silent-no-op bug: activating an abatement in
+        # the decision window must deduct cash and mark the measure.
+        create = client.post("/api/games", json={"player_name": "Doer"}).json()
+        game_id = create["game_id"]
+        snap = client.get(f"/api/games/{game_id}").json()["snapshot"]
+        assert snap["phase"] == "decision_window"
+        company = self._get_company_from_snapshot(snap)
+        pre_cash = company["cash"]
+        menu = company.get("abatement_menu", [])
+        assert menu, "expected an abatement menu in the decision window"
+        measure_id = menu[0]["measure_id"]
+
+        resp = client.post(
+            f"/api/games/{game_id}/decision",
+            json={"action": "activate_abatement", "payload": {"measure_id": measure_id}},
+        )
+        assert resp.status_code == 200
+
+        post = self._get_company_from_snapshot(client.get(f"/api/games/{game_id}").json()["snapshot"])
+        assert post["cash"] < pre_cash
+        item = next(m for m in post["abatement_menu"] if m["measure_id"] == measure_id)
+        assert item["active"] or item["pending"]
+
+    def test_advance_year_reopens_decision_window(self, client):
+        # Advancing from the decision window closes/scores the year and opens
+        # the next year's window (turn-based loop stays playable).
+        create = client.post("/api/games", json={"player_name": "Loop", "num_years": 5}).json()
+        game_id = create["game_id"]
+        assert create["snapshot"]["phase"] == "decision_window"
+
+        data = client.post(f"/api/games/{game_id}/advance-year").json()
+        assert data["phase"] == "decision_window"
+        assert data["year"] == 2
 
     def test_fast_forward_changes_year_and_phase(self, client):
         create = client.post("/api/games", json={"player_name": "FastForwarder", "difficulty": "easy", "num_years": 10}).json()
