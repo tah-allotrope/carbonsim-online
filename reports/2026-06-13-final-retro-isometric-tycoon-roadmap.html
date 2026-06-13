@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: Retro Isometric Tycoon Roadmap (Sprints 1–5)</title>
+  <meta name="color-scheme" content="light">
+  <style>
+    :root {
+      --paper: #fbf7f1; --paper-strong: #fffdf9; --ink: #1f1912;
+      --ink-soft: #5f564c; --line: #dccdb6; --line-strong: #bfa37d;
+      --accent: #9d6b37; --accent-2: #3b6f76; --green: #5a8f4e; --red: #b54a3f;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08); --radius: 18px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace; --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%); font-family: var(--body); line-height: 1.65; }
+    .page { width: min(960px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 56px; }
+    .hero { padding: 32px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 8px 0 12px; font-size: 2.1rem; }
+    .meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+    .chip { font-family: var(--mono); font-size: 0.72rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(157,107,55,0.08); }
+    .section { margin-top: 26px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    h2 { font-family: var(--display); margin: 0 0 16px; font-size: 1.45rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 18px 0 8px; font-size: 1.1rem; color: var(--ink-soft); }
+    ul, p { margin: 0 0 12px; }
+    li { margin-bottom: 8px; }
+    code { font-family: var(--mono); background: rgba(157,107,55,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+    .ok { color: var(--green); font-weight: 600; }
+    .warn { color: var(--red); font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+    th { font-family: var(--mono); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em; color: var(--ink-soft); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fffdf9; }
+    .stat-label { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+    .highlight { background: rgba(59,111,118,0.08); padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="eyebrow">Final Roadmap Report</div>
+      <h1>Retro Isometric Tycoon Roadmap Complete</h1>
+      <p>Five sprints transformed CarbonSim Online from a cyberpunk prototype into a cohesive retro tycoon experience: asset pipeline, design tokens, isometric renderer, full-screen reskin, and SFX/perf/a11y polish.</p>
+      <div class="meta">
+        <span class="chip">Date: 2026-06-13</span>
+        <span class="chip">Final commit: 0ea0ac5</span>
+        <span class="chip">Tests: 92 passed</span>
+        <span class="chip">Sprints: 5 / 5</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Roadmap Summary</h2>
+      <table>
+        <thead>
+          <tr><th>Sprint</th><th>Focus</th><th>Key Deliverables</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Sprint 1</strong></td>
+            <td>Retro Asset Pipeline</td>
+            <td><code>web/assets/</code> tree, FastAPI static mount, <code>manifest.json</code>, <code>AssetLoader</code>, <code>ATTRIBUTIONS.md</code></td>
+            <td class="ok">Complete</td>
+          </tr>
+          <tr>
+            <td><strong>Sprint 2</strong></td>
+            <td>Design Tokens &amp; Chrome</td>
+            <td>Parchment/teal palette, Press Start 2P, bevel tokens, component chrome, <code>docs/design-language.md</code></td>
+            <td class="ok">Complete</td>
+          </tr>
+          <tr>
+            <td><strong>Sprint 3</strong></td>
+            <td>Isometric Renderer</td>
+            <td><code>web/js/isocity.js</code>, 2:1 iso projection, 16-plot cap + district tile, reduced-motion path, default renderer</td>
+            <td class="ok">Complete</td>
+          </tr>
+          <tr>
+            <td><strong>Sprint 4</strong></td>
+            <td>Retro Reskin All Screens</td>
+            <td>Audited <code>index.html</code>, <code>game.html</code>, <code>coop.html</code>, <code>summary.html</code>; deleted <code>skyline.js</code></td>
+            <td class="ok">Complete</td>
+          </tr>
+          <tr>
+            <td><strong>Sprint 5</strong></td>
+            <td>SFX, Perf &amp; A11y</td>
+            <td>Chiptune <code>audio.js</code>, pixel <code>effects.js</code>, iso perf hardening, contrast/focus fixes</td>
+            <td class="ok">Complete</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Key Outcomes</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-label">Test suite</div><div class="stat-value">92 passed</div></div>
+        <div class="stat"><div class="stat-label">Commits</div><div class="stat-value">16</div></div>
+        <div class="stat"><div class="stat-label">Phase reports</div><div class="stat-value">14</div></div>
+        <div class="stat"><div class="stat-label">Final reports</div><div class="stat-value">5</div></div>
+        <div class="stat"><div class="stat-label">Renderer</div><div class="stat-value">isocity</div></div>
+        <div class="stat"><div class="stat-label">Body contrast</div><div class="stat-value">17.1:1</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Sprint 1 — Asset Pipeline</h2>
+      <ul>
+        <li>Created a clean <code>web/assets/</code> structure with fonts, sprites, tiles, audio, and manifest metadata.</li>
+        <li>Added the FastAPI <code>/assets</code> static mount and an <code>AssetLoader</code> preloader in <code>web/js/assets.js</code>.</li>
+        <li>Authored <code>ATTRIBUTIONS.md</code> and procedural placeholder sprites to avoid unreliable third-party downloads.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Sprint 2 — Design Tokens</h2>
+      <ul>
+        <li>Replaced neon palette with parchment/teal retro tokens and beveled chrome shadows.</li>
+        <li>Integrated Press Start 2P as the display font while keeping sans/mono for body and stats.</li>
+        <li>Retuned animations and documented the design language in <code>docs/design-language.md</code>.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Sprint 3 — Isometric Renderer</h2>
+      <ul>
+        <li>Built <code>web/js/isocity.js</code> with a 2:1 isometric projection and deterministic company-to-plot mapping.</li>
+        <li>Capped individual plots at 16 and aggregated overflow into district tiles.</li>
+        <li>Implemented a reduced-motion static render path and made isocity the default renderer in all modes.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Sprint 4 — Full Reskin</h2>
+      <ul>
+        <li>Audited all four HTML screens for neon remnants and hardcoded colors.</li>
+        <li>Retokenized inline styles, Chart.js colors, tables, modals, and the year-transition overlay.</li>
+        <li>Removed <code>web/js/skyline.js</code> and its references.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Sprint 5 — SFX, Perf &amp; A11y</h2>
+      <ul>
+        <li>Re-voiced <code>web/js/audio.js</code> to square/triangle chiptune cues with short envelopes and arpeggios.</li>
+        <li>Converted <code>web/js/effects.js</code> and canvas particles to blocky pixel-style bursts.</li>
+        <li>Hardened <code>isocity.js</code>: DPR cap of 2×, adaptive particle budget, debounced resize, background-tab guard.</li>
+        <li>Added global <code>:focus-visible</code>, fully wired <code>prefers-reduced-motion</code>, and fixed contrast across all screens.</li>
+        <li>Updated <code>docs/design-language.md</code> with verified accessibility results.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Verification &amp; Quality</h2>
+      <ul>
+        <li>Full backend/engine test suite passes on every phase: <span class="ok">92 passed</span>.</li>
+        <li>Manual frontend audits completed for palette contrast, focus visibility, reduced-motion behavior, and visual consistency.</li>
+        <li>No new build steps or frontend frameworks introduced; the stack remains vanilla JS + canvas + FastAPI.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Recommended Next Steps</h2>
+      <ul>
+        <li>Play-test the full three-year single-player and multiplayer flows with sound and animations enabled.</li>
+        <li>Run Lighthouse/axe on each screen in a real browser to capture automated accessibility scores.</li>
+        <li>Profile <code>isocity.js</code> on low-end Android and iOS devices to validate the 30fps floor under real conditions.</li>
+        <li>Consider V2 features (shock events, bot liquidity, tutorial mode) only after the core game loop is proven end-to-end.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
