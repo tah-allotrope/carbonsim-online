@@ -96,7 +96,7 @@
 .year-wipe-title {
   font-size: clamp(3rem, 10vw, 6rem);
   font-weight: 900;
-  color: #fff;
+  color: var(--text);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   font-family: var(--mono);
@@ -259,7 +259,7 @@
 .toast-success {
   border-color: rgba(90, 143, 78, 0.5);
 }
-.toast-success .toast-title { color: var(--green); }
+.toast-success .toast-title { color: var(--text); }
 .toast-success .toast-progress { background: var(--green); }
 
 .toast-error {
@@ -271,7 +271,7 @@
 .toast-warning {
   border-color: rgba(212, 136, 58, 0.5);
 }
-.toast-warning .toast-title { color: var(--orange); }
+.toast-warning .toast-title { color: var(--text); }
 .toast-warning .toast-progress { background: var(--orange); }
 
 .toast-info {
@@ -338,14 +338,20 @@ body.game-bg-animated::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.game-bg-animated::before,
-  body.game-bg-animated::after,
-  .animate-card-reveal,
-  .year-wipe-overlay.active,
-  .year-wipe-title,
-  .toast-enhanced {
-    animation: none !important;
-    transition: none !important;
+  /* Stop all decorative motion without hiding content */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 
+  body.game-bg-animated::before,
+  body.game-bg-animated::after {
+    animation: none !important;
+  }
+
+  .visual-particle {
+    display: none !important;
+  }
 }

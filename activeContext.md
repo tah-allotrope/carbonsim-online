@@ -16,9 +16,9 @@ Sprint 5 — Retro SFX Re-voice & Iso Renderer Perf/A11y Polish (`plans/2026-06-
 
 ## Plan
 
-- [ ] PHASE-01: Chiptune SFX re-voice + pixel-style effects
-- [ ] PHASE-02: Iso renderer performance hardening
-- [ ] PHASE-03: Accessibility parity & sign-off
+- [x] PHASE-01: Chiptune SFX re-voice + pixel-style effects
+- [x] PHASE-02: Iso renderer performance hardening
+- [x] PHASE-03: Accessibility parity & sign-off
 
 ## Notes
 

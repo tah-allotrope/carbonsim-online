@@ -136,9 +136,17 @@ The isometric pixel-art city is the primary signature visual. It renders as a ca
 
 ## Accessibility
 
-- All interactive elements have visible `:focus-visible` states
-- Color is never the sole indicator — badges include text labels
-- `prefers-reduced-motion` disables animations, background gradients, and particle effects
-- Canvas has `aria-hidden="true"` (decorative)
-- Minimum contrast ratio: 4.5:1 for body text, 3:1 for large text
-- Press Start 2P is used only for large display text to preserve readability
+Verified on 2026-06-13 as part of Sprint 5.
+
+- **Focus:** All interactive elements have a visible `:focus-visible` outline (2px solid `--accent`, 2px offset). Buttons, inputs, links, and `[tabindex]` elements are covered by a global rule as well as component-specific rules.
+- **Motion:** `prefers-reduced-motion: reduce` disables all animations and transitions (global `0.01ms` duration override), stops the isometric city RAF loop, hides DOM particles, and renders a single static city frame.
+- **Canvas:** The isometric canvas has `aria-hidden="true"` and is purely decorative; the same state is exposed as text stats, badges, and leaderboard rows.
+- **Color & contrast:**
+  - Body text (`--text` on `--panel`): 17.1:1
+  - Muted labels (`--muted` on `--panel`): 6.2:1
+  - Accent links/buttons (`--accent` on `--panel`): 5.6:1
+  - Red alerts (`--red` on `--panel`): 5.2:1
+  - Green semantic text on green backgrounds uses dark ink (`#1f1912`) to avoid the 3.4:1 white-on-green failure.
+  - Orange is reserved for borders, progress bars, and indicators; adjacent text uses `--text` to meet 4.5:1.
+- **Minimum contrast ratio:** 4.5:1 for body text, 3:1 for large text / bold UI text.
+- **Typography:** Press Start 2P is used only for large display text to preserve readability.

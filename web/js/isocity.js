@@ -57,6 +57,24 @@ const Isocity = (function () {
     resize();
     window.addEventListener('resize', resize);
 
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    function onMotionChange(e) {
+      reducedMotion = e.matches;
+      if (reducedMotion) {
+        if (animId) cancelAnimationFrame(animId);
+        animId = null;
+        drawStatic();
+      } else {
+        lastFrame = performance.now();
+        animId = requestAnimationFrame(loop);
+      }
+    }
+    if (motionQuery.addEventListener) {
+      motionQuery.addEventListener('change', onMotionChange);
+    } else if (motionQuery.addListener) {
+      motionQuery.addListener(onMotionChange);
+    }
+
     loadImages().then(function () {
       update(snapshot);
       if (!reducedMotion) {
@@ -344,6 +362,7 @@ const Isocity = (function () {
     if (!snapshot) return;
     snapshotCache = snapshot;
     buildPlots(snapshot);
+    if (reducedMotion) drawStatic();
   }
 
   function burstParticles(plotFilter, color, count, speed) {
