@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: Sprint 5 Phase 02 — Iso Renderer Performance Hardening</title>
+  <meta name="color-scheme" content="light">
+  <style>
+    :root {
+      --paper: #fbf7f1; --paper-strong: #fffdf9; --ink: #1f1912;
+      --ink-soft: #5f564c; --line: #dccdb6; --line-strong: #bfa37d;
+      --accent: #9d6b37; --accent-2: #3b6f76; --green: #5a8f4e; --red: #b54a3f;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08); --radius: 18px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace; --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%); font-family: var(--body); line-height: 1.65; }
+    .page { width: min(920px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 56px; }
+    .hero { padding: 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 8px 0 12px; font-size: 1.9rem; }
+    .meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+    .chip { font-family: var(--mono); font-size: 0.72rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(157,107,55,0.08); }
+    .section { margin-top: 26px; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    h2 { font-family: var(--display); margin: 0 0 14px; font-size: 1.35rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 18px 0 8px; font-size: 1.05rem; color: var(--ink-soft); }
+    ul, p { margin: 0 0 12px; }
+    li { margin-bottom: 6px; }
+    code { font-family: var(--mono); background: rgba(157,107,55,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+    .ok { color: var(--green); font-weight: 600; }
+    .warn { color: var(--red); font-weight: 600; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 14px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fffdf9; }
+    .stat-label { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="eyebrow">Sprint 5 Phase 02 Report</div>
+      <h1>Isometric Renderer Performance Hardening</h1>
+      <p>Tuned the heavier isometric canvas renderer so it stays smooth on mid-range and mobile devices with bounded resource use.</p>
+      <div class="meta">
+        <span class="chip">Date: 2026-06-13</span>
+        <span class="chip">Commit: 085c432</span>
+        <span class="chip">Tests: 92 passed</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>What Changed</h2>
+      <h3>Device Pixel Ratio Cap (<code>web/js/isocity.js</code>)</h3>
+      <ul>
+        <li>Added <code>MAX_DPR = 2</code> so high-DPR mobile displays don't over-render the canvas.</li>
+        <li>Resize now sets integer canvas dimensions and resets the transform matrix before scaling to avoid drift.</li>
+      </ul>
+
+      <h3>Adaptive Particle Budget</h3>
+      <ul>
+        <li>Particle cap scales with plot count: <code>min(150, 40 + plots.length * 8)</code>.</li>
+        <li><code>spawnParticles</code> and <code>burstParticles</code> both guard against exceeding the cap.</li>
+        <li>Reduced smog spawn rate slightly (<code>emissions / 800</code>) to keep per-frame work predictable.</li>
+      </ul>
+
+      <h3>Debounced Resize</h3>
+      <ul>
+        <li>Window resize events are debounced to 100ms to prevent layout thrashing.</li>
+        <li>Timer is cleared on <code>destroy()</code>.</li>
+      </ul>
+
+      <h3>Background Tab Throttling</h3>
+      <ul>
+        <li>RAF loop already pauses on background tabs; added an explicit <code>document.hidden</code> guard for state hygiene.</li>
+        <li>30fps interval gate is unchanged and enforces the frame budget.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Performance Targets</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-label">Frame budget</div><div class="stat-value">33 ms</div></div>
+        <div class="stat"><div class="stat-label">Max DPR</div><div class="stat-value">2.0×</div></div>
+        <div class="stat"><div class="stat-label">Max particles</div><div class="stat-value">150</div></div>
+        <div class="stat"><div class="stat-label">Base particles</div><div class="stat-value">40</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Verification</h2>
+      <ul>
+        <li>Full test suite: <span class="ok">92 passed</span>.</li>
+        <li>Static analysis confirms bounded loops and no unbounded array growth.</li>
+        <li>Manual review of resize path confirms no transform drift on repeated resizes.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Next Step</h2>
+      <p>PHASE-03: accessibility parity — verify reduced-motion static city, contrast/focus across all four screens, and update <code>docs/design-language.md</code>.</p>
+    </div>
+  </div>
+</body>
+</html>
