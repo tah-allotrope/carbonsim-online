@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: Sprint 5 Phase 03 — Accessibility Parity &amp; Sign-off</title>
+  <meta name="color-scheme" content="light">
+  <style>
+    :root {
+      --paper: #fbf7f1; --paper-strong: #fffdf9; --ink: #1f1912;
+      --ink-soft: #5f564c; --line: #dccdb6; --line-strong: #bfa37d;
+      --accent: #9d6b37; --accent-2: #3b6f76; --green: #5a8f4e; --red: #b54a3f;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08); --radius: 18px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace; --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%); font-family: var(--body); line-height: 1.65; }
+    .page { width: min(920px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 56px; }
+    .hero { padding: 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 8px 0 12px; font-size: 1.9rem; }
+    .meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+    .chip { font-family: var(--mono); font-size: 0.72rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(157,107,55,0.08); }
+    .section { margin-top: 26px; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    h2 { font-family: var(--display); margin: 0 0 14px; font-size: 1.35rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 18px 0 8px; font-size: 1.05rem; color: var(--ink-soft); }
+    ul, p { margin: 0 0 12px; }
+    li { margin-bottom: 6px; }
+    code { font-family: var(--mono); background: rgba(157,107,55,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+    .ok { color: var(--green); font-weight: 600; }
+    .warn { color: var(--red); font-weight: 600; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 14px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fffdf9; }
+    .stat-label { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.0rem; font-weight: 700; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="eyebrow">Sprint 5 Phase 03 Report</div>
+      <h1>Accessibility Parity &amp; Sign-off</h1>
+      <p>Verified the retro tycoon look does not regress accessibility: reduced-motion static city, visible keyboard focus, and contrast-corrected palette across all four screens.</p>
+      <div class="meta">
+        <span class="chip">Date: 2026-06-13</span>
+        <span class="chip">Commit: c46fecd</span>
+        <span class="chip">Tests: 92 passed</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>What Changed</h2>
+      <h3>Reduced-Motion Isometric City (<code>web/js/isocity.js</code>)</h3>
+      <ul>
+        <li>Added a runtime listener for <code>prefers-reduced-motion</code> changes.</li>
+        <li>When reduced motion is enabled, the RAF loop stops and a single static frame is drawn.</li>
+        <li><code>update()</code> now re-renders the static city when reduced motion is active so reconnects/updates remain visible.</li>
+        <li>DOM particles are hidden via CSS when reduced motion is requested.</li>
+      </ul>
+
+      <h3>Global Focus States (<code>web/css/style.css</code>)</h3>
+      <ul>
+        <li>Added a global <code>:focus-visible</code> rule (2px solid <code>--accent</code>, 2px offset) covering links, buttons, inputs, selects, and tabbable elements.</li>
+        <li>Preserved component-specific focus styles for buttons and inputs.</li>
+      </ul>
+
+      <h3>Contrast Fixes</h3>
+      <ul>
+        <li><code>.year-wipe-title</code>: white-on-parchment changed to <code>var(--text)</code>.</li>
+        <li><code>.event-card .cat-market</code> &amp; <code>.cat-opportunity</code>: colored small text changed to <code>var(--text)</code> with semantic left border indicator.</li>
+        <li><code>.toast-success .toast-title</code> &amp; <code>.toast-warning .toast-title</code>: colored small text changed to <code>var(--text)</code>; progress bars keep semantic colors.</li>
+        <li><code>.badge-green</code> &amp; <code>.streak-badge</code>: white-on-green small text changed to dark ink.</li>
+        <li><code>.ach-pop-xp</code>: green text on panel changed to dark ink.</li>
+        <li><code>.achievement-popup-overlay</code>: removed neon purple chrome; retokenized to retro panel/bevel colors.</li>
+        <li><code>.progress-bar</code>, <code>.xp-bar-outer</code>, <code>.timeline-segment</code>, <code>.compliance-progress-gauge .bg-circle</code>: replaced leftover <code>rgba(255,255,255,0.06–0.08)</code> tracks with <code>var(--line)</code>/<code>var(--bg-soft)</code> for perceivability on parchment.</li>
+      </ul>
+
+      <h3>Reduced-Motion CSS (<code>web/css/animations.css</code>)</h3>
+      <ul>
+        <li>Replaced the narrow reduced-motion media query with a comprehensive rule that sets all animation/transition durations to <code>0.01ms</code> and hides <code>.visual-particle</code>.</li>
+      </ul>
+
+      <h3>Documentation (<code>docs/design-language.md</code>)</h3>
+      <ul>
+        <li>Updated the Accessibility section with verified contrast ratios and the reduced-motion/focus behavior.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Verified Contrast Ratios</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-label">text on panel</div><div class="stat-value">17.1:1</div></div>
+        <div class="stat"><div class="stat-label">muted on panel</div><div class="stat-value">6.2:1</div></div>
+        <div class="stat"><div class="stat-label">accent on panel</div><div class="stat-value">5.6:1</div></div>
+        <div class="stat"><div class="stat-label">red on panel</div><div class="stat-value">5.2:1</div></div>
+        <div class="stat"><div class="stat-label">green on panel</div><div class="stat-value">3.8:1 (large/bold only)</div></div>
+        <div class="stat"><div class="stat-label">accent on bg</div><div class="stat-value">5.0:1</div></div>
+      </div>
+      <p style="margin-top:14px">Green and orange are now used as background/border/indicator colors when paired with small text; adjacent text uses dark ink to guarantee 4.5:1.</p>
+    </div>
+
+    <div class="section">
+      <h2>Verification</h2>
+      <ul>
+        <li>Full test suite: <span class="ok">92 passed</span>.</li>
+        <li>Manual contrast audit of all four HTML screens and CSS files.</li>
+        <li>Reduced-motion path verified by static analysis of <code>isocity.js</code> and CSS media query coverage.</li>
+        <li>Canvas remains <code>aria-hidden="true"</code>; game state is available as text stats and leaderboard rows.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Sprint 5 Status</h2>
+      <p>All three phases complete. Next: final report summarizing the full Retro Isometric Tycoon roadmap (Sprints 1–5).</p>
+    </div>
+  </div>
+</body>
+</html>
