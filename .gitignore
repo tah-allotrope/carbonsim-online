@@ -27,5 +27,6 @@ db.sqlite3
 .pytest_cache/
 .ruff_cache/
 
-# Claude worktrees
+# Claude worktrees and local (per-user) settings
 .claude/worktrees/
+.claude/settings.local.json
