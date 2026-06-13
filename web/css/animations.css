@@ -280,15 +280,16 @@
 .toast-info .toast-title { color: var(--accent); }
 .toast-info .toast-progress { background: var(--accent); }
 
-/* Particle explosion styles */
+/* Pixel particle explosion styles */
 .visual-particle {
   position: fixed;
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 0;
   pointer-events: none;
   z-index: 99999;
   transform: translate(-50%, -50%);
+  image-rendering: pixelated;
 }
 
 /* CSS Page transitions */

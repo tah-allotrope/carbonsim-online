@@ -1,63 +1,55 @@
 /**
- * Climate Mayor — Visual Juice Engine
- * Reusable visual effect utilities for micro-interactions
+ * CarbonSim Online — Pixel-Style Visual Effects Engine
+ * Blocky, stepped micro-interactions for the retro tycoon aesthetic.
  */
 
 const Effects = {
   /**
    * Animates a numeric text content from one value to another smoothly
-   * @param {HTMLElement} element 
-   * @param {number} from 
-   * @param {number} to 
+   * @param {HTMLElement} element
+   * @param {number} from
+   * @param {number} to
    * @param {number} duration ms
    * @param {boolean} isCurrency prepend $
    */
   animateCounter(element, from, to, duration = 800, isCurrency = false) {
     if (!element) return;
-    
-    // Stop any existing animation on this element
+
     if (element._animId) {
       cancelAnimationFrame(element._animId);
     }
-    
+
     const start = performance.now();
-    
-    // Formatting helper
+
     function fmt(n) {
       if (n == null) return '0';
-      const absN = Math.abs(n);
-      
-      // Determine prefix
       const prefix = isCurrency ? (n < 0 ? '-$' : '$') : '';
       const displayVal = Math.abs(n);
-      
+
       let formatted = '';
       if (displayVal >= 1e6) {
         formatted = (displayVal / 1e6).toFixed(1) + 'M';
       } else if (displayVal >= 1e3) {
         formatted = (displayVal / 1e3).toFixed(1) + 'K';
       } else {
-        formatted = displayVal.toFixed(0); // integers look cleaner for raw values
+        formatted = displayVal.toFixed(0);
       }
-      
+
       return prefix + formatted;
     }
-    
-    // Trigger subtle bump animation on start
+
     element.classList.remove('stat-value-bump');
-    void element.offsetWidth; // trigger reflow
+    void element.offsetWidth;
     element.classList.add('stat-value-bump');
-    
+
     function update(now) {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
-      
-      // Cubic ease-out
       const ease = 1 - Math.pow(1 - progress, 3);
       const current = from + (to - from) * ease;
-      
+
       element.textContent = fmt(current);
-      
+
       if (progress < 1) {
         element._animId = requestAnimationFrame(update);
       } else {
@@ -66,83 +58,115 @@ const Effects = {
         setTimeout(() => element.classList.remove('stat-value-bump'), 100);
       }
     }
-    
+
     element._animId = requestAnimationFrame(update);
   },
 
   /**
-   * Spawns a bursts of glowing particles from a coordinate
+   * Pixel-palette map for effect bursts.
+   */
+  _pixelPalette: {
+    accent: '#3b6f76',
+    green: '#5a8f4e',
+    red: '#b54a3f',
+    orange: '#d4883a',
+    ink: '#1f1912',
+    paper: '#fffdf9',
+  },
+
+  /**
+   * Resolves a CSS variable or named color to a hex for canvas/DOM particles.
+   */
+  _resolveColor(color) {
+    if (!color) return this._pixelPalette.accent;
+    if (color.startsWith('var(')) {
+      const name = color.replace(/var\(--([^)]+)\)/, '$1');
+      return this._pixelPalette[name] || this._pixelPalette.accent;
+    }
+    return color;
+  },
+
+  /**
+   * Spawns a burst of blocky pixel particles from a coordinate.
    * @param {number} x viewport coordinate
    * @param {number} y viewport coordinate
-   * @param {string} color hex/hsl/css color string
+   * @param {string} color hex or var(--token) name
    * @param {number} count number of particles
    */
-  particleBurst(x, y, color = 'var(--accent)', count = 12) {
+  particleBurst(x, y, color = 'var(--accent)', count = 14) {
     const container = document.body;
-    
+    const resolved = this._resolveColor(color);
+
     for (let i = 0; i < count; i++) {
       const p = document.createElement('div');
       p.className = 'visual-particle';
-      p.style.backgroundColor = color;
-      p.style.boxShadow = `0 0 8px ${color}`;
-      p.style.left = `${x}px`;
-      p.style.top = `${y}px`;
+      p.style.backgroundColor = resolved;
+      p.style.left = `${Math.floor(x)}px`;
+      p.style.top = `${Math.floor(y)}px`;
       container.appendChild(p);
-      
-      // Physics factors
+
+      const size = 4 + Math.floor(Math.random() * 4);
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+
       const angle = Math.random() * Math.PI * 2;
-      const velocity = 2 + Math.random() * 6;
-      const dx = Math.cos(angle) * velocity;
-      const dy = Math.sin(angle) * velocity - (Math.random() * 2); // slight upwards gravity bias
-      
-      let posX = x;
-      let posY = y;
-      let opacity = 1;
-      let scale = 1;
-      
+      const velocity = 2 + Math.random() * 5;
+      let dx = Math.cos(angle) * velocity;
+      let dy = Math.sin(angle) * velocity - (Math.random() * 2);
+
+      let posX = Math.floor(x);
+      let posY = Math.floor(y);
+      let life = 1;
+      const decay = 0.02 + Math.random() * 0.03;
+      const gravity = 0.18;
+
       const startTime = performance.now();
-      const life = 400 + Math.random() * 400; // ms duration
-      
+      const maxLife = 350 + Math.random() * 300;
+
       function step(now) {
         const elapsed = now - startTime;
-        const progress = elapsed / life;
-        
+        const progress = elapsed / maxLife;
+
         if (progress >= 1) {
           p.remove();
           return;
         }
-        
+
+        // Stepped pixel motion
+        dx *= 0.96;
+        dy += gravity;
         posX += dx;
-        posY += dy + (progress * 1.5); // gravity pulling down slowly
-        opacity = 1 - progress;
-        scale = 1 - (progress * 0.5);
-        
-        p.style.left = `${posX}px`;
-        p.style.top = `${posY}px`;
-        p.style.opacity = opacity;
-        p.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        
+        posY += dy;
+
+        const drawX = Math.floor(posX / size) * size;
+        const drawY = Math.floor(posY / size) * size;
+        life = 1 - progress;
+
+        p.style.left = `${drawX}px`;
+        p.style.top = `${drawY}px`;
+        p.style.opacity = life.toFixed(2);
+        p.style.transform = `translate(-50%, -50%)`;
+
         requestAnimationFrame(step);
       }
-      
+
       requestAnimationFrame(step);
     }
   },
 
   /**
    * Temporarily pulses border glow of an element
-   * @param {HTMLElement} element 
-   * @param {'cyan'|'green'|'red'} color 
+   * @param {HTMLElement} element
+   * @param {'cyan'|'green'|'red'} color
    */
   glowPulse(element, color = 'cyan') {
     if (!element) return;
-    
+
     const className = `pulse-glow-${color}`;
     element.classList.remove('pulse-glow-cyan', 'pulse-glow-green', 'pulse-glow-red');
-    void element.offsetWidth; // trigger reflow
+    void element.offsetWidth;
     element.classList.add(className);
-    
-    // Automatically clean up class when animation ends
+
     element.addEventListener('animationend', function handler() {
       element.classList.remove(className);
       element.removeEventListener('animationend', handler);
@@ -150,42 +174,40 @@ const Effects = {
   },
 
   /**
-   * Flash the viewport with a cybernetic colored glow
+   * Flash the viewport with a retro colored glow
    * @param {string} color hex/rgb color
    * @param {number} duration ms
    */
-  screenFlash(color = 'rgba(255,68,68,0.25)', duration = 400) {
+  screenFlash(color = 'rgba(181,74,63,0.25)', duration = 400) {
     const flash = document.createElement('div');
     flash.className = 'screen-flash-overlay';
     flash.style.backgroundColor = color;
     document.body.appendChild(flash);
-    
+
     const start = performance.now();
-    
+
     function step(now) {
       const elapsed = now - start;
       const progress = elapsed / duration;
-      
+
       if (progress >= 1) {
         flash.remove();
         return;
       }
-      
-      // Sine wave peak-and-fade
+
       let opacity = 0;
       if (progress < 0.25) {
-        opacity = progress / 0.25; // ramp up
+        opacity = progress / 0.25;
       } else {
-        opacity = 1 - ((progress - 0.25) / 0.75); // fade out
+        opacity = 1 - ((progress - 0.25) / 0.75);
       }
-      
+
       flash.style.opacity = opacity;
       requestAnimationFrame(step);
     }
-    
+
     requestAnimationFrame(step);
   }
 };
 
-// Export to window
 window.Effects = Effects;

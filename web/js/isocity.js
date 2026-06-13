@@ -261,10 +261,11 @@ const Isocity = (function () {
 
   function drawParticles() {
     particles.forEach(function (p) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + p.color + ',' + (p.life * 0.4) + ')';
-      ctx.fill();
+      const size = Math.max(1, Math.floor(p.size * p.life));
+      const drawX = Math.floor(p.x / size) * size;
+      const drawY = Math.floor(p.y / size) * size;
+      ctx.fillStyle = 'rgba(' + p.color + ',' + (p.life * 0.55) + ')';
+      ctx.fillRect(drawX, drawY, size, size);
     });
   }
 
