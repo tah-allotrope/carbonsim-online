@@ -17,8 +17,8 @@ from .ws import coop_ws_endpoint
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Climate Mayor API",
-        description="Single-player carbon compliance game backend",
+        title="CarbonSim Online API",
+        description="Single-player and multiplayer carbon compliance game backend",
         version="0.1.0",
     )
 
@@ -53,15 +53,20 @@ def create_app() -> FastAPI:
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
 
+    web_root = web_dir.resolve()
+    index_path = web_root / "index.html"
+
     @app.get("/{path:path}")
     async def serve_frontend(path: str):
-        file_path = web_dir / path
-        if file_path.exists() and file_path.is_file():
-            return FileResponse(str(file_path))
-        index_path = web_dir / "index.html"
-        if index_path.exists():
-            return FileResponse(str(index_path))
-        return FileResponse(str(index_path)) if index_path.exists() else None
+        # Resolve the requested path and confirm it stays inside web/ before
+        # serving — guards against traversal (e.g. "..%2frequirements.txt").
+        candidate = (web_dir / path).resolve()
+        if (
+            candidate.is_file()
+            and candidate.is_relative_to(web_root)
+        ):
+            return FileResponse(str(candidate))
+        return FileResponse(str(index_path))
 
     return app
 

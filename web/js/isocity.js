@@ -12,8 +12,9 @@ const Isocity = (function () {
   let reducedMotion = false;
   let lastFrame = 0;
   const FPS_INTERVAL = 1000 / 30;
-  let time = 0;
   let particles = [];
+  let motionQuery = null;
+  let motionHandler = null;
   let flashOpacity = 0;
   let flashColor = null;
 
@@ -52,13 +53,16 @@ const Isocity = (function () {
     canvas = document.getElementById(canvasId);
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    resize();
+    motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    reducedMotion = motionQuery.matches;
+
+    // Size synchronously so the very first paint has real dimensions; only the
+    // window resize event is debounced (see resize()).
+    doResize();
     window.addEventListener('resize', resize);
 
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    function onMotionChange(e) {
+    motionHandler = function (e) {
       reducedMotion = e.matches;
       if (reducedMotion) {
         if (animId) cancelAnimationFrame(animId);
@@ -68,11 +72,11 @@ const Isocity = (function () {
         lastFrame = performance.now();
         animId = requestAnimationFrame(loop);
       }
-    }
+    };
     if (motionQuery.addEventListener) {
-      motionQuery.addEventListener('change', onMotionChange);
+      motionQuery.addEventListener('change', motionHandler);
     } else if (motionQuery.addListener) {
-      motionQuery.addListener(onMotionChange);
+      motionQuery.addListener(motionHandler);
     }
 
     loadImages().then(function () {
@@ -148,13 +152,8 @@ const Isocity = (function () {
         positions.push({ col, row });
       }
     }
-    // Sort by row+col for painter-friendly order (back to front).
-    positions.sort(function (a, b) {
-      return (a.col + a.row) - (b.col + b.row);
-    });
-
-    // Shuffle positions deterministically by company hash so different rooms
-    // get different layouts, but the same room always gets the same layout.
+    // Assign plots deterministically by company-id hash so the same room
+    // always produces the same layout (draw() handles painter ordering).
     const used = new Set();
     const individual = [];
     const remainder = [];
@@ -198,10 +197,13 @@ const Isocity = (function () {
         attempts++;
       } while (used.has(pos.col + ',' + pos.row) && attempts < positions.length);
       used.add(pos.col + ',' + pos.row);
+      const districtEmissions = remainder.reduce(function (sum, c) {
+        return sum + (c.projected_emissions || 0);
+      }, 0);
       plots.push({
         col: pos.col,
         row: pos.row,
-        company: { projected_emissions: 0, compliance_gap: 0 },
+        company: { projected_emissions: districtEmissions, compliance_gap: 0 },
         isPlayer: false,
         isDistrict: true,
         districtCount: remainder.length,
@@ -222,14 +224,14 @@ const Isocity = (function () {
 
     if (plot.isDistrict) {
       ctx.drawImage(images.district, pos.x - 32, pos.y - 36);
-      return;
+    } else {
+      const abated = (company.active_abatement_ids || []).length > 0;
+      const sprite = abated ? images.factory_clean : images.factory_dirty;
+      ctx.drawImage(sprite, pos.x - 32, pos.y - 36);
     }
 
-    const abated = (company.active_abatement_ids || []).length > 0;
-    const sprite = abated ? images.factory_clean : images.factory_dirty;
-    ctx.drawImage(sprite, pos.x - 32, pos.y - 36);
-
-    // Smog overlay scales with projected emissions.
+    // Smog overlay scales with projected emissions — districts aggregate the
+    // emissions of every company they stand in for, so they smog too.
     const emissions = company.projected_emissions || 0;
     if (emissions > 0 && images.smog) {
       const alpha = Math.min(0.7, emissions / 300);
@@ -238,9 +240,9 @@ const Isocity = (function () {
       ctx.globalAlpha = 1;
     }
 
-    // Compliance shortfall tint.
+    // Compliance shortfall tint (individual plots only).
     const gap = company.compliance_gap || 0;
-    if (gap > 0) {
+    if (!plot.isDistrict && gap > 0) {
       ctx.fillStyle = 'rgba(181, 74, 63, 0.25)';
       ctx.beginPath();
       ctx.ellipse(pos.x, pos.y, 28, 14, 0, 0, Math.PI * 2);
@@ -266,7 +268,6 @@ const Isocity = (function () {
     if (reducedMotion || particles.length >= cap) return;
     plots.forEach(function (plot) {
       if (particles.length >= cap) return;
-      if (plot.isDistrict) return;
       const company = plot.company || {};
       const emissions = company.projected_emissions || 0;
       if (emissions <= 0) return;
@@ -354,7 +355,6 @@ const Isocity = (function () {
     const delta = timestamp - lastFrame;
     if (delta < FPS_INTERVAL) return;
     lastFrame = timestamp - (delta % FPS_INTERVAL);
-    time += delta * 0.001;
     draw();
   }
 
@@ -404,6 +404,13 @@ const Isocity = (function () {
     if (animId) cancelAnimationFrame(animId);
     window.removeEventListener('resize', resize);
     if (resizeTimer) clearTimeout(resizeTimer);
+    if (motionQuery && motionHandler) {
+      if (motionQuery.removeEventListener) {
+        motionQuery.removeEventListener('change', motionHandler);
+      } else if (motionQuery.removeListener) {
+        motionQuery.removeListener(motionHandler);
+      }
+    }
   }
 
   return {
