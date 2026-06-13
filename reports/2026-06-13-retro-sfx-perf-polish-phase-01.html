@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: Sprint 5 Phase 01 — Chiptune SFX &amp; Pixel Effects</title>
+  <meta name="color-scheme" content="light">
+  <style>
+    :root {
+      --paper: #fbf7f1;
+      --paper-strong: #fffdf9;
+      --ink: #1f1912;
+      --ink-soft: #5f564c;
+      --line: #dccdb6;
+      --line-strong: #bfa37d;
+      --accent: #9d6b37;
+      --accent-2: #3b6f76;
+      --green: #5a8f4e;
+      --red: #b54a3f;
+      --shadow: 0 18px 40px rgba(49, 33, 16, 0.08);
+      --radius: 18px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+      --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      color: var(--ink);
+      background: linear-gradient(180deg, #f7f1e7 0%, #fbf7f1 28%, #f6efe5 100%);
+      font-family: var(--body); line-height: 1.65;
+    }
+    .page { width: min(920px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 56px; }
+    .hero {
+      padding: 28px; border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--paper-strong); box-shadow: var(--shadow);
+    }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 8px 0 12px; font-size: 1.9rem; }
+    .meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+    .chip { font-family: var(--mono); font-size: 0.72rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(157,107,55,0.08); }
+    .section { margin-top: 26px; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    h2 { font-family: var(--display); margin: 0 0 14px; font-size: 1.35rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 18px 0 8px; font-size: 1.05rem; color: var(--ink-soft); }
+    ul, p { margin: 0 0 12px; }
+    li { margin-bottom: 6px; }
+    code { font-family: var(--mono); background: rgba(157,107,55,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+    .ok { color: var(--green); font-weight: 600; }
+    .warn { color: var(--red); font-weight: 600; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 14px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fffdf9; }
+    .stat-label { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="eyebrow">Sprint 5 Phase 01 Report</div>
+      <h1>Chiptune SFX Re-voice &amp; Pixel-Style Effects</h1>
+      <p>Re-voiced the procedural Web Audio SFX engine to a chiptune register and converted DOM/canvas particle bursts from soft neon glows to blocky pixel-art bursts.</p>
+      <div class="meta">
+        <span class="chip">Date: 2026-06-13</span>
+        <span class="chip">Commit: 89a0385</span>
+        <span class="chip">Tests: 92 passed</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>What Changed</h2>
+      <h3>Audio Engine (<code>web/js/audio.js</code>)</h3>
+      <ul>
+        <li>Replaced cyberpunk sine/saw sweeps with square/triangle chiptune voices.</li>
+        <li>Shortened envelopes across all cues (click, draw, resolve, activate, penalty, success, save, error).</li>
+        <li>Added simple arpeggios for positive events (draw, resolve, year-advance, success).</li>
+        <li>Lowered master volume from 0.6 to 0.5 to reduce repetition fatigue.</li>
+        <li>Ambient drone kept triangle-based but reduced gain and slowed sweep.</li>
+        <li>Preserved mute toggle, localStorage mute state, and audio-context-on-gesture init.</li>
+      </ul>
+
+      <h3>DOM Effects (<code>web/js/effects.js</code>)</h3>
+      <ul>
+        <li><code>particleBurst</code> now spawns blocky square particles (4–8 px, no border-radius, no box-shadow).</li>
+        <li>Motion is stepped to emulate low-resolution pixel movement.</li>
+        <li>Palette resolves CSS <code>var(--token)</code> names to retro hex values.</li>
+        <li><code>screenFlash</code> default tint switched from neon red to retro red.</li>
+      </ul>
+
+      <h3>Canvas Particles (<code>web/js/isocity.js</code>)</h3>
+      <ul>
+        <li>Swapped circular smog/burst particles for rectangular pixel blocks.</li>
+        <li>Position quantization matches the DOM pixel-step style.</li>
+      </ul>
+
+      <h3>CSS (<code>web/css/animations.css</code>)</h3>
+      <ul>
+        <li><code>.visual-particle</code> border-radius removed, <code>image-rendering: pixelated</code> added.</li>
+      </ul>
+
+      <h3>Cleanup</h3>
+      <ul>
+        <li>Deleted stale <code>web/js/skyline.js</code> (deletion pending from Sprint 4).</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Verification</h2>
+      <ul>
+        <li>Full test suite: <span class="ok">92 passed</span> (visual-only changes, no engine/server regressions).</li>
+        <li>Manual code review: all existing event hooks preserved.</li>
+        <li>Dom/canvas particle APIs unchanged; consumers (<code>game.js</code>, <code>isocity.js</code>) require no updates.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Risks &amp; Mitigations</h2>
+      <ul>
+        <li><strong>Repetition fatigue</strong> → kept durations under 0.6s and master gain modest.</li>
+        <li><strong>Sample-free constraint</strong> → all SFX remain oscillator-based; no asset/licensing burden.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Next Step</h2>
+      <p>PHASE-02: harden <code>isocity.js</code> performance — DPR cap, adaptive particle budget, background-tab throttling verification.</p>
+    </div>
+  </div>
+</body>
+</html>
