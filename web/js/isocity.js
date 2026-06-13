@@ -21,12 +21,17 @@ const Isocity = (function () {
   const TILE_H = 32;
   const GRID_SIZE = 6;
   const MAX_PLOTS = 16;
+  const MAX_DPR = 2; // cap over-rendering on high-DPR mobile
+  const BASE_MAX_PARTICLES = 40;
+  const PARTICLES_PER_PLOT = 8;
+  const ABSOLUTE_MAX_PARTICLES = 150;
 
   let images = {};
   let manifestLoaded = false;
   let plots = [];
   let snapshotCache = null;
   let localCompanyId = null;
+  let resizeTimer = null;
 
   function loadImages() {
     if (typeof AssetLoader === 'undefined') {
@@ -63,17 +68,23 @@ const Isocity = (function () {
     });
   }
 
-  function resize() {
+  function doResize() {
     if (!canvas) return;
     const rect = canvas.parentElement.getBoundingClientRect();
-    dpr = window.devicePixelRatio || 1;
-    width = canvas.width = rect.width * dpr;
-    height = canvas.height = 260 * dpr;
+    dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+    width = canvas.width = Math.floor(rect.width * dpr);
+    height = canvas.height = Math.floor(260 * dpr);
     canvas.style.width = rect.width + 'px';
     canvas.style.height = '260px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
     width = rect.width;
     height = 260;
+  }
+
+  function resize() {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(doResize, 100);
   }
 
   function tileToScreen(col, row) {
@@ -225,14 +236,23 @@ const Isocity = (function () {
     ctx.drawImage(images.player_marker, pos.x - 32, pos.y - 64);
   }
 
+  function maxParticles() {
+    return Math.min(
+      ABSOLUTE_MAX_PARTICLES,
+      BASE_MAX_PARTICLES + plots.length * PARTICLES_PER_PLOT
+    );
+  }
+
   function spawnParticles() {
-    if (reducedMotion || particles.length > 150) return;
+    const cap = maxParticles();
+    if (reducedMotion || particles.length >= cap) return;
     plots.forEach(function (plot) {
+      if (particles.length >= cap) return;
       if (plot.isDistrict) return;
       const company = plot.company || {};
       const emissions = company.projected_emissions || 0;
       if (emissions <= 0) return;
-      const rate = Math.min(0.3, emissions / 600);
+      const rate = Math.min(0.25, emissions / 800);
       if (Math.random() > rate) return;
       const pos = tileToScreen(plot.col, plot.row);
       particles.push({
@@ -308,6 +328,11 @@ const Isocity = (function () {
 
   function loop(timestamp) {
     animId = requestAnimationFrame(loop);
+    if (document.hidden) {
+      // Background tabs naturally pause RAF, but guard anyway.
+      lastFrame = timestamp;
+      return;
+    }
     const delta = timestamp - lastFrame;
     if (delta < FPS_INTERVAL) return;
     lastFrame = timestamp - (delta % FPS_INTERVAL);
@@ -324,9 +349,11 @@ const Isocity = (function () {
   function burstParticles(plotFilter, color, count, speed) {
     const targets = plots.filter(plotFilter);
     if (targets.length === 0) return;
+    const cap = maxParticles();
     targets.forEach(function (plot) {
       const pos = tileToScreen(plot.col, plot.row);
       for (let i = 0; i < count; i++) {
+        if (particles.length >= cap) return;
         particles.push({
           x: pos.x,
           y: pos.y - 30,
@@ -357,6 +384,7 @@ const Isocity = (function () {
   function destroy() {
     if (animId) cancelAnimationFrame(animId);
     window.removeEventListener('resize', resize);
+    if (resizeTimer) clearTimeout(resizeTimer);
   }
 
   return {
