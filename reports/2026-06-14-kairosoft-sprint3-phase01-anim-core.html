@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 3 · Phase 01 — Frame-Animation Core</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#1f93c7;--accent2:#2bb0e0;--green:#4caf50;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px}
+  header.hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border-radius:var(--radius);padding:28px 30px;box-shadow:0 6px 18px rgba(31,147,199,.3)}
+  header.hero h1{margin:0 0 6px;font-size:1.6rem}.meta{font-size:.85rem;opacity:.95}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent)}h2 .n{color:var(--muted);margin-right:8px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.9rem}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}.flow .arr{color:var(--muted);font-weight:700}
+  .empty{color:var(--muted);font-style:italic}ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.ok{color:var(--green);font-weight:700}.muted{color:var(--muted)}
+  @media print{body{background:#fff}header.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}section{box-shadow:none;break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header class="hero">
+  <div><span class="tag">Phase Report</span><span class="tag">Sprint 3 · Phase 01</span></div>
+  <h1>Frame-Animation Core &amp; Citizen Sheet</h1>
+  <div class="meta">CarbonSim Online · repo carbonsim-online · 2026-06-14</div>
+</header>
+
+<section><h2><span class="n">1</span>Phase Header</h2>
+  <p>First phase of <strong>Kairosoft Sprint 3 — Animated Chibi Citizens</strong>
+  (<code>plans/2026-06-14-kairosoft-citizens-plan.md</code>). Goal: give <code>isocity.js</code> the sprite-sheet
+  frame-animation capability it lacked (it only blitted single frames) and author the chibi citizen sheet that
+  Phase 2 will animate and move.</p></section>
+
+<section><h2><span class="n">2</span>Input → Output Summary</h2>
+  <table><tr><th>Input</th><th>Output</th></tr>
+  <tr><td>Renderer blits single static images; no character art</td>
+      <td><code>drawSprite()</code> (9-arg sub-rect blit, optional flip) + <code>walkFrame()</code> clock; <code>citizens.png</code> sheet (64×48: 4-frame walk × 3 shirt variants) registered with frame metadata</td></tr></table></section>
+
+<section><h2><span class="n">3</span>Logic Flow</h2>
+  <div class="flow"><span class="step">Author citizen sheet (Pillow)</span><span class="arr">→</span>
+  <span class="step">Register in manifest w/ frame meta</span><span class="arr">→</span>
+  <span class="step">Add drawSprite + walkFrame to isocity</span><span class="arr">→</span>
+  <span class="step">Load sheet + meta</span><span class="arr">→</span>
+  <span class="step">Verify slice + meta in browser</span></div></section>
+
+<section><h2><span class="n">4</span>Math / Algorithm Used</h2>
+  <p>Frame index = <code>floor(performance.now()/150) mod frames</code> — wall-clock based so the walk cycle stays
+  stable under the 30fps throttle and idles (frame 0) under reduced motion. Sub-rect blit reads cell
+  <code>(col·frameW, row·frameH)</code> from the sheet.</p></section>
+
+<section><h2><span class="n">5</span>Tools / Formulas / Methods</h2>
+  <ul>
+    <li><strong>Pillow</strong> — extended <code>scripts/gen_building_sprites.py</code> with <code>make_citizens()</code> (16×16 chibi: head/hair/eyes/shirt + alternating legs).</li>
+    <li><strong>Edit</strong> <code>web/assets/manifest.json</code> (citizens entry + frame meta) and <code>web/js/isocity.js</code> (load sheet/meta, <code>drawSprite</code>, <code>walkFrame</code>).</li>
+    <li><strong>node --check</strong> + <strong>Claude Preview</strong> (AssetLoader load, frame slice).</li>
+  </ul></section>
+
+<section><h2><span class="n">6</span>Results &amp; Visualizations</h2>
+  <table><tr><th>Check</th><th>Result</th></tr>
+  <tr><td><code>citizens.png</code> generated</td><td><span class="ok">64×48, 987 opaque px</span></td></tr>
+  <tr><td>Manifest frame metadata</td><td><span class="ok">frameW/H 16, frames 4, variants 3</span></td></tr>
+  <tr><td>Sheet loads via AssetLoader</td><td><span class="ok">64×48; getAsset returns meta</span></td></tr>
+  <tr><td>Single-frame slice</td><td><span class="ok">82 opaque px (one citizen)</span></td></tr>
+  <tr><td>Syntax</td><td><span class="ok">node --check OK</span></td></tr>
+  </table></section>
+
+<section><h2><span class="n">7</span>Limitations / Second-Best Alternative</h2>
+  <ul>
+    <li>No citizens are placed/moving yet — that is Phase 2; this phase delivers the capability + art only.</li>
+    <li><strong>Second-best:</strong> CSS-sprite animation — rejected; citizens must depth-sort with canvas buildings.</li>
+  </ul></section>
+
+<section><h2><span class="n">8</span>Errors / Warnings / Flags Encountered</h2>
+  <ul><li>None. Sheet, metadata, and slicing all verified.</li></ul></section>
+
+<section><h2><span class="n">9</span>Open Questions / Next Phase Seeds</h2>
+  <ul><li><strong>Phase 02 (next):</strong> spawn a citizen pool, wander movement (reuse particle-update pattern), direction flip by velocity, and depth-sort citizens with buildings by screen-y.</li></ul></section>
+</div></body></html>

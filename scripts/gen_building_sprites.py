@@ -169,6 +169,46 @@ def make_tree():
     return img
 
 
+# --- Chibi citizen sprite sheet --------------------------------------------
+# 16x16 frames: cols = 4-frame walk cycle, rows = 3 shirt-colour variants.
+SKIN = (245, 205, 160)
+HAIR = (92, 64, 44)
+SHIRTS = [(31, 147, 199), (226, 85, 63), (76, 175, 80)]  # azure / red / green
+CELL = 16
+CWALK_FRAMES = 4
+CVARIANTS = 3
+
+
+def draw_citizen(d, ox, oy, shirt, frame):
+    cx = ox + 8
+    # legs (walk cycle): f1 left fwd, f3 right fwd, else together
+    ll, rl = ox + 6, ox + 9
+    if frame == 1:
+        ll, rl = ox + 5, ox + 9
+    elif frame == 3:
+        ll, rl = ox + 6, ox + 10
+    d.rectangle([P((ll, oy + 12)), P((ll + 1, oy + 15))], fill=(70, 55, 40, 255))
+    d.rectangle([P((rl, oy + 12)), P((rl + 1, oy + 15))], fill=(70, 55, 40, 255))
+    # body / shirt
+    d.rectangle([P((cx - 3, oy + 8)), P((cx + 2, oy + 12))], fill=shirt + (255,), outline=OUT)
+    # head
+    d.ellipse([P((cx - 3, oy + 2)), P((cx + 3, oy + 8))], fill=SKIN + (255,), outline=OUT)
+    # hair cap
+    d.rectangle([P((cx - 3, oy + 2)), P((cx + 3, oy + 4))], fill=HAIR + (255,))
+    # eyes
+    d.point((cx - 1, oy + 6), fill=OUT)
+    d.point((cx + 1, oy + 6), fill=OUT)
+
+
+def make_citizens():
+    img = Image.new("RGBA", (CELL * CWALK_FRAMES, CELL * CVARIANTS), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    for v in range(CVARIANTS):
+        for f in range(CWALK_FRAMES):
+            draw_citizen(d, f * CELL, v * CELL, SHIRTS[v], f)
+    return img
+
+
 def main():
     written = []
     written.append(save(make_ground(), os.path.join(TILES, "ground.png")))
@@ -181,6 +221,7 @@ def main():
     written.append(save(make_player_marker(), os.path.join(SPRITES, "player_marker.png")))
     written.append(save(make_district(), os.path.join(SPRITES, "district.png")))
     written.append(save(make_tree(), os.path.join(SPRITES, "decor_tree.png")))
+    written.append(save(make_citizens(), os.path.join(SPRITES, "citizens.png")))
     for p in written:
         print("wrote", os.path.relpath(p, os.path.join(os.path.dirname(__file__), "..")))
 

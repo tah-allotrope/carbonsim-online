@@ -17,6 +17,8 @@
     "district":      { "type": "image", "path": "/assets/sprites/district.png",      "width": 64, "height": 64 },
     "decor_tree":    { "type": "image", "path": "/assets/sprites/decor_tree.png",    "width": 64, "height": 64 },
 
+    "citizens":      { "type": "image", "path": "/assets/sprites/citizens.png", "width": 64, "height": 48, "frameW": 16, "frameH": 16, "frames": 4, "variants": 3 },
+
     "font_display": { "type": "font", "path": "/assets/fonts/PressStart2P-Regular.ttf", "format": "truetype" }
   }
 }

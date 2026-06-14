@@ -16,6 +16,8 @@ const Isocity = (function () {
   let motionQuery = null;
   let motionHandler = null;
   let resizeObserver = null;
+  let citizens = [];
+  let citizenMeta = null;
   let flashOpacity = 0;
   let flashColor = null;
 
@@ -49,6 +51,8 @@ const Isocity = (function () {
       images.player_marker = AssetLoader.getImage('player_marker');
       images.district = AssetLoader.getImage('district');
       images.decor_tree = AssetLoader.getImage('decor_tree');
+      images.citizens = AssetLoader.getImage('citizens');
+      citizenMeta = AssetLoader.getAsset('citizens');
       manifestLoaded = true;
     });
   }
@@ -358,6 +362,29 @@ const Isocity = (function () {
     ctx.fillRect(0, 0, width, height);
     flashOpacity -= 0.02;
     if (flashOpacity < 0) flashOpacity = 0;
+  }
+
+  /* --- Sprite-sheet frame animation core (Sprint 3) --- */
+  function drawSprite(img, fw, fh, col, row, dx, dy, flip) {
+    if (!img) return;
+    const sx = col * fw, sy = row * fh;
+    if (flip) {
+      ctx.save();
+      ctx.translate(Math.round(dx + fw), Math.round(dy));
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, sx, sy, fw, fh, 0, 0, fw, fh);
+      ctx.restore();
+    } else {
+      ctx.drawImage(img, sx, sy, fw, fh, Math.round(dx), Math.round(dy), fw, fh);
+    }
+  }
+
+  // Walk-cycle frame index derived from wall-clock so it is stable under the
+  // 30fps throttle (and idle when reduced motion freezes the loop).
+  function walkFrame() {
+    const n = (citizenMeta && citizenMeta.frames) || 1;
+    if (reducedMotion) return 0;
+    return Math.floor(performance.now() / 150) % n;
   }
 
   function draw() {
