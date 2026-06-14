@@ -2,11 +2,11 @@
 
 ## Visual Direction
 
-**Theme:** Retro isometric tycoon. Warm parchment tones, chunky beveled chrome, and a pixel display font evoke classic management sims (SimCity 2000 / Theme Hospital register) while keeping carbon compliance data legible. The aesthetic is playful and readable rather than cinematic.
+**Theme:** Bright Kairosoft-style pixel-art tycoon. Cheerful saturated colors, rounded gradient panels, soft drop shadows, and pill buttons evoke Kairosoft's cute management sims (Game Dev Story / Venture Towns register) while keeping carbon compliance data legible. The aesthetic is friendly and lively rather than austere. (See `research/2026-06-14_kairosoft-visual-style.md`.)
 
 **Principles:**
 1. **Clarity over decoration** — every visual element serves a compliance or game-state purpose
-2. **Chunky, tactile chrome** — raised panels and inset buttons make the UI feel like a tycoon interface
+2. **Cheerful, rounded, tactile chrome** — rounded gradient panels and pressable pill buttons make the UI feel like a cute tycoon
 3. **Consistent tokens** — one palette, one spacing scale, one type system across all screens
 4. **Performance-first** — no heavy frameworks, canvas for the signature visual, CSS for everything else
 
@@ -14,19 +14,28 @@
 
 | Token | Value | Usage |
 |---|---|---|
-| `--bg` | `#f7f1e7` | Page background (parchment) |
-| `--bg-soft` | `#efe4d0` | Modal/overlay background, softer parchment |
-| `--panel` | `#fffdf9` | Card/panel background (off-white) |
-| `--line` | `rgba(92, 77, 60, 0.28)` | Borders, dividers |
-| `--text` | `#1f1912` | Primary text (dark ink) |
-| `--muted` | `#6b5e4f` | Secondary/label text |
-| `--accent` | `#3b6f76` | Primary accent (teal) — interactive elements, phase badges |
-| `--green` | `#5a8f4e` | Positive — compliant, success, abatement active |
-| `--red` | `#b54a3f` | Negative — shortfall, penalty, error |
-| `--orange` | `#d4883a` | Warning — pending, approaching cap |
-| `--bevel-light` | `#fff8e7` | Raised edge highlight |
-| `--bevel-dark` | `#8b7355` | Recessed edge shadow |
-| `--bevel-shadow` | `#4a3b2d` | Drop-shadow for raised chrome |
+| `--bg` | `#fdf6e9` | Page background (bright warm cream) |
+| `--bg-soft` | `#f4e8d2` | Softer cream (HUD strips) |
+| `--panel` | `#fffefb` | Card/panel base (near-white) |
+| `--line` | `rgba(74, 59, 45, 0.22)` | Borders, dividers |
+| `--text` | `#2a2018` | Primary text (warm near-black) |
+| `--muted` | `#6f5d46` | Secondary/label text |
+| `--accent` | `#1f93c7` | Primary accent (bright sky azure) — interactive elements, phase badges |
+| `--accent-bright` | `#2bb0e0` | Lighter azure for gradient tops/highlights |
+| `--green` | `#4caf50` | Positive — compliant, success, abatement active |
+| `--red` | `#e2553f` | Negative — shortfall, penalty, error |
+| `--orange` | `#f5a623` | Warning — pending, approaching cap (sunny) |
+| `--bevel-dark` | `#caa96c` | Pressable button bottom-edge color |
+| `--bevel-light` / `--bevel-shadow` | `#fffefb` / `#a07d44` | Legacy bevel tokens (retained for compatibility) |
+
+### Gradient & Radius Tokens
+| Token | Value | Usage |
+|---|---|---|
+| `--grad-panel` | `linear-gradient(180deg,#fffefb,#f7eed9)` | Cards, buttons (default), modals, event cards |
+| `--grad-accent` | `linear-gradient(180deg,--accent-bright,--accent)` | Primary buttons, blue badges, bubbles |
+| `--grad-green` / `--grad-red` | green/red top→base gradients | Semantic badges/buttons/bubbles |
+| `--radius` | `8px` | Inputs, stats, small chrome |
+| `--radius-lg` | `16px` | Rounded cards, modals, event cards |
 
 ### Semantic Color Rules
 - **Compliance gap <= 0** → `--green` (compliant)
@@ -46,7 +55,7 @@
 | Body | `var(--font)` (Segoe UI) | 0.9rem | 400 | Prose, descriptions, dense stats |
 | Badge | `var(--mono)` | 0.75rem | 400 | Status pills (uppercase) |
 
-Press Start 2P is restricted to display type; dense stats and body text remain on the readable sans/mono stack.
+Press Start 2P is restricted to display type; dense stats and body text remain on the readable sans/mono stack. *Follow-up:* swapping the display face to a rounded-pixel OFL font (more Kairosoft-cute) is a drop-in change — add the `.ttf` + `@font-face`, record in `ATTRIBUTIONS.md`, and point `--font-display` at it.
 
 ## Spacing Scale
 
@@ -62,35 +71,35 @@ Press Start 2P is restricted to display type; dense stats and body text remain o
 ## Component Library
 
 ### Card
-- Background: `var(--panel)` with `var(--bevel-dark)` border
-- Border-radius: `var(--radius)` (8px)
-- Box-shadow: inset `var(--bevel-light)` top-left, inset `var(--bevel-dark)` bottom-right, offset `var(--bevel-shadow)`
-- Hover: translateY(-2px), shadow deepens
+- Background: `var(--grad-panel)`, `var(--line)` border
+- Border-radius: `var(--radius-lg)` (16px)
+- Box-shadow: soft `0 4px 14px rgba(74,59,45,.12)`; hover deepens + translateY(-2px)
 - Title: `var(--mono)` uppercase with accent color
 
 ### Button
-- **Default**: `var(--panel)` bg, `var(--bevel-dark)` border, raised bevel shadow
-- **Primary**: `var(--accent)` bg, white text
-- **Danger**: `var(--red)` bg, white text
-- **Disabled**: 0.45 opacity, grayscale, no transform
-- **Active/pressed**: reverse inset shadows, translateY(2px)
-- All buttons: 8px radius, short tactile transitions
+- **Pill shape** (999px radius), `var(--grad-panel)` fill, soft shadow + colored bottom edge (`--bevel-dark`)
+- **Primary**: `var(--grad-accent)` + white text + azure bottom edge/shadow
+- **Danger**: `var(--grad-red)` + white text
+- **Active/pressed**: translateY(2px), bottom edge collapses
+- **Disabled**: 0.5 opacity, grayscale, no transform
+- Short tactile transitions + subtle hover brightness
 
 ### Badge
-- Pill shape (999px radius)
-- Solid semantic background colors with subtle bevel inset
-- Variants: `badge-green`, `badge-red`, `badge-orange`, `badge-blue`
-- White or dark ink text for contrast
+- Pill shape (999px radius), **gradient** semantic fills, soft 1px shadow
+- Variants: `badge-green` (dark ink), `badge-red`/`badge-blue` (white), `badge-orange` (dark ink)
+
+### Bubble (notification / speech)
+- Pill with a small bottom tail (`.bubble::after`)
+- Variants: `bubble-accent`, `bubble-green`, `bubble-red`
+- Used by in-game floating feedback (Sprint 4)
 
 ### Stat
-- Label/value pair inside a beveled panel
-- Value uses mono font, 1.3rem
-- Color variants: `.accent`, `.green`, `.red`
+- Label/value pair in a soft-shadow panel (`var(--radius)`)
+- Value uses mono font, 1.3rem; color variants `.accent`/`.green`/`.red`
 
 ### Input / Select
-- `var(--bg-soft)` background
-- Inset bevel shadow
-- Focus: accent border + inset accent ring
+- White background, `var(--line)` border, soft inner shadow
+- Focus: accent border + 3px accent focus ring
 - Full width by default
 
 ### Table
@@ -104,10 +113,24 @@ Press Start 2P is restricted to display type; dense stats and body text remain o
 - Smooth width transitions
 
 ### Toast
-- Beveled panel with semantic border
+- Rounded panel with semantic accent
 - Slide-in animation
 - Variants: success (green), error (red), warning (orange), info (accent)
 - Auto-dismiss with progress bar
+
+## Building Sprite Spec (for Sprint 2)
+
+Author Kairosoft-*inspired* original (or CC0/CC-BY) sprites to this spec so the set stays coherent — never reuse Kairosoft's actual assets.
+
+| Property | Spec |
+|---|---|
+| Canvas | 64×64 PNG, transparent background |
+| Footprint | 64×32 isometric diamond (matches `isocity.js` `TILE_W`/`TILE_H`); buildings may rise above, drawn with a vertical offset |
+| Palette | Sprint-1 token palette (cream/azure/green/red/orange); saturated, cheerful |
+| Outline | 1px dark warm outline (≈ `--bevel-shadow`) for the cute Kairosoft read |
+| Light | Top-left light source; soft 1–2 step shading |
+| Variety | ≥4 sector types (thermal, steel/cement, generation, generic industry) × dirty/clean + ≥1 upgrade tier; plus decorations (trees/roads) |
+| Naming | `bldg_<sector>_<state>` (e.g. `bldg_thermal_dirty`) registered in `web/assets/manifest.json` |
 
 ## Signature Visual: Isometric City
 
@@ -136,17 +159,15 @@ The isometric pixel-art city is the primary signature visual. It renders as a ca
 
 ## Accessibility
 
-Verified on 2026-06-13 as part of Sprint 5.
+Focus/motion/canvas behavior carried over from Sprint 5 (still in effect). **Color contrast for the new Kairosoft palette was sanity-checked but a full axe/Lighthouse re-verification is pending** (Sprint 1 was a style change; numbers below are approximate and should be re-measured).
 
-- **Focus:** All interactive elements have a visible `:focus-visible` outline (2px solid `--accent`, 2px offset). Buttons, inputs, links, and `[tabindex]` elements are covered by a global rule as well as component-specific rules.
-- **Motion:** `prefers-reduced-motion: reduce` disables all animations and transitions (global `0.01ms` duration override), stops the isometric city RAF loop, hides DOM particles, and renders a single static city frame.
-- **Canvas:** The isometric canvas has `aria-hidden="true"` and is purely decorative; the same state is exposed as text stats, badges, and leaderboard rows.
-- **Color & contrast:**
-  - Body text (`--text` on `--panel`): 17.1:1
-  - Muted labels (`--muted` on `--panel`): 6.2:1
-  - Accent links/buttons (`--accent` on `--panel`): 5.6:1
-  - Red alerts (`--red` on `--panel`): 5.2:1
-  - Green semantic text on green backgrounds uses dark ink (`#1f1912`) to avoid the 3.4:1 white-on-green failure.
-  - Orange is reserved for borders, progress bars, and indicators; adjacent text uses `--text` to meet 4.5:1.
-- **Minimum contrast ratio:** 4.5:1 for body text, 3:1 for large text / bold UI text.
-- **Typography:** Press Start 2P is used only for large display text to preserve readability.
+- **Focus:** All interactive elements have a visible `:focus-visible` outline (2px solid `--accent`, 2px offset); inputs additionally get a 3px accent focus ring. Covered by a global rule plus component rules.
+- **Motion:** `prefers-reduced-motion: reduce` disables animations, stops the isometric city RAF loop, hides DOM particles, and renders a single static city frame.
+- **Canvas:** The isometric canvas is `aria-hidden="true"` and purely decorative; the same state is exposed as text stats, badges, and leaderboard rows.
+- **Color & contrast (approximate, re-verify):**
+  - Body text (`--text #2a2018` on `--bg #fdf6e9` / `--panel`): very high (dark-on-cream).
+  - White text on `--accent #1f93c7` (primary buttons): chosen to meet the large/bold-text threshold (≈3:1+); confirm for 0.9rem bold button labels.
+  - Green/orange badges use **dark ink** on their gradient fills to avoid white-on-bright failures; red/blue badges use white.
+- **Minimum contrast target:** 4.5:1 body text, 3:1 large/bold UI text.
+- **Typography:** Press Start 2P used only for display text to preserve readability (rounded-pixel swap is a follow-up).
+- **Open item:** run a full axe/Lighthouse pass on the new palette (tracked for the Sprint-4 perf/a11y phase).

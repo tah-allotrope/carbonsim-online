@@ -208,7 +208,7 @@ function renderGame(s) {
     const isYou = row.participant_id === PARTICIPANT_ID;
     const rankColors = ['', 'var(--accent)', 'var(--muted)', 'var(--orange)'];
     const rankColor = rankColors[row.rank] || 'var(--muted)';
-    html += `<div class="leaderboard-row" style="${isYou ? 'background:rgba(59,111,118,0.08);border-radius:6px;padding:6px 8px' : ''}">
+    html += `<div class="leaderboard-row" style="${isYou ? 'background:rgba(31,147,199,0.10);border-radius:6px;padding:6px 8px' : ''}">
       <span><span style="color:${rankColor};font-family:var(--mono);margin-right:8px">#${row.rank}</span>${row.player_name}${isYou ? ' (you)' : ''}</span>
       <span style="font-family:var(--mono);font-size:0.8rem">
         <span style="color:var(--green)">$${fmt(row.cash)}</span> ·

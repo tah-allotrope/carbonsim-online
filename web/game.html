@@ -49,7 +49,7 @@
     <div style="display:flex;align-items:center;gap:16px">
       <span class="xp-text" id="xpText">0 / 100 XP</span>
       <span class="streak-badge" id="streakBadge" style="display:none">🔥 0 Streak</span>
-      <span id="globalXpBadge" style="color:var(--muted);font-size:0.75rem;border-left:1px solid rgba(255,255,255,0.15);padding-left:12px">Global: Lvl 1 (0 XP)</span>
+      <span id="globalXpBadge" style="color:var(--muted);font-size:0.75rem;border-left:1px solid rgba(74,59,45,0.2);padding-left:12px">Global: Lvl 1 (0 XP)</span>
     </div>
   </div>
 
@@ -413,7 +413,7 @@ function renderContent() {
     html += `<table><tr><th>#</th><th>Company</th><th>Emissions</th><th>Allowances</th><th>Cash</th><th>Penalties</th></tr>`;
     leaderboardArr.slice(0, 10).forEach((c, i) => {
       const isPlayer = c.company_id === player.company_id;
-      html += `<tr style="${isPlayer ? 'background:rgba(59,111,118,0.08)' : ''}">
+      html += `<tr style="${isPlayer ? 'background:rgba(31,147,199,0.10)' : ''}">
         <td>${i+1}</td>
         <td>${c.company_name || c.name} ${isPlayer ? '(You)' : ''}</td>
         <td style="font-family:var(--mono)">${fmt(c.projected_emissions || c.emissions || 0)}</td>
@@ -541,7 +541,7 @@ function doDecision(action, payload, event) {
     const y = rect.top + rect.height / 2 + window.scrollY;
     if (window.Effects) {
       Effects.particleBurst(x, y, 'var(--green)', 16);
-      Effects.screenFlash('rgba(57, 255, 20, 0.12)', 300);
+      Effects.screenFlash('rgba(76, 175, 80, 0.18)', 300);
     }
   }
   if (window.AudioManager) AudioManager.playSFX('activate');

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 1 · Phase 03 — Design Doc &amp; Cross-Screen</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#1f93c7;--accent2:#2bb0e0;--green:#4caf50;--red:#e2553f;--orange:#f5a623;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px}
+  header.hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border-radius:var(--radius);padding:28px 30px;box-shadow:0 6px 18px rgba(31,147,199,.3)}
+  header.hero h1{margin:0 0 6px;font-size:1.6rem}
+  header.hero .meta{font-size:.85rem;opacity:.95}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent)}
+  h2 .n{color:var(--muted);margin-right:8px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.9rem}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}
+  .flow .arr{color:var(--muted);font-weight:700}
+  .empty{color:var(--muted);font-style:italic}
+  ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}
+  .ok{color:var(--green);font-weight:700}.warn{color:var(--orange);font-weight:700}.muted{color:var(--muted)}
+  @media print{body{background:#fff}header.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}section{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div><span class="tag">Phase Report</span><span class="tag">Sprint 1 · Phase 03</span></div>
+  <h1>Design Doc Rewrite &amp; Cross-Screen Consistency</h1>
+  <div class="meta">CarbonSim Online · repo <code style="color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)">carbonsim-online</code> · 2026-06-14</div>
+</header>
+
+<section>
+  <h2><span class="n">1</span>Phase Header</h2>
+  <p>Final phase of <strong>Kairosoft Sprint 1</strong>. Goal: make the design system documentation match the
+  shipped Kairosoft look, define the <strong>building sprite spec</strong> that Sprint 2 will produce against, and
+  sweep the four screens for inline styles that still referenced the old muted-teal palette. This closes Sprint 1
+  (Bright Palette &amp; Rounded UI/Font).</p>
+</section>
+
+<section>
+  <h2><span class="n">2</span>Input → Output Summary</h2>
+  <table>
+    <tr><th>Input</th><th>Output</th></tr>
+    <tr><td><code>docs/design-language.md</code> describing the retro parchment/bevel system</td><td>Rewritten for the bright Kairosoft system — palette, gradient/radius tokens, rounded components, <code>.bubble</code>, + a Building Sprite Spec for Sprint 2</td></tr>
+    <tr><td>Four screens with hardcoded old-teal/neon inline colors</td><td>Off-palette inline colors replaced with the new azure/green palette + tokens</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">3</span>Logic Flow</h2>
+  <div class="flow">
+    <span class="step">Rewrite design-language.md sections</span><span class="arr">→</span>
+    <span class="step">Add Building Sprite Spec</span><span class="arr">→</span>
+    <span class="step">Grep screens for hardcoded hex/rgba</span><span class="arr">→</span>
+    <span class="step">Replace old teal/neon → new palette</span><span class="arr">→</span>
+    <span class="step">Verify game screen renders + grep clean</span>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">4</span>Math / Algorithm Used</h2>
+  <p class="empty">None. Documentation + find-and-replace consistency pass.</p>
+</section>
+
+<section>
+  <h2><span class="n">5</span>Tools / Formulas / Methods</h2>
+  <ul>
+    <li><strong>Edit</strong> on <code>docs/design-language.md</code> — Visual Direction, Color Tokens (+gradient/radius), Component Library (rounded + Bubble), Typography note, Building Sprite Spec, Accessibility.</li>
+    <li><strong>Grep</strong> across <code>web/*.html</code> and <code>style.css</code> to find old-palette literals (<code>rgba(59,111,118…)</code>, <code>#3b6f76</code>, <code>#b54a3f</code>, <code>#6b5e4f</code>, neon <code>rgba(57,255,20…)</code>, white-on-dark borders).</li>
+    <li><strong>Edit</strong> across <code>style.css</code>, <code>game.html</code>, <code>coop.html</code>, <code>summary.html</code> — table/leaderboard borders &amp; hovers, player-row highlights, screen-flash color, XP-badge border, and the summary Chart.js palette.</li>
+    <li><strong>Claude Preview</strong> — created a game, confirmed render + pill buttons + city paint.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">6</span>Results &amp; Visualizations</h2>
+  <table>
+    <tr><th>Check</th><th>Result</th></tr>
+    <tr><td>Design doc reflects Kairosoft tokens/components</td><td><span class="ok">Rewritten incl. sprite spec for Sprint 2</span></td></tr>
+    <tr><td>Old-palette literals remaining in screens</td><td><span class="ok">0 (grep clean)</span></td></tr>
+    <tr><td>Game screen render</td><td><span class="ok">Decisions phase, all 6 sections, city paint 18,525px</span></td></tr>
+    <tr><td>Primary button radius</td><td><span class="ok">999px (pill)</span></td></tr>
+    <tr><td>Summary Chart.js palette</td><td><span class="ok">Re-colored to azure/red on new grid/ticks</span></td></tr>
+  </table>
+  <p class="empty" style="margin-top:10px">No quantitative dataset warrants a chart — empty state by design.</p>
+</section>
+
+<section>
+  <h2><span class="n">7</span>Limitations / Second-Best Alternative</h2>
+  <ul>
+    <li><strong>Contrast not formally re-measured.</strong> The doc's accessibility numbers were marked approximate; a full axe/Lighthouse pass on the new palette is deferred to the Sprint-4 perf/a11y phase.</li>
+    <li><strong>A few harmless invisibles remain</strong> (white text-shadows / icon drop-shadows designed for dark bg) — cosmetically inert on cream; left to avoid churn.</li>
+    <li><strong>Second-best:</strong> leave inline colors and rely only on tokens — rejected; several literals were hardcoded and would have stayed off-palette.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">8</span>Errors / Warnings / Flags Encountered</h2>
+  <ul>
+    <li><span class="warn">Open item:</span> full accessibility/contrast re-verification on the new palette (tracked for Sprint 4).</li>
+    <li><span class="muted">Preview server is session-bound and drops between turns; restarted as needed.</span></li>
+    <li>No render or console errors on the game screen after the sweep.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">9</span>Open Questions / Next Phase Seeds</h2>
+  <ul>
+    <li><strong>Sprint 2 (next):</strong> author/​source the building sprite set to the new Building Sprite Spec (decision: original vs CC0/CC-BY packs), register in the manifest, and wire <code>drawPlotStructure</code> to pick by sector/state.</li>
+    <li><strong>Carry-over:</strong> rounded-pixel display font (drop-in), fuller <code>animations.css</code> reconcile, and the a11y contrast pass.</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>

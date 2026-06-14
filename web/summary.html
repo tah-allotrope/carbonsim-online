@@ -144,7 +144,7 @@ async function load() {
     if (isNewPB) {
       pbMessage.innerHTML = `🏆 <strong>New Personal Best!</strong> You set a new high score on ${summary.difficulty} mode!`;
       pbMessage.style.color = 'var(--green)';
-      if (window.Effects) Effects.screenFlash('rgba(57, 255, 20, 0.15)', 400);
+      if (window.Effects) Effects.screenFlash('rgba(76, 175, 80, 0.18)', 400);
     } else {
       pbMessage.innerHTML = `Personal Best score for ${summary.difficulty} difficulty: <strong>${previousPB} / 100</strong>`;
     }
@@ -161,7 +161,7 @@ async function load() {
       let html = '<table><tr><th>#</th><th>Company</th><th>Emissions</th><th>Allowances</th><th>Cash</th><th>Penalties</th></tr>';
       companies.slice().sort((a,b) => (a.cumulative_penalties||0) - (b.cumulative_penalties||0)).forEach((c,i) => {
         const isPlayer = c.company_id === player.company_id;
-        html += `<tr style="${isPlayer ? 'background:rgba(59,111,118,0.08)' : ''}">
+        html += `<tr style="${isPlayer ? 'background:rgba(31,147,199,0.10)' : ''}">
           <td>${i+1}</td>
           <td>${c.company_name || c.name} ${isPlayer ? '(You)' : ''}</td>
           <td style="font-family:var(--mono)">${fmt(c.projected_emissions || c.emissions || 0)}</td>
@@ -226,17 +226,17 @@ function drawChart(snapshot) {
     data: {
       labels,
       datasets: [
-        { label: 'Emissions', data: emissions, backgroundColor: 'rgba(181,74,63,0.7)', borderColor: '#b54a3f', borderWidth: 1 },
-        { label: 'Allowances', data: allowances, backgroundColor: 'rgba(59,111,118,0.7)', borderColor: '#3b6f76', borderWidth: 1 },
+        { label: 'Emissions', data: emissions, backgroundColor: 'rgba(226,85,63,0.7)', borderColor: '#e2553f', borderWidth: 1 },
+        { label: 'Allowances', data: allowances, backgroundColor: 'rgba(31,147,199,0.7)', borderColor: '#1f93c7', borderWidth: 1 },
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       animation: false, resizeDelay: 150, normalized: true,
-      plugins: { legend: { labels: { color: '#1f1912' } } },
+      plugins: { legend: { labels: { color: '#2a2018' } } },
       scales: {
-        x: { ticks: { color: '#6b5e4f' }, grid: { color: 'rgba(92,77,60,0.1)' } },
-        y: { beginAtZero: true, ticks: { color: '#6b5e4f', callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v }, grid: { color: 'rgba(92,77,60,0.1)' } }
+        x: { ticks: { color: '#6f5d46' }, grid: { color: 'rgba(74,59,45,0.1)' } },
+        y: { beginAtZero: true, ticks: { color: '#6f5d46', callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v }, grid: { color: 'rgba(74,59,45,0.1)' } }
       }
     }
   });

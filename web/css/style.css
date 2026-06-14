@@ -214,11 +214,11 @@ label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8r
 
 .leaderboard-row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 12px 14px; border-bottom: 1px solid var(--line);
   transition: background-color 0.2s;
   border-radius: 6px;
 }
-.leaderboard-row:hover { background-color: rgba(255,255,255,0.02); }
+.leaderboard-row:hover { background-color: rgba(31,147,199,0.07); }
 .leaderboard-row:last-child { border-bottom: none; }
 
 .hidden { display: none !important; }
@@ -254,10 +254,10 @@ label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8r
 .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 
 table { width: 100%; border-collapse: collapse; }
-th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); }
 th { color: var(--accent); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--mono); }
 tr { transition: background-color 0.2s; }
-tbody tr:hover { background-color: rgba(59, 111, 118, 0.06); }
+tbody tr:hover { background-color: rgba(31, 147, 199, 0.07); }
 
 /* GAMIFICATION & PROGRESSION ELEMENT STYLES */
 
