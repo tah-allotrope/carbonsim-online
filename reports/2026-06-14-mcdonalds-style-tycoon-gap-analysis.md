@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-CarbonSim already has the bones of a tycoon — an extensible decision engine, a time-based phase clock (currently used only by multiplayer), an event-card system, and a reactive isometric city — so the target is reachable by *extending* rather than rebuilding. The gap is mostly missing **systems of consequence**: there is no public-opinion/backlash model, no tempting "dirty options," no multi-sector supply chain, and solo play is discrete-turn rather than real-time. **2 CRITICAL gaps** (multi-sector supply chain; stakeholder backlash) and **2 HIGH** (influence layer; real-time-with-pause). Recommendation: build the procedural-rhetoric *core* first (backlash → influence layer) on the existing single-company engine, then the real-time loop, then the multi-sector restructure last.
+CarbonSim already has the bones of a tycoon — an extensible decision engine, a time-based phase clock (currently used only by multiplayer), an event-card system, and a reactive isometric city — so the target is reachable by *extending* rather than rebuilding. But the **thesis** of the McDonald's Video Game is *structural futility* — the system is rigged so you can't win cleanly — and the carbon analog must be the **spine** of this game: a carbon market **cannot solve climate change on its own**; it rewards paper compliance over real decarbonization, so a player can "win" while the planet keeps warming (markets are **necessary but insufficient**). The gap is therefore both this missing systemic core **and** the missing systems of consequence: no planetary-outcome/futility mechanic, no public-opinion backlash, no tempting "dirty options," no multi-sector supply chain, and discrete-turn (not real-time) solo. **3 CRITICAL gaps** (systemic insufficiency core; multi-sector supply chain; stakeholder backlash) and **2 HIGH** (influence layer; real-time-with-pause). Recommendation: establish the **futility core first**, then the consequence systems (backlash → influence layer) on the existing single-company engine, then the real-time loop, then the multi-sector restructure last.
 
 ---
 
@@ -35,7 +35,7 @@ CarbonSim already has the bones of a tycoon — an extensible decision engine, a
 
 ## Target State
 
-> A carbon tycoon where the player manages an **interconnected supply chain** (e.g. generation → industry → market/HQ) under a **continuously ticking, pausable** clock; profit pressure tempts them toward **influence/integrity shortcuts** (lobbying, greenwashing, low-quality offsets) that work short-term but feed a **stakeholder backlash** system (regulators, communities, NGOs, investors) escalating **warning → protest → boycott/divestment**; and the **isometric city visibly reacts** so the player *feels* the externality trade-off — the McDonald's Video Game's procedural rhetoric, in the carbon domain.
+> A carbon tycoon whose **core thesis is that the market alone cannot solve climate change.** The player manages an **interconnected supply chain** (e.g. generation → industry → market/HQ) under a **continuously ticking, pausable** clock; profit pressure tempts them toward **influence/integrity shortcuts** (lobbying, greenwashing, low-quality offsets) that work short-term but feed a **stakeholder backlash** system (regulators, communities, NGOs, investors) escalating **warning → protest → boycott/divestment**. Throughout, a **planetary climate trajectory keeps deteriorating largely regardless of the player's individual compliance**, and the UI makes the **divergence between "market success" and "real-world outcome"** legible — so that even a high-scoring player *feels* that paper compliance ≠ a solved climate. The **isometric city visibly reacts** to both progress and futility. This is the McDonald's Video Game's procedural rhetoric — structural insufficiency — in the carbon domain.
 
 ---
 
@@ -120,14 +120,35 @@ CarbonSim already has the bones of a tycoon — an extensible decision engine, a
 
 ---
 
+### GAP-05: No systemic-insufficiency / planetary-outcome core (the "futility" thesis)
+
+**Severity:** CRITICAL — this is the game's *thesis*, the carbon analog of the McDonald's game's structural futility. Without it the game implicitly says "the market solves it," the opposite of the intended message.
+
+**Current state:** Outcomes are entirely **local to the player** — compliance gap, penalties, cash, and an end-of-game grade (`engine/engine.py:_close_current_year`, `engine/achievements.py`, `web/summary.html`). There is **no planetary/global state**: nothing represents cumulative global emissions, a temperature/“planet health” trajectory, or the divergence between *paper compliance* and *real decarbonization*. Winning the market currently implies winning for the climate — which is the message to subvert.
+
+**What's needed:**
+- A **planetary climate trajectory** (e.g. cumulative global emissions / warming index) that is largely **exogenous** — driven by the wider economy and other actors — so it keeps worsening even when the player is compliant; the player can *bend* it only marginally alone.
+- A modeled distinction between **compliance** and **actual atmospheric impact** (offsets/trades reallocate a budget but don't shrink it fast enough; low-quality offsets count on paper but not in reality).
+- **UI surfacing of the divergence**: market score "green" while the planet meter reddens; an endgame that lands the insufficiency — individual/market success against systemic failure, with collective/structural action (beyond one player's market moves) shown as the only thing that meaningfully moves the global needle.
+
+**Existing assets to reuse:**
+- `engine/engine.py` year-close pipeline (`_close_current_year`) and `audit_log` — add a global-state update each year.
+- `web/summary.html` grade/standings screen — extend to contrast "your grade" vs "the planet's outcome."
+- `web/js/isocity.js` sky/compliance tinting — already shifts with state; extend to reflect the planetary trajectory, not just local compliance.
+- `engine/scenarios.py` — declare the exogenous global emissions path per scenario/difficulty.
+
+**Effort estimate:** 1 multi-phase plan (3 phases). Threads through every other system, so define it early.
+
+---
+
 ## Second-Tier Gaps
 
 | Gap | Severity | Summary | Existing Assets |
 |---|---|---|---|
-| GAP-05: Visible reactive externalities for new systems | MEDIUM | Extend the iso city to show sectors, backlash (protesters/placards), and shortcut exposure — make the rhetoric legible | `web/js/isocity.js` (smog, sprites, triggers); `web/js/effects.js` |
-| GAP-06: Procedural-rhetoric framing/tone | MEDIUM | Shift copy/feedback so the player *feels* the perverse incentive; reconcile with `AGENTS.md` educational mission | tutorial/card copy (`engine/tutorial.py`, deck JSON) |
-| GAP-07: Resource-chain dynamics (degradation/capacity analogs) | MEDIUM | McD land degradation → CarbonSim capacity/asset-aging so sectors can't be milked indefinitely | scenario/company fields in `engine/scenarios.py` |
-| GAP-08: Balance & tuning for the new loop | MEDIUM | New actions + backlash need playtest tuning | `engine/playtest.py` batch harness already exists |
+| GAP-06: Visible reactive externalities for new systems | MEDIUM | Extend the iso city to show sectors, backlash (protesters/placards), and shortcut exposure — make the rhetoric legible | `web/js/isocity.js` (smog, sprites, triggers); `web/js/effects.js` |
+| GAP-07: Procedural-rhetoric framing/tone | MEDIUM | Shift copy/feedback so the player *feels* the perverse incentive and the "necessary but insufficient" thesis; reconcile with `AGENTS.md` educational mission | tutorial/card copy (`engine/tutorial.py`, deck JSON) |
+| GAP-08: Resource-chain dynamics (degradation/capacity analogs) | MEDIUM | McD land degradation → CarbonSim capacity/asset-aging so sectors can't be milked indefinitely | scenario/company fields in `engine/scenarios.py` |
+| GAP-09: Balance & tuning for the new loop | MEDIUM | New actions + backlash + planetary path need playtest tuning | `engine/playtest.py` batch harness already exists |
 
 ---
 
@@ -135,11 +156,12 @@ CarbonSim already has the bones of a tycoon — an extensible decision engine, a
 
 | Priority | Gap | Rationale |
 |---|---|---|
-| Sprint 1 | GAP-02 (stakeholder backlash) | The procedural-rhetoric foundation; reuses cards/events; gives consequences beyond cash that everything else hooks into. Lowest structural risk. |
-| Sprint 2 | GAP-03 (influence/integrity layer) | The "tempting shortcuts" that make backlash meaningful; just new dispatch actions + an exposure model. Depends on Sprint 1. |
-| Sprint 3 | GAP-04 (real-time-with-pause loop) | Adds ongoing pressure; engine machinery already exists, so mostly wiring + UI. Independent of sectors. |
-| Sprint 4 | GAP-01 (multi-sector supply chain) | Biggest, riskiest structural change — do it once the consequence/loop core is proven and stable. |
-| Sprint 5 | GAP-05 + GAP-06 (+ GAP-07/08) | Make it *felt* and *legible*: reactive city, satirical framing, resource dynamics, balance. |
+| Sprint 1 | GAP-05 (systemic-insufficiency core) | The thesis/spine — establish the planetary trajectory and the market-vs-reality divergence first, so every later system plugs into it and the "futility" message is structural, not bolted on. |
+| Sprint 2 | GAP-02 (stakeholder backlash) | Procedural-rhetoric consequence layer; reuses cards/events; hooks into the planetary state from Sprint 1. |
+| Sprint 3 | GAP-03 (influence/integrity layer) | The "tempting shortcuts" that make backlash + insufficiency meaningful; new dispatch actions + exposure model. Depends on Sprint 2. |
+| Sprint 4 | GAP-04 (real-time-with-pause loop) | Adds ongoing pressure; engine machinery already exists, so mostly wiring + UI. Independent of sectors. |
+| Sprint 5 | GAP-01 (multi-sector supply chain) | Biggest, riskiest structural change — do it once the thesis + consequence/loop core are proven and stable. |
+| Sprint 6 | GAP-06 + GAP-07 (+ GAP-08/09) | Make it *felt* and *legible*: reactive city, "necessary but insufficient" framing, resource dynamics, balance. |
 
 ---
 
@@ -147,7 +169,8 @@ CarbonSim already has the bones of a tycoon — an extensible decision engine, a
 
 | Risk | Impact | Likelihood | Mitigation |
 |---|---|---|---|
-| Mission conflict: McD-style satire/"dirty options" vs. CarbonSim's educational ETS mandate (`AGENTS.md`, Vietnam-pilot grounding) | Product identity drift | H | Frame shortcuts as *teaching* externality economics (consequences always land); keep ETS rules accurate; get product sign-off before Sprint 2 |
+| Mission conflict: McD-style satire/"dirty options" vs. CarbonSim's educational ETS mandate (`AGENTS.md`, Vietnam-pilot grounding) | Product identity drift | H | Frame shortcuts as *teaching* externality economics (consequences always land); keep ETS rules accurate; get product sign-off before building shortcuts |
+| "Futility" message misread as "ETS is pointless" / nihilistic / demotivating | Wrong takeaway; alienates pilot stakeholders | H | Frame as **"necessary but insufficient"**, not "useless": market success still matters but must pair with structural/collective action; show what *does* move the planetary needle. Validate the ending message with product/educators (Sprint 1). |
 | Real-time loop collides with the just-shipped turn-based solo fix | Rework, player confusion | M | Make real-time an explicit mode/toggle; keep turn-based intact |
 | Multi-sector rewrite destabilizes the engine + 116 tests | Regressions | M | Do GAP-01 last, behind the stable consequence core; expand `engine/playtest.py` coverage first |
 | Scope explosion (4 big systems) | Never ships | H | Strict sprint gating; each sprint independently playable/valuable |
@@ -157,4 +180,4 @@ CarbonSim already has the bones of a tycoon — an extensible decision engine, a
 
 ## Suggested Next Step
 
-Review this report, then invoke `/plan` per sprint — start with **GAP-02 (stakeholder backlash)** as the procedural-rhetoric foundation, then **GAP-03 (influence layer)**. Confirm the satire-vs-education framing (Risk #1) with product before building the "dirty options." Grounding research: `research/2026-06-14_mcdonalds-video-game-comparison.md`.
+Review this report, then invoke `/plan` per sprint — start with **GAP-05 (systemic-insufficiency core)** since it is the thesis every other system plugs into, then **GAP-02 (stakeholder backlash)** and **GAP-03 (influence layer)**. Confirm both framing risks (the satire-vs-education tension and the "necessary but insufficient" vs. "ETS is pointless" reading) with product before building. Grounding research: `research/2026-06-14_mcdonalds-video-game-comparison.md`.
