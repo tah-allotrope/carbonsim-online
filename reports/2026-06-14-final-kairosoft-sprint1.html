@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 1 — Final Report</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#1f93c7;--accent2:#2bb0e0;--green:#4caf50;--red:#e2553f;--orange:#f5a623;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 20px 72px}
+  .hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border-radius:var(--radius);padding:36px 34px;box-shadow:0 8px 24px rgba(31,147,199,.32)}
+  .hero h1{margin:0 0 8px;font-size:1.9rem}
+  .hero .take{font-size:1.05rem;opacity:.97;margin-top:10px}
+  .hero .meta{font-size:.85rem;opacity:.9;margin-top:14px}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.15rem;color:var(--accent)}
+  h3{margin:14px 0 6px;font-size:1rem}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.9rem}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  ul{margin:6px 0 0;padding-left:20px}li{margin:5px 0}
+  .ok{color:var(--green);font-weight:700}.warn{color:var(--orange);font-weight:700}.muted{color:var(--muted)}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0}
+  .flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}
+  .flow .arr{color:var(--muted);font-weight:700}
+  .sw{display:inline-block;width:13px;height:13px;border-radius:4px;border:1px solid rgba(0,0,0,.2);vertical-align:-2px;margin-right:5px}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .kpi .box{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 2px 6px rgba(74,59,45,.1)}
+  .kpi .v{font-size:1.5rem;font-weight:800;color:var(--accent)}
+  .kpi .l{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  @media print{body{background:#fff}.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}section{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div><span class="tag">Final Report</span><span class="tag">Sprint 1 of 4</span></div>
+  <h1>Kairosoft Visual Upgrade — Sprint 1: Bright Palette &amp; Rounded UI</h1>
+  <div class="take">The whole app now reads as a bright, cheerful Kairosoft-style tycoon — delivered as a frontend-only CSS upgrade with zero engine or gameplay risk.</div>
+  <div class="meta">CarbonSim Online · repo carbonsim-online · 2026-06-14 · plan <code style="color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)">plans/2026-06-14-kairosoft-palette-ui-plan.md</code></div>
+</div>
+
+<section>
+  <h2>Executive Summary</h2>
+  <p>Sprint 1 shifted CarbonSim's visual mood from a muted retro-parchment look to the bright, rounded, gradient
+  Kairosoft register — the cheapest, highest-visibility step of the four-sprint Kairosoft visual roadmap. Because the
+  stylesheet is fully tokenized, the change was almost entirely a <strong>token + component restyle in one CSS file</strong>,
+  plus a documentation rewrite and a consistency sweep of inline colors across the four screens. It is
+  <strong>frontend-only</strong> — no engine, API, or gameplay code was touched, so the 116-test suite is unaffected.</p>
+  <p>All three phases are complete, verified live in the browser, and pushed to <code>master</code>. Two items were
+  intentionally deferred: a rounded-<em>pixel</em> display webfont (needs a licensed binary; Press Start 2P retained) and
+  a full accessibility/contrast re-measurement (flagged for Sprint 4). <strong>Recommendation: proceed to Sprint 2
+  (building sprite art), which the new palette and a fresh sprite spec now unblock.</strong></p>
+  <div class="kpi">
+    <div class="box"><div class="v">3 / 3</div><div class="l">Phases complete</div></div>
+    <div class="box"><div class="v">1</div><div class="l">CSS file restyled</div></div>
+    <div class="box"><div class="v">4</div><div class="l">Screens swept</div></div>
+    <div class="box"><div class="v">0</div><div class="l">Engine/test changes</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Background &amp; Objective</h2>
+  <p>CarbonSim is a single + multiplayer carbon-compliance tycoon with an isometric pixel-art city. Research
+  (<code>research/2026-06-14_kairosoft-visual-style.md</code>) found the gap to a Kairosoft look is "art and juice,"
+  not the rendering engine — and that the quickest, highest-impact lever is palette + UI chrome. Sprint 1's objective:
+  establish the bright Kairosoft mood and the target palette that every later art sprint must match.</p>
+</section>
+
+<section>
+  <h2>Inputs &amp; Scope</h2>
+  <ul>
+    <li><strong>Plan:</strong> <code>plans/2026-06-14-kairosoft-palette-ui-plan.md</code> (Sprint 1 of the roadmap index).</li>
+    <li><strong>Research:</strong> <code>research/2026-06-14_kairosoft-visual-style.md</code>; gap analysis <code>reports/2026-06-14-kairosoft-visual-style-gap-analysis.md</code>.</li>
+    <li><strong>Touched:</strong> <code>web/css/style.css</code>, <code>docs/design-language.md</code>, and inline styles in <code>web/index.html</code>, <code>game.html</code>, <code>coop.html</code>, <code>summary.html</code>.</li>
+    <li><strong>Out of scope:</strong> building sprites (Sprint 2), citizens (Sprint 3), floating feedback (Sprint 4), the canvas renderer, and any engine/gameplay logic.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Assumptions &amp; Constraints</h2>
+  <ul>
+    <li>Token <em>names</em> kept stable so a value swap propagates everywhere with no markup edits.</li>
+    <li>No build step (vanilla CSS); fonts must be self-hosted (offline-friendly) — ruled out a CDN rounded font.</li>
+    <li>Accessibility floor: 4.5:1 body / 3:1 large-bold; color never the sole indicator.</li>
+    <li>Full reskin (single design system), not a theme toggle.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Methodology</h2>
+  <p>Each phase followed: implement → verify live in Claude Preview (computed-style readback + screenshot) →
+  generate a phase report → commit &amp; push. Phases were scoped to be cleanly separable so each commit is
+  meaningful and reversible.</p>
+  <div class="flow">
+    <span class="step">P1 · Palette tokens</span><span class="arr">→</span>
+    <span class="step">P2 · Rounded chrome + bubble</span><span class="arr">→</span>
+    <span class="step">P3 · Design doc + cross-screen sweep</span>
+  </div>
+</section>
+
+<section>
+  <h2>Phase-by-Phase Analysis</h2>
+  <h3>Phase 01 — Bright palette tokens</h3>
+  <p>Retuned <code>:root</code> to a cheerful scheme and added gradient/radius tokens for Phase 2.</p>
+  <table>
+    <tr><th>Token</th><th>Before</th><th>After</th></tr>
+    <tr><td><code>--bg</code></td><td><span class="sw" style="background:#f7f1e7"></span>#f7f1e7</td><td><span class="sw" style="background:#fdf6e9"></span>#fdf6e9</td></tr>
+    <tr><td><code>--accent</code></td><td><span class="sw" style="background:#3b6f76"></span>#3b6f76</td><td><span class="sw" style="background:#1f93c7"></span>#1f93c7</td></tr>
+    <tr><td><code>--green</code></td><td><span class="sw" style="background:#5a8f4e"></span>#5a8f4e</td><td><span class="sw" style="background:#4caf50"></span>#4caf50</td></tr>
+    <tr><td><code>--red</code> / <code>--orange</code></td><td><span class="sw" style="background:#b54a3f"></span>/<span class="sw" style="background:#d4883a"></span></td><td><span class="sw" style="background:#e2553f"></span>/<span class="sw" style="background:#f5a623"></span></td></tr>
+  </table>
+  <h3>Phase 02 — Rounded chrome, gradients &amp; bubble</h3>
+  <p>Beveled components became pill buttons (gradient + colored bottom edge), 16px rounded gradient cards/modals/event-cards,
+  white inputs with a 3px focus ring, gradient badge pills, and a reusable <code>.bubble</code> speech-pill for Sprint 4.</p>
+  <h3>Phase 03 — Design doc &amp; cross-screen consistency</h3>
+  <p>Rewrote <code>docs/design-language.md</code> for the Kairosoft system and added the <strong>Building Sprite Spec</strong>
+  that Sprint 2 builds against. Swept the four screens, replacing old muted-teal/neon inline literals
+  (player-row highlights, screen-flash, XP-badge border, the summary Chart.js palette) — grep confirms none remain.</p>
+</section>
+
+<section>
+  <h2>Findings &amp; Recommendation</h2>
+  <ul>
+    <li><span class="ok">Tokenization paid off:</span> one CSS file drove an app-wide mood change with no markup edits.</li>
+    <li><span class="ok">Verified live:</span> azure pill buttons, 16px soft-shadow cards, gradient badges; game screen renders with the city painting (18,525 non-blank px) and all sections intact.</li>
+    <li><span class="warn">Tradeoff accepted:</span> bright-but-legible azure <code>#1f93c7</code> over a louder hue, to keep white button-text contrast.</li>
+    <li><strong>Recommendation:</strong> proceed to <strong>Sprint 2 — building sprite art</strong>; the palette and sprite spec are the prerequisites and are now in place.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Implementation Path</h2>
+  <ol>
+    <li><strong>Decide asset strategy</strong> for Sprint 2 (author original pixel art vs. CC0/CC-BY packs; never Kairosoft IP) — gates the art work.</li>
+    <li><strong>Sprint 2:</strong> produce buildings to the new Building Sprite Spec → register in <code>web/assets/manifest.json</code> → wire <code>isocity.js drawPlotStructure</code> by sector/state.</li>
+    <li><strong>Then Sprint 3</strong> (animated citizens + frame-anim core) and <strong>Sprint 4</strong> (floating feedback + perf/a11y, including the deferred contrast pass).</li>
+    <li><strong>Quick win anytime:</strong> drop in a rounded-pixel OFL display font (add <code>.ttf</code> + <code>@font-face</code> + <code>ATTRIBUTIONS.md</code>; point <code>--font-display</code>).</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Risks / Open Questions</h2>
+  <table>
+    <tr><th>Item</th><th>Status / Mitigation</th></tr>
+    <tr><td>Rounded-pixel display font</td><td class="warn">Deferred — needs a licensed binary; Press Start 2P retained meanwhile</td></tr>
+    <tr><td>Accessibility contrast on new palette</td><td class="warn">Sanity-checked only; full axe/Lighthouse pass tracked for Sprint 4</td></tr>
+    <tr><td>Palette vs. upcoming sprite art</td><td>Mitigated — sprite spec pins art to this palette</td></tr>
+    <tr><td><code>animations.css</code> minor old-teal glows</td><td class="muted">Cosmetically inert; fuller reconcile later</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Appendices / Evidence Notes</h2>
+  <ul>
+    <li><strong>Commits:</strong> P1 <code>3d9ebe2</code>, P2 <code>1ffe8d1</code>, P3 <code>a74eaf9</code> (pushed to <code>master</code>).</li>
+    <li><strong>Phase reports:</strong> <code>reports/2026-06-14-kairosoft-sprint1-phase01-bright-palette.html</code>, <code>…-phase02-rounded-chrome.html</code>, <code>…-phase03-design-doc-crossscreen.html</code>.</li>
+    <li><strong>Live verification:</strong> computed <code>--accent #1f93c7</code>, body bg <code>rgb(253,246,233)</code>, primary button radius <code>999px</code> + azure gradient, card radius <code>16px</code>, <code>.bubble</code> rule present, grep clean of old-palette literals.</li>
+    <li><strong>Tests:</strong> frontend-only change; <code>pytest</code> suite (116) unaffected.</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>
