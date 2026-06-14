@@ -18,6 +18,7 @@ const Isocity = (function () {
   let resizeObserver = null;
   let citizens = [];
   let citizenMeta = null;
+  let floaters = [];
   let flashOpacity = 0;
   let flashColor = null;
 
@@ -462,6 +463,64 @@ const Isocity = (function () {
     drawSprite(images.citizens, fw, fh, frame, c.variant, c.x - fw / 2, c.y - fh + 2, c.flip);
   }
 
+  /* --- Floating feedback (Sprint 4): coins / numbers / reaction emotes --- */
+  const MAX_FLOATERS = 24;
+
+  function playerPlotScreen() {
+    const p = plots.find(function (pl) { return pl.isPlayer; }) || plots[0];
+    if (!p) return { x: width / 2, y: height / 2 };
+    return tileToScreen(p.col, p.row);
+  }
+
+  function float(text, color) {
+    if (reducedMotion || floaters.length >= MAX_FLOATERS) return;
+    const pos = playerPlotScreen();
+    floaters.push({
+      x: pos.x + (Math.random() - 0.5) * 14, y: pos.y - 34,
+      text: String(text), color: color || '#2a2018', life: 1, vy: -0.55, emote: false,
+    });
+  }
+
+  function emote(symbol) {
+    if (reducedMotion || floaters.length >= MAX_FLOATERS) return;
+    const pos = playerPlotScreen();
+    floaters.push({
+      x: pos.x, y: pos.y - 46,
+      text: String(symbol), color: null, life: 1.3, vy: -0.28, emote: true,
+    });
+  }
+
+  function updateFloaters() {
+    for (let i = floaters.length - 1; i >= 0; i--) {
+      const f = floaters[i];
+      f.y += f.vy;
+      f.life -= 0.012;
+      if (f.life <= 0) floaters.splice(i, 1);
+    }
+  }
+
+  function drawFloaters() {
+    if (!floaters.length) return;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    floaters.forEach(function (f) {
+      ctx.globalAlpha = Math.max(0, Math.min(1, f.life));
+      if (f.emote) {
+        ctx.font = '18px sans-serif';
+        ctx.fillText(f.text, f.x, f.y);
+      } else {
+        ctx.font = 'bold 12px "Segoe UI", sans-serif';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.strokeText(f.text, f.x, f.y);
+        ctx.fillStyle = f.color;
+        ctx.fillText(f.text, f.x, f.y);
+      }
+    });
+    ctx.restore();
+  }
+
   function draw() {
     if (!manifestLoaded) return;
     ctx.clearRect(0, 0, width, height);
@@ -488,7 +547,10 @@ const Isocity = (function () {
     // Layer 4: player markers above everything.
     sorted.forEach(drawPlotMarker);
 
-    // Layer 5: transition flash overlay.
+    // Layer 5: floating feedback (coins / numbers / emotes).
+    drawFloaters();
+
+    // Layer 6: transition flash overlay.
     drawFlash();
   }
 
@@ -507,6 +569,7 @@ const Isocity = (function () {
     if (delta < FPS_INTERVAL) return;
     lastFrame = timestamp - (delta % FPS_INTERVAL);
     updateCitizens();
+    updateFloaters();
     draw();
   }
 
@@ -577,6 +640,8 @@ const Isocity = (function () {
     triggerAbatementEffect,
     triggerOffsetEffect,
     triggerYearTransition,
+    float,
+    emote,
   };
 })();
 

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 4 · Phase 01 — Floating Feedback Layer</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#1f93c7;--accent2:#2bb0e0;--green:#4caf50;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px}
+  header.hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border-radius:var(--radius);padding:28px 30px;box-shadow:0 6px 18px rgba(31,147,199,.3)}
+  header.hero h1{margin:0 0 6px;font-size:1.6rem}.meta{font-size:.85rem;opacity:.95}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent)}h2 .n{color:var(--muted);margin-right:8px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.9rem}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}.flow .arr{color:var(--muted);font-weight:700}
+  .empty{color:var(--muted);font-style:italic}ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.ok{color:var(--green);font-weight:700}.muted{color:var(--muted)}
+  @media print{body{background:#fff}header.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}section{box-shadow:none;break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header class="hero">
+  <div><span class="tag">Phase Report</span><span class="tag">Sprint 4 · Phase 01</span></div>
+  <h1>Floating Feedback Layer</h1>
+  <div class="meta">CarbonSim Online · repo carbonsim-online · 2026-06-14</div>
+</header>
+
+<section><h2><span class="n">1</span>Phase Header</h2>
+  <p>First phase of <strong>Kairosoft Sprint 4 — Floating Feedback Juice</strong>
+  (<code>plans/2026-06-14-kairosoft-feedback-juice-plan.md</code>). Goal: add a rising/fading on-canvas feedback layer
+  (coins / numbers / reaction emotes) anchored to the player's plot, exposed as a public API for event wiring in Phase 2.</p></section>
+
+<section><h2><span class="n">2</span>Input → Output Summary</h2>
+  <table><tr><th>Input</th><th>Output</th></tr>
+  <tr><td>Only particle bursts + DOM toasts; no spatial pop-ups</td>
+      <td><code>Isocity.float(text,color)</code> (outlined rising number/coin) and <code>Isocity.emote(symbol)</code> (rising emoji) on the city canvas, anchored above the player plot; updated in the loop, drawn above buildings/citizens</td></tr></table></section>
+
+<section><h2><span class="n">3</span>Logic Flow</h2>
+  <div class="flow"><span class="step">float/emote push to floaters[]</span><span class="arr">→</span>
+  <span class="step">updateFloaters (rise + fade)</span><span class="arr">→</span>
+  <span class="step">drawFloaters (layer 5, above markers)</span><span class="arr">→</span>
+  <span class="step">expose float/emote in API</span></div></section>
+
+<section><h2><span class="n">4</span>Math / Algorithm Used</h2>
+  <p>Each floater rises (<code>vy ≈ −0.55</code> px/frame; emotes slower) and fades (<code>life −= 0.012</code>/frame,
+  ~2.8s) then is culled. Capped at 24. Numbers get a white stroke + colored fill for legibility on any background;
+  emotes render as emoji glyphs.</p></section>
+
+<section><h2><span class="n">5</span>Tools / Formulas / Methods</h2>
+  <ul>
+    <li><strong>Edit</strong> <code>web/js/isocity.js</code> — <code>floaters[]</code>, <code>playerPlotScreen</code>, <code>float</code>, <code>emote</code>, <code>updateFloaters</code>, <code>drawFloaters</code>; wired into loop + draw + public API.</li>
+    <li><strong>node --check</strong>; <strong>Claude Preview</strong> — fire floaters, full-canvas pixel-diff with y-range.</li>
+  </ul></section>
+
+<section><h2><span class="n">6</span>Results &amp; Visualizations</h2>
+  <table><tr><th>Check</th><th>Result</th></tr>
+  <tr><td>Public API present</td><td><span class="ok">Isocity.float / Isocity.emote</span></td></tr>
+  <tr><td>Floaters render + animate</td><td><span class="ok">3,266 px changed near player plot (y 141–355) right after firing</span></td></tr>
+  <tr><td>Reduced motion</td><td><span class="ok">float/emote are no-ops (fall back to toast)</span></td></tr>
+  <tr><td>Syntax</td><td><span class="ok">node --check OK</span></td></tr>
+  </table></section>
+
+<section><h2><span class="n">7</span>Limitations / Second-Best Alternative</h2>
+  <ul>
+    <li>Not yet wired to game events — that is Phase 2; this phase delivers the layer + API only.</li>
+    <li>Anchored to the player plot (or city center) — per-bot floaters aren't surfaced (snapshot limitation).</li>
+    <li><strong>Second-best:</strong> DOM-overlay popups using the <code>.bubble</code> CSS — rejected; on-canvas keeps anchoring in one coordinate space and respects the reduced-motion/throttle path.</li>
+  </ul></section>
+
+<section><h2><span class="n">8</span>Errors / Warnings / Flags Encountered</h2>
+  <ul><li><span class="muted">Initial verify sampled only the top 160px and saw ~0 change; floaters render mid-canvas near the player plot — re-checked full canvas.</span></li>
+  <li>No render/console errors.</li></ul></section>
+
+<section><h2><span class="n">9</span>Open Questions / Next Phase Seeds</h2>
+  <ul><li><strong>Phase 02 (next):</strong> wire <code>float</code>/<code>emote</code> to events in <code>game.html</code> — abatement (💚 + −t / −cost coin), offsets (🪙 + cost), compliance change (😊/😡 + penalty), XP/level-up (+XP); avoid double-signaling with toasts.</li></ul></section>
+</div></body></html>
