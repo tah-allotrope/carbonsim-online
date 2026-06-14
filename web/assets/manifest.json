@@ -1,46 +1,22 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "assets": {
-    "ground": {
-      "type": "image",
-      "path": "/assets/tiles/ground.png",
-      "width": 64,
-      "height": 64
-    },
-    "factory_dirty": {
-      "type": "image",
-      "path": "/assets/sprites/factory_dirty.png",
-      "width": 64,
-      "height": 64
-    },
-    "factory_clean": {
-      "type": "image",
-      "path": "/assets/sprites/factory_clean.png",
-      "width": 64,
-      "height": 64
-    },
-    "smog": {
-      "type": "image",
-      "path": "/assets/sprites/smog.png",
-      "width": 64,
-      "height": 64
-    },
-    "player_marker": {
-      "type": "image",
-      "path": "/assets/sprites/player_marker.png",
-      "width": 64,
-      "height": 64
-    },
-    "district": {
-      "type": "image",
-      "path": "/assets/sprites/district.png",
-      "width": 64,
-      "height": 64
-    },
-    "font_display": {
-      "type": "font",
-      "path": "/assets/fonts/PressStart2P-Regular.ttf",
-      "format": "truetype"
-    }
+    "ground": { "type": "image", "path": "/assets/tiles/ground.png", "width": 64, "height": 64 },
+
+    "bldg_thermal_dirty": { "type": "image", "path": "/assets/sprites/bldg_thermal_dirty.png", "width": 64, "height": 64 },
+    "bldg_thermal_clean": { "type": "image", "path": "/assets/sprites/bldg_thermal_clean.png", "width": 64, "height": 64 },
+    "bldg_steel_dirty":   { "type": "image", "path": "/assets/sprites/bldg_steel_dirty.png",   "width": 64, "height": 64 },
+    "bldg_steel_clean":   { "type": "image", "path": "/assets/sprites/bldg_steel_clean.png",   "width": 64, "height": 64 },
+    "bldg_cement_dirty":  { "type": "image", "path": "/assets/sprites/bldg_cement_dirty.png",  "width": 64, "height": 64 },
+    "bldg_cement_clean":  { "type": "image", "path": "/assets/sprites/bldg_cement_clean.png",  "width": 64, "height": 64 },
+    "bldg_generic_dirty": { "type": "image", "path": "/assets/sprites/bldg_generic_dirty.png", "width": 64, "height": 64 },
+    "bldg_generic_clean": { "type": "image", "path": "/assets/sprites/bldg_generic_clean.png", "width": 64, "height": 64 },
+
+    "smog":          { "type": "image", "path": "/assets/sprites/smog.png",          "width": 64, "height": 64 },
+    "player_marker": { "type": "image", "path": "/assets/sprites/player_marker.png", "width": 64, "height": 64 },
+    "district":      { "type": "image", "path": "/assets/sprites/district.png",      "width": 64, "height": 64 },
+    "decor_tree":    { "type": "image", "path": "/assets/sprites/decor_tree.png",    "width": 64, "height": 64 },
+
+    "font_display": { "type": "font", "path": "/assets/fonts/PressStart2P-Regular.ttf", "format": "truetype" }
   }
 }
