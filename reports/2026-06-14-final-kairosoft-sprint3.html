@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 3 — Final Report</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#1f93c7;--accent2:#2bb0e0;--green:#4caf50;--red:#e2553f;--orange:#f5a623;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 20px 72px}
+  .hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border-radius:var(--radius);padding:36px 34px;box-shadow:0 8px 24px rgba(31,147,199,.32)}
+  .hero h1{margin:0 0 8px;font-size:1.85rem}.hero .take{font-size:1.05rem;opacity:.97;margin-top:10px}.hero .meta{font-size:.85rem;opacity:.9;margin-top:14px}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.15rem;color:var(--accent)}h3{margin:14px 0 6px;font-size:1rem}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.9rem}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}ul,ol{margin:6px 0 0;padding-left:20px}li{margin:5px 0}
+  .ok{color:var(--green);font-weight:700}.warn{color:var(--orange);font-weight:700}.muted{color:var(--muted)}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0}.flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}.flow .arr{color:var(--muted);font-weight:700}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}.kpi .box{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 2px 6px rgba(74,59,45,.1)}.kpi .v{font-size:1.5rem;font-weight:800;color:var(--accent)}.kpi .l{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  @media print{body{background:#fff}.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}section{box-shadow:none;break-inside:avoid}}
+</style></head><body><div class="wrap">
+
+<div class="hero">
+  <div><span class="tag">Final Report</span><span class="tag">Sprint 3 of 4</span></div>
+  <h1>Kairosoft Visual Upgrade — Sprint 3: Animated Chibi Citizens</h1>
+  <div class="take">The city is alive: little chibi citizens now walk the streets, the renderer can animate sprite sheets for the first time, and the crowd thins when the city pollutes or falls out of compliance.</div>
+  <div class="meta">CarbonSim Online · repo carbonsim-online · 2026-06-14 · plan <code style="color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)">plans/2026-06-14-kairosoft-citizens-plan.md</code></div>
+</div>
+
+<section>
+  <h2>Executive Summary</h2>
+  <p>Sprint 3 added the signature Kairosoft "life." It introduced a <strong>sprite-sheet frame-animation core</strong>
+  the renderer never had, authored an original chibi citizen sheet, and spawned a pool of citizens that <strong>wander,
+  animate, depth-sort with buildings, and react to game state</strong> (a compliant, clean city is busy; a shortfall or
+  heavy smog empties the streets). Frontend-only; the 116-test suite still passes.</p>
+  <p>Two items were deferred to Sprint 4: a formal mobile FPS trace and the new-palette accessibility contrast pass.
+  <strong>Recommendation: proceed to Sprint 4 (floating feedback juice + perf/a11y), the final sprint of the Kairosoft roadmap.</strong></p>
+  <div class="kpi">
+    <div class="box"><div class="v">3 / 3</div><div class="l">Phases complete</div></div>
+    <div class="box"><div class="v">≤14</div><div class="l">Citizens (capped)</div></div>
+    <div class="box"><div class="v">4×3</div><div class="l">Walk frames × variants</div></div>
+    <div class="box"><div class="v">116</div><div class="l">Tests passing</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Background &amp; Objective</h2>
+  <p>Research flagged animated citizens as the most glaring missing Kairosoft element — and noted the renderer could
+  only blit static frames. Sprint 3's objective: build the animation capability and bring the city to life with
+  state-aware ambient citizens.</p>
+</section>
+
+<section>
+  <h2>Inputs &amp; Scope</h2>
+  <ul>
+    <li><strong>Plan:</strong> <code>plans/2026-06-14-kairosoft-citizens-plan.md</code>; research <code>research/2026-06-14_kairosoft-visual-style.md</code>.</li>
+    <li><strong>Touched:</strong> <code>scripts/gen_building_sprites.py</code> (citizen sheet), <code>web/assets/sprites/citizens.png</code>, <code>web/assets/manifest.json</code>, <code>web/js/isocity.js</code>.</li>
+    <li><strong>Out of scope:</strong> floating feedback (Sprint 4), engine/snapshot changes, projection change.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Assumptions &amp; Constraints</h2>
+  <ul>
+    <li>Citizen sheet: 16×16 frames, 4-frame walk × 3 variants; loaded via the existing manifest/AssetLoader.</li>
+    <li>Preserve the 30fps throttle, particle caps, and reduced-motion static fallback.</li>
+    <li>Citizens are ambient/decorative (the canvas is <code>aria-hidden</code>); state is still in text/badges.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Methodology</h2>
+  <p>Same cadence: implement → verify live (frame-slice + meta, animation pixel-diff, formula replication) → phase
+  report → commit &amp; push.</p>
+  <div class="flow"><span class="step">P1 · Anim core + sheet</span><span class="arr">→</span><span class="step">P2 · Spawn + move + depth-sort</span><span class="arr">→</span><span class="step">P3 · State-reactive + perf/a11y</span></div>
+</section>
+
+<section>
+  <h2>Phase-by-Phase Analysis</h2>
+  <h3>Phase 01 — Animation core</h3>
+  <p><code>drawSprite()</code> (sub-rect blit + flip) and <code>walkFrame()</code> (wall-clock frame clock); original
+  <code>citizens.png</code> (64×48) with frame metadata in the manifest.</p>
+  <h3>Phase 02 — Citizens &amp; movement</h3>
+  <p>A pool that wanders within the city bounds, flips by direction, and is <strong>depth-sorted with buildings</strong>
+  by screen-y in a single painter pass; spawned only when the desired count changes (no refresh teleport).</p>
+  <h3>Phase 03 — Reactive &amp; perf/a11y</h3>
+  <p>Count scales with compliance + smog via incremental add/remove; capped at 14; reduced motion freezes movement and
+  idles the frame.</p>
+</section>
+
+<section>
+  <h2>Findings &amp; Recommendation</h2>
+  <ul>
+    <li><span class="ok">Renderer can now animate sprite sheets</span> — reusable for Sprint-4 effects.</li>
+    <li><span class="ok">Citizens walk, layer, and react</span> — 8 when compliant/clean (4 plots), 5 under shortfall or heavy smog; scene animates (~2,900 px/600ms).</li>
+    <li><span class="ok">Stable + bounded</span> — no teleport on refresh; ≤14 citizens; throttle intact.</li>
+    <li><strong>Recommendation:</strong> proceed to <strong>Sprint 4 — floating feedback juice + perf/a11y</strong> (closes the roadmap; folds in the deferred contrast pass).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Implementation Path</h2>
+  <ol>
+    <li><strong>Sprint 4:</strong> floating coins/numbers + reaction emotes (reuse the <code>.bubble</code> style + the new frame/particle infra), wired to decision/year events.</li>
+    <li><strong>Then:</strong> perf hardening (mobile FPS trace) + the new-palette a11y contrast pass; roll the full stack across <code>coop.html</code> / <code>summary.html</code>.</li>
+    <li><strong>Engine follow-up (small, optional):</strong> expose per-company abatement/emissions so bot buildings + citizen reactivity reflect the whole city, not just the player.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Risks / Open Questions</h2>
+  <table>
+    <tr><th>Item</th><th>Status / Mitigation</th></tr>
+    <tr><td>Formal mobile FPS trace</td><td class="warn">Deferred to Sprint 4; perf bounded by cap + throttle</td></tr>
+    <tr><td>New-palette a11y contrast pass</td><td class="warn">Deferred to Sprint 4 (carried from Sprint 1)</td></tr>
+    <tr><td>Reactivity keys on player only</td><td class="muted">Snapshot limitation; small engine follow-up</td></tr>
+    <tr><td>Citizens small at default zoom</td><td class="muted">Ambient by design; readable on the canvas</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Appendices / Evidence Notes</h2>
+  <ul>
+    <li><strong>Commits:</strong> P1 <code>d06ebfa</code>, P2 <code>0c4aa87</code>, P3 <code>fe5d1c9</code> (pushed to <code>master</code>).</li>
+    <li><strong>Phase reports:</strong> <code>…sprint3-phase01-anim-core.html</code>, <code>…-phase02-citizens.html</code>, <code>…-phase03-reactive-perf.html</code>.</li>
+    <li><strong>Verification:</strong> citizens.png 64×48 (987 opaque px); frame slice 82 px; animation 2,755–2,909 px/600ms; reactive counts 8/5/5 (compliant/shortfall/smog); 116 tests pass.</li>
+    <li><strong>Regenerate art:</strong> <code>python scripts/gen_building_sprites.py</code>.</li>
+  </ul>
+</section>
+
+</div></body></html>
