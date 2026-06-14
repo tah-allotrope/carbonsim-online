@@ -459,10 +459,12 @@ function renderContent() {
       Effects.glowPulse(compMeter, 'green');
       if (window.AudioManager) AudioManager.playSFX('success');
       showToast('Compliance Achieved!', 'success');
+      if (CityRenderer) CityRenderer.emote('\u{1F60A}'); // 😊
     } else if (gap > 0 && oldGap <= 0) {
       Effects.glowPulse(compMeter, 'red');
       if (window.AudioManager) AudioManager.playSFX('penalty');
       showToast('Compliance Shortfall Detected!', 'warning');
+      if (CityRenderer) CityRenderer.emote('\u{1F621}'); // 😡
     } else {
       Effects.glowPulse(compMeter, 'cyan');
     }
@@ -546,8 +548,22 @@ function doDecision(action, payload, event) {
   }
   if (window.AudioManager) AudioManager.playSFX('activate');
   if (CityRenderer) {
-    if (action === 'activate_abatement') CityRenderer.triggerAbatementEffect();
-    if (action === 'buy_offsets') CityRenderer.triggerOffsetEffect();
+    if (action === 'activate_abatement') {
+      CityRenderer.triggerAbatementEffect();
+      CityRenderer.emote('\u{1F49A}'); // 💚
+      const m = ((gameState && gameState.snapshot && gameState.snapshot.player_company &&
+        gameState.snapshot.player_company.abatement_menu) || [])
+        .find(x => x.measure_id === (payload && payload.measure_id));
+      if (m) {
+        CityRenderer.float('-' + m.abatement_amount + ' t', '#4caf50');
+        if (m.cost) CityRenderer.float('-$' + fmt(m.cost), '#e2553f');
+      }
+    }
+    if (action === 'buy_offsets') {
+      CityRenderer.triggerOffsetEffect();
+      CityRenderer.emote('\u{1FA99}'); // 🪙
+      if (payload && payload.quantity) CityRenderer.float('+' + payload.quantity + ' t', '#1f93c7');
+    }
   }
   API.decision(GAME_ID, { action, payload }).then(r => {
     showToast('Decision applied', 'success');
@@ -672,6 +688,11 @@ function showError(msg) { showToast(msg, 'error'); }
 // Progression integration helpers
 function syncProgressionState() {
   const info = Progression.syncProgress(GAME_ID, gameState);
+  if (CityRenderer && window.__lastLevel != null && info.levelInfo.level > window.__lastLevel) {
+    CityRenderer.emote('⭐'); // ⭐
+    CityRenderer.float('LEVEL UP!', '#f5a623');
+  }
+  window.__lastLevel = info.levelInfo.level;
   document.getElementById('xpLevelBadge').textContent = `Lvl ${info.levelInfo.level}`;
   
   // Dynamic descriptive level label
