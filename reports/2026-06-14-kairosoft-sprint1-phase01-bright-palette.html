@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 1 · Phase 01 — Bright Palette</title>
+<style>
+  :root{
+    --bg:#fdf6e9; --panel:#fffefb; --ink:#2a2018; --muted:#6f5d46;
+    --accent:#1f93c7; --accent2:#2bb0e0; --green:#4caf50; --red:#e2553f; --orange:#f5a623;
+    --line:rgba(74,59,45,.2); --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px}
+  header.hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;
+    border-radius:var(--radius);padding:28px 30px;box-shadow:0 6px 0 rgba(0,0,0,.12)}
+  header.hero h1{margin:0 0 6px;font-size:1.6rem}
+  header.hero .meta{font-size:.85rem;opacity:.95}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);
+    padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 24px;margin-top:18px;box-shadow:0 3px 0 rgba(0,0,0,.05)}
+  h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent);letter-spacing:.02em}
+  h2 .n{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:8px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.9rem}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  .sw{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.2);
+    vertical-align:-2px;margin-right:6px}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .flow .step{background:#f7eed9;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.85rem}
+  .flow .arr{color:var(--muted);font-weight:700}
+  .empty{color:var(--muted);font-style:italic}
+  ul{margin:6px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .ok{color:var(--green);font-weight:700}
+  .muted{color:var(--muted)}
+  @media print{
+    body{background:#fff}
+    header.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}
+    section{box-shadow:none;break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div><span class="tag">Phase Report</span><span class="tag">Sprint 1 · Phase 01</span></div>
+  <h1>Bright Kairosoft Palette Tokens</h1>
+  <div class="meta">CarbonSim Online · repo <code style="color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)">carbonsim-online</code> · 2026-06-14</div>
+</header>
+
+<section>
+  <h2><span class="n">1</span>Phase Header</h2>
+  <p>First phase of the <strong>Kairosoft Visual Upgrade — Sprint 1 (Bright Palette &amp; Rounded UI/Font)</strong>
+  (<code>plans/2026-06-14-kairosoft-palette-ui-plan.md</code>). Goal: shift the whole app's mood from the muted
+  retro-earth scheme to a bright, cheerful Kairosoft palette via a pure CSS token swap — the cheapest,
+  highest-visibility lever, and the palette every later art sprint must match. Scope was the color/token layer
+  only; bevel→rounded chrome and the display font are deliberately deferred to Phase 02 to keep the phases
+  cleanly separable.</p>
+</section>
+
+<section>
+  <h2><span class="n">2</span>Input → Output Summary</h2>
+  <table>
+    <tr><th>Input</th><th>Output</th></tr>
+    <tr>
+      <td>Muted retro-earth <code>:root</code> in <code>web/css/style.css</code> — <span class="sw" style="background:#3b6f76"></span><code>--accent #3b6f76</code>, <span class="sw" style="background:#f7f1e7"></span><code>--bg #f7f1e7</code></td>
+      <td>Bright Kairosoft <code>:root</code> — <span class="sw" style="background:#1f93c7"></span><code>--accent #1f93c7</code>, <span class="sw" style="background:#fdf6e9"></span><code>--bg #fdf6e9</code>, new <code>--accent-bright</code>, gradient tokens, <code>--radius-lg 16px</code></td>
+    </tr>
+  </table>
+  <table>
+    <tr><th>Token</th><th>Before</th><th>After</th></tr>
+    <tr><td><code>--bg</code></td><td><span class="sw" style="background:#f7f1e7"></span>#f7f1e7</td><td><span class="sw" style="background:#fdf6e9"></span>#fdf6e9</td></tr>
+    <tr><td><code>--accent</code></td><td><span class="sw" style="background:#3b6f76"></span>#3b6f76</td><td><span class="sw" style="background:#1f93c7"></span>#1f93c7</td></tr>
+    <tr><td><code>--green</code></td><td><span class="sw" style="background:#5a8f4e"></span>#5a8f4e</td><td><span class="sw" style="background:#4caf50"></span>#4caf50</td></tr>
+    <tr><td><code>--red</code></td><td><span class="sw" style="background:#b54a3f"></span>#b54a3f</td><td><span class="sw" style="background:#e2553f"></span>#e2553f</td></tr>
+    <tr><td><code>--orange</code></td><td><span class="sw" style="background:#d4883a"></span>#d4883a</td><td><span class="sw" style="background:#f5a623"></span>#f5a623</td></tr>
+    <tr><td><code>--text</code></td><td><span class="sw" style="background:#1f1912"></span>#1f1912</td><td><span class="sw" style="background:#2a2018"></span>#2a2018</td></tr>
+    <tr><td><code>--radius-lg</code></td><td class="muted">—</td><td>16px (new)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">3</span>Logic Flow</h2>
+  <div class="flow">
+    <span class="step">Read full <code>style.css</code></span><span class="arr">→</span>
+    <span class="step">Retune core color tokens (keep semantic names)</span><span class="arr">→</span>
+    <span class="step">Add <code>--accent-bright</code>, gradient &amp; <code>--radius-lg</code> tokens</span><span class="arr">→</span>
+    <span class="step">Reload preview (cache-bust)</span><span class="arr">→</span>
+    <span class="step">Verify computed tokens + menu screenshot</span>
+  </div>
+  <p class="muted" style="margin-top:10px">Token <em>names</em> were held stable so the swap propagates to every screen with zero markup edits.</p>
+</section>
+
+<section>
+  <h2><span class="n">4</span>Math / Algorithm Used</h2>
+  <p class="empty">No algorithm. The only quantitative check was WCAG contrast sanity: dark <code>--text #2a2018</code>
+  on <code>--bg #fdf6e9</code> is high-contrast; saturated hues were reserved for accents/buttons/badges where
+  text color (white or near-black) keeps legibility.</p>
+</section>
+
+<section>
+  <h2><span class="n">5</span>Tools / Formulas / Methods</h2>
+  <ul>
+    <li><strong>Edit</strong> on <code>web/css/style.css</code> — single <code>:root</code> block.</li>
+    <li><strong>Claude Preview</strong> — <code>preview_start</code>, cache-busted reload, <code>preview_eval</code> (computed-style readback), <code>preview_screenshot</code>.</li>
+    <li><strong>Design principle:</strong> tokenized CSS → one source of truth; swap values, not markup.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">6</span>Results &amp; Visualizations</h2>
+  <p>Verified live on the running server (port 8000):</p>
+  <table>
+    <tr><th>Check</th><th>Result</th></tr>
+    <tr><td>Computed <code>--accent</code></td><td><span class="ok">#1f93c7</span></td></tr>
+    <tr><td>Computed <code>--bg</code> / body background</td><td><span class="ok">#fdf6e9 / rgb(253,246,233)</span></td></tr>
+    <tr><td>Computed <code>--green</code></td><td><span class="ok">#4caf50</span></td></tr>
+    <tr><td>Primary button background</td><td><span class="ok">rgb(31,147,199)</span> (azure)</td></tr>
+    <tr><td><code>--radius-lg</code> present</td><td><span class="ok">16px</span></td></tr>
+    <tr><td>Menu screenshot</td><td><span class="ok">Bright cream + azure buttons, green resume pills — reads cheerful</span></td></tr>
+  </table>
+  <p class="empty" style="margin-top:10px">No time-series/quantitative data warrants a chart this phase — empty state by design.</p>
+</section>
+
+<section>
+  <h2><span class="n">7</span>Limitations / Second-Best Alternative</h2>
+  <ul>
+    <li><strong>Intentional mid-state:</strong> chrome is still <em>beveled</em> (hard 3-D edges) and the font is still blocky Press Start 2P — both addressed in Phase 02. Mid-phase the bright palette + old bevel borders look slightly transitional.</li>
+    <li><strong>Accent vs. brightness tradeoff:</strong> a very bright azure would fail white-text contrast on buttons; <code>#1f93c7</code> was chosen as bright-but-legible.</li>
+    <li><strong>Second-best:</strong> a separate <code>kairosoft.css</code> overlay — rejected to avoid dual-skin maintenance; editing the single tokenized source is cleaner.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">8</span>Errors / Warnings / Flags Encountered</h2>
+  <ul>
+    <li><span class="muted">Preview server had to be restarted (it is tied to the session and drops between turns) — resolved with <code>preview_start</code>.</span></li>
+    <li><span class="muted">Browser served cached CSS until a cache-busting reload; the <code>/css</code> mount already sends <code>Cache-Control: no-cache</code>, so a normal hard-refresh suffices for users.</span></li>
+    <li>No CSS/build errors. <code>pytest</code> unaffected (frontend-only change).</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">9</span>Open Questions / Next Phase Seeds</h2>
+  <ul>
+    <li><strong>Open decision (Phase 02):</strong> keep Press Start 2P or add a rounded pixel display font. Default chosen for this sprint: add a rounded display font, keep mono for stats.</li>
+    <li><strong>Phase 02 seeds:</strong> round panels/buttons/badges using <code>--radius-lg</code> + the new gradient tokens; replace hard bevel shadows with soft rounded shadows; add a reusable "notification bubble" style for Sprint 4.</li>
+    <li><strong>Phase 03 seed:</strong> define the building sprite color spec (for Sprint 2) in <code>docs/design-language.md</code> against this palette.</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>

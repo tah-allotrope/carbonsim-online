@@ -7,23 +7,30 @@
 }
 
 :root {
-  /* Retro tycoon palette */
-  --bg: #f7f1e7;
-  --bg-soft: #efe4d0;
-  --panel: #fffdf9;
-  --line: rgba(92, 77, 60, 0.28);
-  --text: #1f1912;
-  --muted: #6b5e4f;
-  --accent: #3b6f76;
-  --green: #5a8f4e;
-  --red: #b54a3f;
-  --orange: #d4883a;
+  /* Kairosoft-bright tycoon palette */
+  --bg: #fdf6e9;          /* bright warm cream */
+  --bg-soft: #f4e8d2;     /* deeper cream */
+  --panel: #fffefb;       /* near-white panel */
+  --line: rgba(74, 59, 45, 0.22);
+  --text: #2a2018;        /* warm near-black */
+  --muted: #6f5d46;
+  --accent: #1f93c7;      /* bright sky azure */
+  --accent-bright: #2bb0e0; /* lighter azure for gradients/highlights */
+  --green: #4caf50;       /* fresh grass green */
+  --red: #e2553f;         /* cheerful warm red */
+  --orange: #f5a623;      /* sunny */
   --glow: 0 0 0 transparent;
 
-  /* Bevel chrome tokens */
-  --bevel-light: #fff8e7;
-  --bevel-dark: #8b7355;
-  --bevel-shadow: #4a3b2d;
+  /* Bevel chrome tokens (rounded/softened in Sprint 1 Phase 2) */
+  --bevel-light: #fffefb;
+  --bevel-dark: #caa96c;
+  --bevel-shadow: #a07d44;
+
+  /* Gradient tokens (used by rounded chrome in Phase 2) */
+  --grad-panel: linear-gradient(180deg, #fffefb, #f7eed9);
+  --grad-accent: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  --grad-green: linear-gradient(180deg, #66c06a, var(--green));
+  --grad-red: linear-gradient(180deg, #ef6e59, var(--red));
 
   /* Typography */
   --font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -31,6 +38,7 @@
   --mono: "Cascadia Code", "Fira Code", Consolas, monospace;
 
   --radius: 8px;
+  --radius-lg: 16px;      /* rounded Kairosoft panels */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
