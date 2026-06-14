@@ -41,11 +41,14 @@ const Isocity = (function () {
     }
     return AssetLoader.load().then(function () {
       images.ground = AssetLoader.getImage('ground');
-      images.factory_dirty = AssetLoader.getImage('factory_dirty');
-      images.factory_clean = AssetLoader.getImage('factory_clean');
+      ['thermal', 'steel', 'cement', 'generic'].forEach(function (k) {
+        images['bldg_' + k + '_dirty'] = AssetLoader.getImage('bldg_' + k + '_dirty');
+        images['bldg_' + k + '_clean'] = AssetLoader.getImage('bldg_' + k + '_clean');
+      });
       images.smog = AssetLoader.getImage('smog');
       images.player_marker = AssetLoader.getImage('player_marker');
       images.district = AssetLoader.getImage('district');
+      images.decor_tree = AssetLoader.getImage('decor_tree');
       manifestLoaded = true;
     });
   }
@@ -148,6 +151,15 @@ const Isocity = (function () {
     return h >>> 0;
   }
 
+  const SECTOR_KEYS = ['thermal', 'steel', 'cement'];
+  function sectorKey(label) {
+    const s = String(label || '').toLowerCase();
+    for (let i = 0; i < SECTOR_KEYS.length; i++) {
+      if (s.indexOf(SECTOR_KEYS[i]) >= 0) return SECTOR_KEYS[i];
+    }
+    return 'generic';
+  }
+
   /**
    * Build a deterministic list of plot positions from the snapshot.
    * Up to MAX_PLOTS individual company plots; remaining companies are
@@ -181,6 +193,11 @@ const Isocity = (function () {
       }
     });
 
+    // Only player_company carries emissions + abatement state; the leaderboard
+    // entries are slim (sector_label + compliance only). Enrich the player plot.
+    const pc = snapshot.player_company || {};
+    const playerAbated = (pc.abatement_menu || []).some(function (m) { return m.active; });
+
     individual.forEach(function (company) {
       let hash = hashCompanyId(company.company_id);
       let pos;
@@ -192,12 +209,21 @@ const Isocity = (function () {
       } while (used.has(pos.col + ',' + pos.row) && attempts < positions.length);
 
       used.add(pos.col + ',' + pos.row);
+      const isPlayer = company.company_id === localCompanyId;
+      const co = isPlayer
+        ? Object.assign({}, company, {
+            projected_emissions: pc.projected_emissions != null
+              ? pc.projected_emissions : company.projected_emissions,
+          })
+        : company;
       plots.push({
         col: pos.col,
         row: pos.row,
-        company: company,
-        isPlayer: company.company_id === localCompanyId,
+        company: co,
+        isPlayer: isPlayer,
         isDistrict: false,
+        sectorKey: sectorKey(company.sector_label),
+        abated: isPlayer ? playerAbated : false,
       });
     });
 
@@ -240,9 +266,12 @@ const Isocity = (function () {
     if (plot.isDistrict) {
       ctx.drawImage(images.district, pos.x - 32, pos.y - 36);
     } else {
-      const abated = (company.active_abatement_ids || []).length > 0;
-      const sprite = abated ? images.factory_clean : images.factory_dirty;
-      ctx.drawImage(sprite, pos.x - 32, pos.y - 36);
+      const key = plot.sectorKey || 'generic';
+      const variant = plot.abated ? 'clean' : 'dirty';
+      const sprite = images['bldg_' + key + '_' + variant]
+        || images['bldg_generic_' + variant]
+        || images['bldg_generic_dirty'];
+      if (sprite) ctx.drawImage(sprite, pos.x - 32, pos.y - 36);
     }
 
     // Smog overlay scales with projected emissions — districts aggregate the
