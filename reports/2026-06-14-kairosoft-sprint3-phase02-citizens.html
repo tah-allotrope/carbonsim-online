@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 3 · Phase 02 — Citizens &amp; Movement</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#1f93c7;--accent2:#2bb0e0;--green:#4caf50;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px}
+  header.hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border-radius:var(--radius);padding:28px 30px;box-shadow:0 6px 18px rgba(31,147,199,.3)}
+  header.hero h1{margin:0 0 6px;font-size:1.6rem}.meta{font-size:.85rem;opacity:.95}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent)}h2 .n{color:var(--muted);margin-right:8px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.9rem}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}.flow .arr{color:var(--muted);font-weight:700}
+  .empty{color:var(--muted);font-style:italic}ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.ok{color:var(--green);font-weight:700}.muted{color:var(--muted)}
+  @media print{body{background:#fff}header.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}section{box-shadow:none;break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header class="hero">
+  <div><span class="tag">Phase Report</span><span class="tag">Sprint 3 · Phase 02</span></div>
+  <h1>Chibi Citizens — Spawn, Movement &amp; Depth-Sort</h1>
+  <div class="meta">CarbonSim Online · repo carbonsim-online · 2026-06-14</div>
+</header>
+
+<section><h2><span class="n">1</span>Phase Header</h2>
+  <p>Populate the city with wandering chibi citizens using the Phase-1 animation core, correctly layered with
+  buildings.</p></section>
+
+<section><h2><span class="n">2</span>Input → Output Summary</h2>
+  <table><tr><th>Input</th><th>Output</th></tr>
+  <tr><td>Animation core + citizen sheet; no citizens placed</td>
+      <td>A citizen pool (sized to plots, capped 14) that wanders the city, flips by direction, and is depth-sorted with buildings by screen-y</td></tr></table></section>
+
+<section><h2><span class="n">3</span>Logic Flow</h2>
+  <div class="flow"><span class="step">cityBounds() from plot positions</span><span class="arr">→</span>
+  <span class="step">spawnCitizens (stable across refresh)</span><span class="arr">→</span>
+  <span class="step">updateCitizens (seek target, re-target, flip)</span><span class="arr">→</span>
+  <span class="step">draw: merge buildings+citizens, sort by y</span></div></section>
+
+<section><h2><span class="n">4</span>Math / Algorithm Used</h2>
+  <p>Wander = seek a random target within the city bounding box; on arrival (dist&lt;2) pick a new target. Move by a
+  normalized vector × per-citizen speed; <code>flip = dx &lt; 0</code>. Depth = single painter pass over
+  {buildings (base screen-y), citizens (y)} sorted ascending.</p></section>
+
+<section><h2><span class="n">5</span>Tools / Formulas / Methods</h2>
+  <ul>
+    <li><strong>Edit</strong> <code>web/js/isocity.js</code> — <code>cityBounds</code>, <code>spawnCitizens</code>, <code>updateCitizens</code>, <code>drawCitizen</code>; refactor <code>draw()</code> layer 2 to depth-sort; call <code>updateCitizens()</code> in the loop; spawn in <code>update()</code> only when the desired count changes (no teleport on every server refresh).</li>
+    <li><strong>node --check</strong>; <strong>Claude Preview</strong> — pixel-diff over 600ms + screenshot.</li>
+  </ul></section>
+
+<section><h2><span class="n">6</span>Results &amp; Visualizations</h2>
+  <table><tr><th>Check</th><th>Result</th></tr>
+  <tr><td>Scene animates (movement)</td><td><span class="ok">2,755 px changed over 600ms (tab visible)</span></td></tr>
+  <tr><td>Citizens visible + layered</td><td><span class="ok">chibi figures near plots in screenshot; depth-sorted with buildings</span></td></tr>
+  <tr><td>Stability across refresh</td><td><span class="ok">respawn only when plot count changes</span></td></tr>
+  <tr><td>Syntax</td><td><span class="ok">node --check OK</span></td></tr>
+  </table></section>
+
+<section><h2><span class="n">7</span>Limitations / Second-Best Alternative</h2>
+  <ul>
+    <li>Citizens are small (16px) and few; count/behavior are not yet state-reactive — that is Phase 3.</li>
+    <li>Direction is left/right flip only (no dedicated up/down rows) — adequate at this scale.</li>
+    <li><strong>Second-best:</strong> path-constrained walking on roads — deferred; free wander reads fine for ambience.</li>
+  </ul></section>
+
+<section><h2><span class="n">8</span>Errors / Warnings / Flags Encountered</h2>
+  <ul><li>None. No render/console errors; movement and layering confirmed.</li></ul></section>
+
+<section><h2><span class="n">9</span>Open Questions / Next Phase Seeds</h2>
+  <ul><li><strong>Phase 03 (next):</strong> scale citizen count/liveliness by compliance &amp; smog; cap for perf (~30fps on mobile); ensure reduced-motion freezes/hides citizens via <code>drawStatic</code>.</li></ul></section>
+</div></body></html>

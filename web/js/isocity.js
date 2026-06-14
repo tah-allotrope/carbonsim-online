@@ -387,6 +387,66 @@ const Isocity = (function () {
     return Math.floor(performance.now() / 150) % n;
   }
 
+  /* --- Citizens (Sprint 3) --- */
+  function cityBounds() {
+    if (!plots.length) {
+      return { x0: 20, x1: width - 20, y0: height * 0.45, y1: height - 12 };
+    }
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    plots.forEach(function (p) {
+      const s = tileToScreen(p.col, p.row);
+      if (s.x < x0) x0 = s.x;
+      if (s.x > x1) x1 = s.x;
+      if (s.y < y0) y0 = s.y;
+      if (s.y > y1) y1 = s.y;
+    });
+    return { x0: x0 - 10, x1: x1 + 10, y0: y0 - 4, y1: y1 + 16 };
+  }
+
+  function spawnCitizens(count) {
+    citizens = [];
+    if (!images.citizens || !citizenMeta) return;
+    const b = cityBounds();
+    const variants = citizenMeta.variants || 1;
+    for (let i = 0; i < count; i++) {
+      citizens.push({
+        x: b.x0 + Math.random() * (b.x1 - b.x0),
+        y: b.y0 + Math.random() * (b.y1 - b.y0),
+        tx: b.x0 + Math.random() * (b.x1 - b.x0),
+        ty: b.y0 + Math.random() * (b.y1 - b.y0),
+        speed: 0.25 + Math.random() * 0.35,
+        variant: i % variants,
+        phase: Math.floor(Math.random() * 4),
+        flip: false,
+      });
+    }
+  }
+
+  function updateCitizens() {
+    if (reducedMotion || !citizens.length) return;
+    const b = cityBounds();
+    citizens.forEach(function (c) {
+      const dx = c.tx - c.x, dy = c.ty - c.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 2) {
+        c.tx = b.x0 + Math.random() * (b.x1 - b.x0);
+        c.ty = b.y0 + Math.random() * (b.y1 - b.y0);
+        return;
+      }
+      c.x += (dx / dist) * c.speed;
+      c.y += (dy / dist) * c.speed;
+      c.flip = dx < 0;
+    });
+  }
+
+  function drawCitizen(c) {
+    if (!images.citizens || !citizenMeta) return;
+    const fw = citizenMeta.frameW || 16, fh = citizenMeta.frameH || 16;
+    const n = citizenMeta.frames || 1;
+    const frame = (walkFrame() + c.phase) % n;
+    drawSprite(images.citizens, fw, fh, frame, c.variant, c.x - fw / 2, c.y - fh + 2, c.flip);
+  }
+
   function draw() {
     if (!manifestLoaded) return;
     ctx.clearRect(0, 0, width, height);
@@ -397,8 +457,13 @@ const Isocity = (function () {
     });
     sorted.forEach(drawPlotGround);
 
-    // Layer 2: structures (buildings, smog, tint).
-    sorted.forEach(drawPlotStructure);
+    // Layer 2: structures + citizens, depth-sorted by screen-y so citizens
+    // pass correctly in front of / behind buildings.
+    const ents = [];
+    sorted.forEach(function (p) { ents.push({ y: tileToScreen(p.col, p.row).y, b: p }); });
+    citizens.forEach(function (c) { ents.push({ y: c.y, c: c }); });
+    ents.sort(function (a, z) { return a.y - z.y; });
+    ents.forEach(function (e) { if (e.b) drawPlotStructure(e.b); else drawCitizen(e.c); });
 
     // Layer 3: particles (smoke + effect bursts).
     spawnParticles();
@@ -426,6 +491,7 @@ const Isocity = (function () {
     const delta = timestamp - lastFrame;
     if (delta < FPS_INTERVAL) return;
     lastFrame = timestamp - (delta % FPS_INTERVAL);
+    updateCitizens();
     draw();
   }
 
@@ -433,6 +499,9 @@ const Isocity = (function () {
     if (!snapshot) return;
     snapshotCache = snapshot;
     buildPlots(snapshot);
+    // Stable across refreshes: only (re)spawn when the desired count changes.
+    const desired = Math.min(plots.length * 2, 14);
+    if (citizens.length !== desired) spawnCitizens(desired);
     if (reducedMotion) drawStatic();
   }
 
