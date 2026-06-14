@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 2 — Final Report</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#1f93c7;--accent2:#2bb0e0;--green:#4caf50;--red:#e2553f;--orange:#f5a623;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 20px 72px}
+  .hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;border-radius:var(--radius);padding:36px 34px;box-shadow:0 8px 24px rgba(31,147,199,.32)}
+  .hero h1{margin:0 0 8px;font-size:1.85rem}.hero .take{font-size:1.05rem;opacity:.97;margin-top:10px}.hero .meta{font-size:.85rem;opacity:.9;margin-top:14px}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.15rem;color:var(--accent)}h3{margin:14px 0 6px;font-size:1rem}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.9rem}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  ul,ol{margin:6px 0 0;padding-left:20px}li{margin:5px 0}
+  .ok{color:var(--green);font-weight:700}.warn{color:var(--orange);font-weight:700}.muted{color:var(--muted)}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0}.flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}.flow .arr{color:var(--muted);font-weight:700}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}.kpi .box{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 2px 6px rgba(74,59,45,.1)}.kpi .v{font-size:1.5rem;font-weight:800;color:var(--accent)}.kpi .l{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  @media print{body{background:#fff}.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}section{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div><span class="tag">Final Report</span><span class="tag">Sprint 2 of 4</span></div>
+  <h1>Kairosoft Visual Upgrade — Sprint 2: Characterful Building Sprites</h1>
+  <div class="take">The flat tiles are gone: the isometric city now shows distinct, cute, outlined buildings per sector that visibly clean up when the player abates — built from original, license-clean art.</div>
+  <div class="meta">CarbonSim Online · repo carbonsim-online · 2026-06-14 · plan <code style="color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)">plans/2026-06-14-kairosoft-building-art-plan.md</code></div>
+</div>
+
+<section>
+  <h2>Executive Summary</h2>
+  <p>Sprint 2 replaced CarbonSim's six plain tiles with a coherent set of <strong>13 original isometric sprites</strong> —
+  four sector building types (thermal, steel, cement, generic) each in dirty and clean variants, plus ground, smog,
+  player flag, a district cluster, and a tree — and wired the renderer to pick the right building by <strong>sector</strong>
+  and <strong>abatement state</strong>. It remains frontend-only; the 116-test suite still passes.</p>
+  <p>Two honest deviations: art was <strong>authored in-repo via a script</strong> (the plan's default of CC0 packs isn't
+  fetchable here, and original art removes all IP risk), and a <strong>latent bug</strong> was fixed along the way — the old
+  renderer read a snapshot field that never existed, so buildings could never turn clean. <strong>Recommendation: proceed
+  to Sprint 3 (animated chibi citizens), which also delivers the sprite-sheet animation the renderer still lacks.</strong></p>
+  <div class="kpi">
+    <div class="box"><div class="v">3 / 3</div><div class="l">Phases complete</div></div>
+    <div class="box"><div class="v">13</div><div class="l">Original sprites</div></div>
+    <div class="box"><div class="v">4×2</div><div class="l">Sector × state buildings</div></div>
+    <div class="box"><div class="v">116</div><div class="l">Tests passing</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Background &amp; Objective</h2>
+  <p>Per the Kairosoft research and gap analysis, the single biggest visual lever after palette is the building art —
+  Kairosoft's identity is cute, outlined, varied buildings. Sprint 2's objective: produce that set (license-clean) and
+  make the isometric city render distinct, state-reactive buildings on the existing engine.</p>
+</section>
+
+<section>
+  <h2>Inputs &amp; Scope</h2>
+  <ul>
+    <li><strong>Plan:</strong> <code>plans/2026-06-14-kairosoft-building-art-plan.md</code>; research <code>research/2026-06-14_kairosoft-visual-style.md</code>; spec in <code>docs/design-language.md</code>.</li>
+    <li><strong>Touched:</strong> <code>scripts/gen_building_sprites.py</code> (new), <code>web/assets/**</code>, <code>web/assets/manifest.json</code>, <code>web/js/isocity.js</code>, <code>ATTRIBUTIONS.md</code>.</li>
+    <li><strong>Out of scope:</strong> animated citizens (Sprint 3), floating feedback (Sprint 4), engine/snapshot changes, projection change (stays isometric).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Assumptions &amp; Constraints</h2>
+  <ul>
+    <li>64×64 PNG sprites on a shared 64×32 footprint so all align on the existing grid (no renderer geometry change).</li>
+    <li>Assets must be original or CC0/CC-BY — never Kairosoft's actual art.</li>
+    <li>Snapshot is fixed: <code>leaderboard</code> has <code>sector_label</code> for all; only <code>player_company</code> has abatement/emissions.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Methodology</h2>
+  <p>Same cadence as Sprint 1: implement → verify live (Pillow opacity checks, contact sheet, browser screenshot + AssetLoader readback) → phase report → commit &amp; push.</p>
+  <div class="flow"><span class="step">P1 · Author sprites (script)</span><span class="arr">→</span><span class="step">P2 · Register in manifest</span><span class="arr">→</span><span class="step">P3 · Wire renderer by sector/state</span></div>
+</section>
+
+<section>
+  <h2>Phase-by-Phase Analysis</h2>
+  <h3>Phase 01 — Sprite art</h3>
+  <p>Authored <code>scripts/gen_building_sprites.py</code> (Pillow) → 13 original CC0 iso sprites to the spec; removed the
+  old <code>factory_*</code> sprites + old generator; updated <code>ATTRIBUTIONS.md</code>.</p>
+  <h3>Phase 02 — Manifest &amp; loader</h3>
+  <p>Manifest v2 (14 entries); the generic <code>AssetLoader</code> needed no change. Verified JSON + all paths on disk,
+  static-asset tests pass, and all 13 images preload in-browser with zero 404s.</p>
+  <h3>Phase 03 — Renderer wiring</h3>
+  <p>Added <code>sectorKey()</code>, enriched the player plot from <code>player_company</code>, and made
+  <code>drawPlotStructure</code> select <code>bldg_&lt;sector&gt;_&lt;dirty|clean&gt;</code> with a generic fallback —
+  fixing the never-clean bug en route.</p>
+</section>
+
+<section>
+  <h2>Findings &amp; Recommendation</h2>
+  <ul>
+    <li><span class="ok">Distinct sector buildings render</span> (cement silos, steel furnace, thermal stacks, generic) with the player flag, verified by screenshot.</li>
+    <li><span class="ok">State-reactive:</span> activating abatement (emissions 90→81) flips the player's building to its clean variant.</li>
+    <li><span class="ok">License-clean &amp; reproducible</span> — re-run the script to regenerate; replace with commissioned art via the manifest anytime.</li>
+    <li><strong>Recommendation:</strong> proceed to <strong>Sprint 3 — animated chibi citizens</strong> (and the frame-animation core the renderer needs).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Implementation Path</h2>
+  <ol>
+    <li><strong>Sprint 3:</strong> add the sprite-sheet frame-animation capability, then chibi citizens with movement + state-reactive behavior.</li>
+    <li><strong>Sprint 4:</strong> floating feedback (coins/emotes/pop-ups) + perf/a11y (incl. the deferred contrast pass).</li>
+    <li><strong>Engine follow-up (small):</strong> expose per-company abatement/emissions in the <code>leaderboard</code> so <em>bot</em> buildings + per-plot smog also reflect state.</li>
+    <li><strong>Optional art upgrade:</strong> drop hand-pixelled/commissioned sprites into <code>web/assets/sprites/</code> via the same manifest.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Risks / Open Questions</h2>
+  <table>
+    <tr><th>Item</th><th>Status / Mitigation</th></tr>
+    <tr><td>Art is procedural, not artisan</td><td class="warn">Acceptable improvement; replaceable via manifest. Commission later if desired</td></tr>
+    <tr><td>Bot buildings can't show "clean"</td><td class="warn">Snapshot limitation; small engine follow-up to expose per-company abatement</td></tr>
+    <tr><td>Per-plot smog limited to player</td><td class="muted">Same snapshot limitation; Sprint-4/engine concern</td></tr>
+    <tr><td>Strategy deviation (authored vs CC0 packs)</td><td>Flagged; arguably better (no IP risk, reproducible)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Appendices / Evidence Notes</h2>
+  <ul>
+    <li><strong>Commits:</strong> P1 <code>36bb14d</code>, P2 <code>e54fbfa</code>, P3 <code>fb493ab</code> (pushed to <code>master</code>).</li>
+    <li><strong>Phase reports:</strong> <code>…sprint2-phase01-sprite-art.html</code>, <code>…-phase02-manifest.html</code>, <code>…-phase03-renderer-wiring.html</code>.</li>
+    <li><strong>Verification:</strong> 13 sprites with content (961–2373 opaque px); manifest 14 entries, 0 missing; static-asset tests pass; AssetLoader preloads all 13; tutorial sectors (Cement/Steel/Thermal) render distinct; abatement → clean swap (emissions 90→81); city paints ~19,400px; full suite 116 passed.</li>
+    <li><strong>Regenerate art:</strong> <code>python scripts/gen_building_sprites.py</code>.</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>
