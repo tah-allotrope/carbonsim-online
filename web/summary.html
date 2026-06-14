@@ -206,6 +206,11 @@ Achievements Unlocked: ${(summary.achievements || []).map(a => a.title).join(', 
       const ratio = player.projected_emissions > 0 ? Math.round((player.allowances / player.projected_emissions) * 100) : 100;
       document.getElementById('cityCompliance').textContent = `Final Compliance: ${ratio}%`;
       document.getElementById('cityLabel').textContent = `${summary.player_name}'s City — ${summary.completed_years} Years`;
+      // Celebratory flourish once the renderer has loaded its assets.
+      setTimeout(function () {
+        if (ratio >= 90) { CityRenderer.emote('⭐'); CityRenderer.float('Well played!', '#f5a623'); }
+        else { CityRenderer.emote('😊'); }
+      }, 1400);
     }
   } catch (e) {
     document.getElementById('subtitle').textContent = 'Error: ' + e.message;

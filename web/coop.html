@@ -363,7 +363,13 @@ function resumeGame() {
 
 function activateMeasure(measureId) {
   if (window.AudioManager) AudioManager.playSFX('activate');
-  if (CityRenderer) CityRenderer.triggerAbatementEffect();
+  if (CityRenderer) {
+    CityRenderer.triggerAbatementEffect();
+    CityRenderer.emote('\u{1F49A}'); // 💚
+    const m = ((coopState && coopState.snapshot && coopState.snapshot.player_company &&
+      coopState.snapshot.player_company.abatement_menu) || []).find(x => x.measure_id === measureId);
+    if (m) CityRenderer.float('-' + m.abatement_amount + ' t', '#4caf50');
+  }
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'activate_abatement',
     payload: { measure_id: measureId },
@@ -375,7 +381,11 @@ function buyOffsets() {
   const quantity = parseFloat(input.value);
   if (isNaN(quantity) || quantity <= 0) { alert('Enter a valid quantity'); return; }
   if (window.AudioManager) AudioManager.playSFX('activate');
-  if (CityRenderer) CityRenderer.triggerOffsetEffect();
+  if (CityRenderer) {
+    CityRenderer.triggerOffsetEffect();
+    CityRenderer.emote('\u{1FA99}'); // 🪙
+    CityRenderer.float('+' + quantity + ' t', '#1f93c7');
+  }
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'buy_offsets',
     payload: { quantity },

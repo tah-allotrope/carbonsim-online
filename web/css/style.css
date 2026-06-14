@@ -16,6 +16,7 @@
   --muted: #6f5d46;
   --accent: #1f93c7;      /* bright sky azure */
   --accent-bright: #2bb0e0; /* lighter azure for gradients/highlights */
+  --accent-ink: #157197;  /* darker azure for small accent TEXT (>=4.5:1 on panel) */
   --green: #4caf50;       /* fresh grass green */
   --red: #e2553f;         /* cheerful warm red */
   --orange: #f5a623;      /* sunny */
@@ -52,7 +53,7 @@ body {
   min-height: 100vh; line-height: 1.5; letter-spacing: 0.01em;
   transition: background 0.5s ease;
 }
-a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+a { color: var(--accent-ink); text-decoration: none; transition: color 0.2s; }
 a:hover { text-decoration: underline; color: var(--text); }
 
 /* Global visible focus for keyboard navigation */
@@ -84,7 +85,7 @@ a:hover { text-decoration: underline; color: var(--text); }
   transform: translateY(-2px);
   box-shadow: 0 8px 22px rgba(74, 59, 45, 0.16);
 }
-.card-title { color: var(--accent); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; font-family: var(--mono); }
+.card-title { color: var(--accent-ink); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; font-family: var(--mono); }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -133,7 +134,7 @@ label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8r
   border: 1px solid rgba(0,0,0,0.12);
   box-shadow: 0 1px 2px rgba(74, 59, 45, 0.15);
 }
-.badge-green { background: var(--grad-green); color: #143d16; }
+.badge-green { background: var(--grad-green); color: #0e2e10; }
 .badge-red { background: var(--grad-red); color: #fff; }
 .badge-orange { background: linear-gradient(180deg, #ffbe4d, var(--orange)); color: #3a2600; }
 .badge-blue { background: var(--grad-accent); color: #fff; }
@@ -255,7 +256,7 @@ label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8r
 
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); }
-th { color: var(--accent); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--mono); }
+th { color: var(--accent-ink); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--mono); }
 tr { transition: background-color 0.2s; }
 tbody tr:hover { background-color: rgba(31, 147, 199, 0.07); }
 

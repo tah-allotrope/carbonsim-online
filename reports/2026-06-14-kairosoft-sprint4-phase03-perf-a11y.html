@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 4 · Phase 03 — Perf, Cross-Screen &amp; A11y</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#157197;--accent2:#2bb0e0;--green:#4caf50;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px}
+  header.hero{background:linear-gradient(180deg,var(--accent2),#1f93c7);color:#fff;border-radius:var(--radius);padding:28px 30px;box-shadow:0 6px 18px rgba(31,147,199,.3)}
+  header.hero h1{margin:0 0 6px;font-size:1.6rem}.meta{font-size:.85rem;opacity:.95}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent)}h2 .n{color:var(--muted);margin-right:8px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.9rem}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}.flow .arr{color:var(--muted);font-weight:700}
+  .empty{color:var(--muted);font-style:italic}ul{margin:6px 0 0;padding-left:20px}li{margin:4px 0}.ok{color:var(--green);font-weight:700}.warn{color:#d4883a;font-weight:700}.muted{color:var(--muted)}
+  @media print{body{background:#fff}header.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid #1f93c7}section{box-shadow:none;break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header class="hero">
+  <div><span class="tag">Phase Report</span><span class="tag">Sprint 4 · Phase 03</span></div>
+  <h1>Perf, Cross-Screen Rollout &amp; Accessibility</h1>
+  <div class="meta">CarbonSim Online · repo carbonsim-online · 2026-06-14</div>
+</header>
+
+<section><h2><span class="n">1</span>Phase Header</h2>
+  <p>Final phase of Sprint 4 (and of the Kairosoft roadmap): bound performance, roll the feedback layer across
+  co-op and summary, confirm reduced motion, and run the deferred accessibility contrast pass on the new palette.</p></section>
+
+<section><h2><span class="n">2</span>Input → Output Summary</h2>
+  <table><tr><th>Area</th><th>Output</th></tr>
+  <tr><td>A11y contrast</td><td>Measured all key pairs; fixed 2 failures — small accent text → new <code>--accent-ink #157197</code> (5.4:1); green-badge ink → <code>#0e2e10</code> (5.3:1). Design doc updated with a measured table.</td></tr>
+  <tr><td>Cross-screen</td><td>Feedback wired into <code>coop.html</code> (abatement 💚 + −t, offsets 🪙 + +t); celebratory flourish on <code>summary.html</code> (⭐/😊). Both already render the full city + citizens.</td></tr>
+  <tr><td>Reduced motion</td><td>Confirmed: <code>float</code>/<code>emote</code> no-op, citizens freeze, particles hidden, static frame.</td></tr>
+  <tr><td>Perf</td><td>Bounded by caps + 30fps throttle.</td></tr>
+  </table></section>
+
+<section><h2><span class="n">3</span>Logic Flow</h2>
+  <div class="flow"><span class="step">Measure WCAG ratios</span><span class="arr">→</span>
+  <span class="step">Fix fails (accent-ink, green ink)</span><span class="arr">→</span>
+  <span class="step">Wire coop + summary feedback</span><span class="arr">→</span>
+  <span class="step">Confirm reduced-motion + caps</span><span class="arr">→</span>
+  <span class="step">Update design doc</span></div></section>
+
+<section><h2><span class="n">4</span>Math / Algorithm Used</h2>
+  <p>WCAG 2.1 relative-luminance contrast: L = 0.2126R+0.7152G+0.0722B (linearized), ratio = (L₁+0.05)/(L₂+0.05).
+  Searched darker shades until small accent text and green-badge ink cleared 4.5:1.</p></section>
+
+<section><h2><span class="n">5</span>Tools / Formulas / Methods</h2>
+  <ul>
+    <li><strong>python</strong> — contrast computation across 8 palette pairs; shade search.</li>
+    <li><strong>Edit</strong> <code>style.css</code> (<code>--accent-ink</code>; card-title/th/links; green-badge ink), <code>coop.html</code> + <code>summary.html</code> (feedback), <code>docs/design-language.md</code> (measured table + reduced-motion update).</li>
+    <li><strong>Claude Preview</strong> (computed colors, render) + <strong>pytest</strong>.</li>
+  </ul></section>
+
+<section><h2><span class="n">6</span>Results &amp; Visualizations</h2>
+  <table><tr><th>Check</th><th>Result</th></tr>
+  <tr><td>Contrast failures fixed</td><td><span class="ok">card-title/th/links 3.4→5.4:1; green badge 4.4→5.3:1</span></td></tr>
+  <tr><td>Computed token applied</td><td><span class="ok">card-title &amp; th = rgb(21,113,151) = --accent-ink</span></td></tr>
+  <tr><td>Co-op / summary feedback</td><td><span class="ok">wired; both render city + citizens</span></td></tr>
+  <tr><td>Perf caps</td><td><span class="ok">citizens ≤14, particles ≤150, floaters ≤24, DPR ≤2, 30fps throttle</span></td></tr>
+  <tr><td>Tests</td><td><span class="ok">116 passed</span></td></tr>
+  </table></section>
+
+<section><h2><span class="n">7</span>Limitations / Second-Best Alternative</h2>
+  <ul>
+    <li><strong>No throttled-CPU FPS trace</strong> was captured; perf is argued from the caps + the existing 30fps throttle on a lightweight scene (≤~16 buildings, ≤14 citizens). A formal Lighthouse perf pass remains a nice-to-have.</li>
+    <li>Contrast computed analytically (WCAG formula) rather than via an axe browser run — equivalent for color pairs.</li>
+    <li><strong>Second-best:</strong> recolor the whole accent to the darker ink — rejected; kept bright <code>--accent</code> for fills/large text and used <code>--accent-ink</code> only where small text needs it.</li>
+  </ul></section>
+
+<section><h2><span class="n">8</span>Errors / Warnings / Flags Encountered</h2>
+  <ul><li>Found + fixed 2 real contrast failures (would have shipped from Sprint 1).</li>
+  <li><span class="muted">python3 alias missing on this box; used <code>python</code>.</span></li></ul></section>
+
+<section><h2><span class="n">9</span>Open Questions / Next Phase Seeds</h2>
+  <ul>
+    <li>Kairosoft roadmap (Sprints 1–4) is complete after this phase.</li>
+    <li><strong>Backlog:</strong> rounded-pixel display font; per-company abatement in the snapshot (so bot buildings/citizens react too); a formal mobile FPS/Lighthouse trace; optional commissioned sprite art.</li>
+  </ul></section>
+</div></body></html>

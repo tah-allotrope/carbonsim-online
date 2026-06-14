@@ -159,15 +159,22 @@ The isometric pixel-art city is the primary signature visual. It renders as a ca
 
 ## Accessibility
 
-Focus/motion/canvas behavior carried over from Sprint 5 (still in effect). **Color contrast for the new Kairosoft palette was sanity-checked but a full axe/Lighthouse re-verification is pending** (Sprint 1 was a style change; numbers below are approximate and should be re-measured).
+Focus/motion/canvas behavior carried over from Sprint 5 (still in effect). **Color contrast for the Kairosoft palette was measured (WCAG 2.1 ratios) in Sprint 4 and failures were fixed.**
 
 - **Focus:** All interactive elements have a visible `:focus-visible` outline (2px solid `--accent`, 2px offset); inputs additionally get a 3px accent focus ring. Covered by a global rule plus component rules.
-- **Motion:** `prefers-reduced-motion: reduce` disables animations, stops the isometric city RAF loop, hides DOM particles, and renders a single static city frame.
-- **Canvas:** The isometric canvas is `aria-hidden="true"` and purely decorative; the same state is exposed as text stats, badges, and leaderboard rows.
-- **Color & contrast (approximate, re-verify):**
-  - Body text (`--text #2a2018` on `--bg #fdf6e9` / `--panel`): very high (dark-on-cream).
-  - White text on `--accent #1f93c7` (primary buttons): chosen to meet the large/bold-text threshold (≈3:1+); confirm for 0.9rem bold button labels.
-  - Green/orange badges use **dark ink** on their gradient fills to avoid white-on-bright failures; red/blue badges use white.
-- **Minimum contrast target:** 4.5:1 body text, 3:1 large/bold UI text.
-- **Typography:** Press Start 2P used only for display text to preserve readability (rounded-pixel swap is a follow-up).
-- **Open item:** run a full axe/Lighthouse pass on the new palette (tracked for the Sprint-4 perf/a11y phase).
+- **Motion:** `prefers-reduced-motion: reduce` disables animations, stops the isometric city RAF loop, hides DOM particles, freezes citizens, and suppresses floating feedback (`float`/`emote` are no-ops); a single static city frame is rendered.
+- **Canvas:** The isometric canvas is `aria-hidden="true"` and purely decorative; the same state is exposed as text stats, badges, leaderboard rows, and toasts.
+- **Measured contrast (target 4.5:1 body / 3:1 large/bold UI):**
+
+  | Pair | Ratio | Verdict |
+  |---|---|---|
+  | `--text #2a2018` on `--bg #fdf6e9` | 14.8:1 | ✅ |
+  | `--text` on `--panel #fffefb` | 15.8:1 | ✅ |
+  | `--muted #6f5d46` on panel | 6.3:1 | ✅ |
+  | small accent text → **`--accent-ink #157197`** on panel (card titles, `th`, links) | 5.4:1 | ✅ (was 3.4:1 with `--accent`) |
+  | white on `--accent #1f93c7` (buttons, large/bold) | 3.5:1 | ✅ (large) |
+  | white on `--red #e2553f` (buttons, large/bold) | 3.8:1 | ✅ (large) |
+  | green-badge ink **`#0e2e10`** on `--green` | 5.3:1 | ✅ (was 4.4:1) |
+  | orange-badge ink `#3a2600` on `--orange` | 7.1:1 | ✅ |
+
+- **Typography:** Press Start 2P used only for display text (rounded-pixel swap is a follow-up). `--accent` is reserved for fills/large text; **`--accent-ink` is used for small accent text** to clear 4.5:1.
