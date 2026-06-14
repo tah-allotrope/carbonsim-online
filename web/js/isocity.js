@@ -403,23 +403,38 @@ const Isocity = (function () {
     return { x0: x0 - 10, x1: x1 + 10, y0: y0 - 4, y1: y1 + 16 };
   }
 
-  function spawnCitizens(count) {
-    citizens = [];
-    if (!images.citizens || !citizenMeta) return;
+  // Liveliness reacts to game state: a shortfall or heavy smog empties the
+  // streets; a compliant, low-emission city is busy. Capped for performance.
+  function desiredCitizenCount(snapshot) {
+    const base = Math.min(plots.length * 2, 14);
+    const pc = (snapshot && snapshot.player_company) || {};
+    const gap = pc.compliance_gap || 0;
+    const emissions = pc.projected_emissions || 0;
+    let vitality = gap > 0 ? 0.6 : 1;       // compliance shortfall = quieter
+    if (emissions > 200) vitality *= 0.6;    // heavy smog = fewer people out
+    else if (emissions > 120) vitality *= 0.8;
+    return Math.max(2, Math.round(base * vitality));
+  }
+
+  // Add/remove only the delta so existing citizens keep their positions
+  // (no teleport on year change / refresh).
+  function setCitizenCount(n) {
+    if (!images.citizens || !citizenMeta) { citizens = []; return; }
     const b = cityBounds();
     const variants = citizenMeta.variants || 1;
-    for (let i = 0; i < count; i++) {
+    while (citizens.length < n) {
       citizens.push({
         x: b.x0 + Math.random() * (b.x1 - b.x0),
         y: b.y0 + Math.random() * (b.y1 - b.y0),
         tx: b.x0 + Math.random() * (b.x1 - b.x0),
         ty: b.y0 + Math.random() * (b.y1 - b.y0),
         speed: 0.25 + Math.random() * 0.35,
-        variant: i % variants,
+        variant: citizens.length % variants,
         phase: Math.floor(Math.random() * 4),
         flip: false,
       });
     }
+    if (citizens.length > n) citizens.length = n;
   }
 
   function updateCitizens() {
@@ -499,9 +514,7 @@ const Isocity = (function () {
     if (!snapshot) return;
     snapshotCache = snapshot;
     buildPlots(snapshot);
-    // Stable across refreshes: only (re)spawn when the desired count changes.
-    const desired = Math.min(plots.length * 2, 14);
-    if (citizens.length !== desired) spawnCitizens(desired);
+    setCitizenCount(desiredCitizenCount(snapshot));
     if (reducedMotion) drawStatic();
   }
 
