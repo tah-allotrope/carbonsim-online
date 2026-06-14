@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 4 — Final Report</title>
+<style>
+  :root{--bg:#fdf6e9;--panel:#fffefb;--ink:#2a2018;--muted:#6f5d46;--accent:#157197;--accent2:#2bb0e0;--green:#4caf50;--red:#e2553f;--orange:#f5a623;--line:rgba(74,59,45,.2);--radius:16px}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:960px;margin:0 auto;padding:32px 20px 72px}
+  .hero{background:linear-gradient(180deg,var(--accent2),#1f93c7);color:#fff;border-radius:var(--radius);padding:36px 34px;box-shadow:0 8px 24px rgba(31,147,199,.32)}
+  .hero h1{margin:0 0 8px;font-size:1.85rem}.hero .take{font-size:1.05rem;opacity:.97;margin-top:10px}.hero .meta{font-size:.85rem;opacity:.9;margin-top:14px}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.15rem;color:var(--accent)}h3{margin:14px 0 6px;font-size:1rem}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.9rem}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}ul,ol{margin:6px 0 0;padding-left:20px}li{margin:5px 0}
+  .ok{color:var(--green);font-weight:700}.warn{color:var(--orange);font-weight:700}.muted{color:var(--muted)}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0}.flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}.flow .arr{color:var(--muted);font-weight:700}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}.kpi .box{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 2px 6px rgba(74,59,45,.1)}.kpi .v{font-size:1.5rem;font-weight:800;color:#1f93c7}.kpi .l{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  @media print{body{background:#fff}.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid #1f93c7}section{box-shadow:none;break-inside:avoid}}
+</style></head><body><div class="wrap">
+
+<div class="hero">
+  <div><span class="tag">Final Report</span><span class="tag">Sprint 4 of 4</span><span class="tag">Roadmap Complete</span></div>
+  <h1>Kairosoft Visual Upgrade — Sprint 4: Floating Feedback &amp; Polish</h1>
+  <div class="take">Coins, reaction emotes, and "level up!" pop-ups now reward every meaningful action — and with this the four-sprint Kairosoft visual roadmap is complete.</div>
+  <div class="meta">CarbonSim Online · repo carbonsim-online · 2026-06-14 · plan <code style="color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)">plans/2026-06-14-kairosoft-feedback-juice-plan.md</code></div>
+</div>
+
+<section>
+  <h2>Executive Summary</h2>
+  <p>Sprint 4 added the Kairosoft "game-feel" payoffs — an on-canvas floating-feedback layer (coins, numbers, reaction
+  emotes) wired to abatement, offsets, compliance changes, and level-ups — then hardened the experience: it ran the
+  deferred <strong>accessibility contrast pass</strong> (measuring every key palette pair and fixing two failures),
+  rolled the feedback across <strong>co-op and summary</strong>, confirmed reduced-motion behavior, and bounded
+  performance with caps. Frontend-only; 116 tests pass. <strong>This completes Sprints 1–4 of the Kairosoft roadmap.</strong></p>
+  <div class="kpi">
+    <div class="box"><div class="v">3 / 3</div><div class="l">Phases complete</div></div>
+    <div class="box"><div class="v">5</div><div class="l">Feedback event types</div></div>
+    <div class="box"><div class="v">2</div><div class="l">A11y fails fixed</div></div>
+    <div class="box"><div class="v">116</div><div class="l">Tests passing</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Background &amp; Objective</h2>
+  <p>Kairosoft games shower the player with little payoffs. CarbonSim only emitted abstract particle bursts. Sprint 4's
+  objective: add spatial floating feedback tied to real events, then finish the roadmap's perf/a11y/cross-screen items.</p>
+</section>
+
+<section>
+  <h2>Inputs &amp; Scope</h2>
+  <ul>
+    <li><strong>Plan:</strong> <code>plans/2026-06-14-kairosoft-feedback-juice-plan.md</code>; roadmap index <code>plans/2026-06-14-kairosoft-visual-roadmap-index.md</code>.</li>
+    <li><strong>Touched:</strong> <code>web/js/isocity.js</code>, <code>web/game.html</code>, <code>web/coop.html</code>, <code>web/summary.html</code>, <code>web/css/style.css</code>, <code>docs/design-language.md</code>.</li>
+    <li><strong>Out of scope:</strong> engine/snapshot changes; commissioned art; rounded-pixel font.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Assumptions &amp; Constraints</h2>
+  <ul>
+    <li>Feedback is cosmetic over events already surfaced (cash/compliance/XP); no new engine state.</li>
+    <li>Respect reduced motion and the 30fps throttle / caps.</li>
+    <li>Toast = textual; floaters/emotes = spatial (no double-signaling).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Methodology</h2>
+  <p>Same cadence: implement → verify live (pixel-diff, computed colors, contrast math) → phase report → commit &amp; push.</p>
+  <div class="flow"><span class="step">P1 · Floater layer + API</span><span class="arr">→</span><span class="step">P2 · Wire to events</span><span class="arr">→</span><span class="step">P3 · A11y + cross-screen + perf</span></div>
+</section>
+
+<section>
+  <h2>Phase-by-Phase Analysis</h2>
+  <h3>Phase 01 — Floating feedback layer</h3>
+  <p><code>Isocity.float(text,color)</code> + <code>Isocity.emote(symbol)</code>: rising/fading on-canvas pop-ups
+  anchored above the player plot, capped, no-op under reduced motion.</p>
+  <h3>Phase 02 — Event wiring</h3>
+  <p>game.html fires 💚/−t/−cost on abatement, 🪙/+t on offsets, 😊/😡 on compliance flips, ⭐/"LEVEL UP!" on level-up.</p>
+  <h3>Phase 03 — A11y, cross-screen, perf</h3>
+  <p>Measured WCAG ratios; introduced <code>--accent-ink</code> for small accent text (5.4:1) and darkened green-badge
+  ink (5.3:1); wired feedback into co-op + summary; confirmed reduced motion; bounded perf with caps.</p>
+</section>
+
+<section>
+  <h2>Findings &amp; Recommendation</h2>
+  <ul>
+    <li><span class="ok">Juice landed:</span> real Activate clicks fire emote+coins (≈3,300 px change); floaters animate and fade.</li>
+    <li><span class="ok">Accessibility verified + fixed:</span> all key pairs now meet WCAG 4.5/3.0; 2 prior failures corrected.</li>
+    <li><span class="ok">Consistent across screens:</span> game, co-op, and summary all show the full Kairosoft stack.</li>
+    <li><strong>Recommendation:</strong> roadmap is done — ship it. Optional polish in the backlog below.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Implementation Path (backlog / optional)</h2>
+  <ol>
+    <li>Rounded-pixel display font (drop-in: <code>.ttf</code> + <code>@font-face</code> + attribution).</li>
+    <li>Small engine change: expose per-company abatement/emissions in the leaderboard so bot buildings + citizen reactivity reflect the whole city.</li>
+    <li>Formal mobile FPS / Lighthouse trace.</li>
+    <li>Optional commissioned/hand-pixel sprite art via the existing manifest.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Risks / Open Questions</h2>
+  <table>
+    <tr><th>Item</th><th>Status</th></tr>
+    <tr><td>Mobile FPS trace</td><td class="warn">Not captured; perf bounded by caps + throttle</td></tr>
+    <tr><td>Feedback/citizen reactivity is player-only</td><td class="muted">Snapshot limitation; small engine follow-up</td></tr>
+    <tr><td>Procedural (not artisan) sprite art</td><td class="muted">Replaceable via manifest</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Appendices / Evidence Notes</h2>
+  <ul>
+    <li><strong>Sprint 4 commits:</strong> P1 <code>69add32</code>, P2 <code>fd6c16c</code>, P3 <code>a9ae1f6</code>.</li>
+    <li><strong>Phase reports:</strong> <code>…sprint4-phase01-floaters.html</code>, <code>…-phase02-event-wiring.html</code>, <code>…-phase03-perf-a11y.html</code>.</li>
+    <li><strong>Roadmap finals:</strong> Sprint 1 <code>…-final-kairosoft-sprint1.html</code> · S2 <code>…-sprint2</code> · S3 <code>…-sprint3</code> · S4 (this).</li>
+    <li><strong>Verification:</strong> floaters 3,266–3,278 px on fire; contrast fixes 3.4→5.4 / 4.4→5.3; computed <code>--accent-ink</code> applied; 116 tests pass.</li>
+  </ul>
+</section>
+
+</div></body></html>
