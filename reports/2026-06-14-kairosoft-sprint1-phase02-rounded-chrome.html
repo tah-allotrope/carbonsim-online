@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kairosoft Sprint 1 · Phase 02 — Rounded Chrome</title>
+<style>
+  :root{
+    --bg:#fdf6e9; --panel:#fffefb; --ink:#2a2018; --muted:#6f5d46;
+    --accent:#1f93c7; --accent2:#2bb0e0; --green:#4caf50; --red:#e2553f; --orange:#f5a623;
+    --line:rgba(74,59,45,.2); --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 64px}
+  header.hero{background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;
+    border-radius:var(--radius);padding:28px 30px;box-shadow:0 6px 18px rgba(31,147,199,.3)}
+  header.hero h1{margin:0 0 6px;font-size:1.6rem}
+  header.hero .meta{font-size:.85rem;opacity:.95}
+  .tag{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);
+    padding:2px 10px;border-radius:999px;font-size:.72rem;margin-right:6px}
+  section{background:linear-gradient(180deg,#fffefb,#f7eed9);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 24px;margin-top:18px;box-shadow:0 4px 14px rgba(74,59,45,.12)}
+  h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent);letter-spacing:.02em}
+  h2 .n{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:8px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.9rem}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.08em}
+  code{background:#f3e7cf;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.85em}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .flow .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;box-shadow:0 2px 6px rgba(74,59,45,.12)}
+  .flow .arr{color:var(--muted);font-weight:700}
+  .empty{color:var(--muted);font-style:italic}
+  ul{margin:6px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .ok{color:var(--green);font-weight:700}
+  .warn{color:var(--orange);font-weight:700}
+  .muted{color:var(--muted)}
+  .pill{display:inline-block;border-radius:999px;padding:6px 16px;color:#fff;font-weight:700;font-size:.85rem;
+    background:linear-gradient(180deg,var(--accent2),var(--accent));box-shadow:0 3px 0 #156f97,0 5px 9px rgba(31,147,199,.32)}
+  @media print{body{background:#fff}header.hero{box-shadow:none;color:#0a3b4a;background:#fff;border:2px solid var(--accent)}section{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div><span class="tag">Phase Report</span><span class="tag">Sprint 1 · Phase 02</span></div>
+  <h1>Rounded Chrome, Gradients &amp; Notification Bubble</h1>
+  <div class="meta">CarbonSim Online · repo <code style="color:#fff;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)">carbonsim-online</code> · 2026-06-14</div>
+</header>
+
+<section>
+  <h2><span class="n">1</span>Phase Header</h2>
+  <p>Second phase of <strong>Kairosoft Sprint 1</strong> (<code>plans/2026-06-14-kairosoft-palette-ui-plan.md</code>).
+  Goal: turn the components from hard <em>beveled</em> retro chrome into cute, <strong>rounded, gradient, soft-shadow</strong>
+  Kairosoft UI, and add a reusable speech/notification bubble for the Sprint-4 floating feedback. Built on the Phase-01
+  palette + new <code>--radius-lg</code>/gradient tokens.</p>
+</section>
+
+<section>
+  <h2><span class="n">2</span>Input → Output Summary</h2>
+  <table>
+    <tr><th>Input</th><th>Output</th></tr>
+    <tr>
+      <td>Beveled components in <code>web/css/style.css</code> — hard inset/3-D <code>box-shadow</code> stacks, <code>--radius 8px</code>, flat fills</td>
+      <td>Rounded components — pill buttons (999px), <code>--radius-lg 16px</code> cards/modals/event-cards, gradient fills (<code>--grad-*</code>), soft drop shadows; new <code>.bubble</code> speech-pill</td>
+    </tr>
+  </table>
+  <table>
+    <tr><th>Component</th><th>Before</th><th>After</th></tr>
+    <tr><td><code>.card</code> / <code>.event-card</code> / <code>.modal</code></td><td>8px, inset bevel + hard <code>0 4px 0</code> edge</td><td>16px, <code>--grad-panel</code>, soft <code>0 4px 14px</code> shadow</td></tr>
+    <tr><td><code>.btn</code> / <code>.btn-primary</code> / <code>.btn-danger</code></td><td>8px, flat, bevel insets</td><td><span class="pill">Pill</span> gradient + colored bottom edge + soft shadow; press = translateY</td></tr>
+    <tr><td><code>.input</code> / <code>select</code></td><td>bevel-inset on cream</td><td>white, soft inner shadow, 3px focus ring</td></tr>
+    <tr><td><code>.badge</code></td><td>flat + bevel inset</td><td>gradient pills (<code>--grad-green/red/accent</code>, sunny orange)</td></tr>
+    <tr><td><code>.stat</code></td><td>bevel inset</td><td>soft 2px/6px shadow</td></tr>
+    <tr><td><code>.bubble</code> (new)</td><td class="muted">—</td><td>speech-pill w/ tail; <code>accent/green/red</code> variants (for Sprint 4)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">3</span>Logic Flow</h2>
+  <div class="flow">
+    <span class="step">Scan <code>animations.css</code> (no neon-dominant glow)</span><span class="arr">→</span>
+    <span class="step">Round + gradient core components</span><span class="arr">→</span>
+    <span class="step">Soft shadows replace bevel stacks</span><span class="arr">→</span>
+    <span class="step">Add <code>.bubble</code></span><span class="arr">→</span>
+    <span class="step">Reload + verify computed styles + screenshot</span>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">4</span>Math / Algorithm Used</h2>
+  <p class="empty">None. Pure presentational CSS; no computation.</p>
+</section>
+
+<section>
+  <h2><span class="n">5</span>Tools / Formulas / Methods</h2>
+  <ul>
+    <li><strong>Grep</strong> on <code>animations.css</code> to confirm no neon-dominant effects (only minor old-teal glows remain — left as-is).</li>
+    <li><strong>Edit</strong> (×7) on <code>web/css/style.css</code>: <code>.card</code>, <code>.btn</code> family, <code>.input/select</code>, <code>.badge</code>, <code>.stat</code>, <code>.event-card</code>, <code>.modal</code>, + new <code>.bubble</code>.</li>
+    <li><strong>Claude Preview</strong> — cache-busted reload, <code>preview_eval</code> computed-style readback, <code>preview_screenshot</code>.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">6</span>Results &amp; Visualizations</h2>
+  <table>
+    <tr><th>Check</th><th>Result</th></tr>
+    <tr><td>Primary button border-radius</td><td><span class="ok">999px (pill)</span></td></tr>
+    <tr><td>Primary button background</td><td><span class="ok">linear-gradient(azure → accent)</span></td></tr>
+    <tr><td>Card border-radius / shadow</td><td><span class="ok">16px / soft rgba(74,59,45,.12)</span></td></tr>
+    <tr><td><code>.bubble</code> rule present</td><td><span class="ok">yes (with accent/green/red variants)</span></td></tr>
+    <tr><td>Menu screenshot</td><td><span class="ok">Rounded cards, pill buttons, gradient badges — cheerful Kairosoft read</span></td></tr>
+  </table>
+  <p class="empty" style="margin-top:10px">No quantitative data warrants a chart this phase — empty state by design.</p>
+</section>
+
+<section>
+  <h2><span class="n">7</span>Limitations / Second-Best Alternative</h2>
+  <ul>
+    <li><strong>Font not swapped.</strong> The default decision was to add a rounded pixel display font, but a licensed rounded-pixel webfont binary couldn't be added in this environment. Press Start 2P (a genuine pixel font) is kept for the pixel-game identity; swapping to a rounded-pixel OFL face is a drop-in follow-up (add <code>.ttf</code> → <code>@font-face</code> → <code>ATTRIBUTIONS.md</code>; update <code>--font-display</code>).</li>
+    <li><strong>animations.css</strong> left mostly as-is — a few subtle glows still reference the old teal; low value to chase, flagged for a later pass.</li>
+    <li><strong>Second-best:</strong> Google Fonts CDN for a rounded font — rejected (external runtime dependency; the app is self-hosted/offline-friendly).</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">8</span>Errors / Warnings / Flags Encountered</h2>
+  <ul>
+    <li><span class="warn">Font task partially deferred</span> — see Limitations (no fabricated binary).</li>
+    <li><span class="muted">Browser cached CSS until a cache-busting reload; <code>/css</code> sends <code>Cache-Control: no-cache</code> so a user hard-refresh suffices.</span></li>
+    <li>No CSS errors; layout intact across cards/buttons/badges/inputs/modals.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">9</span>Open Questions / Next Phase Seeds</h2>
+  <ul>
+    <li><strong>Phase 03 (next):</strong> rewrite the palette/typography/component sections of <code>docs/design-language.md</code> for the Kairosoft system, define the <em>building sprite spec</em> (palette/outline/light/64×32) for Sprint 2, and sweep the four screens for inline styles that fight the tokens.</li>
+    <li><strong>Carry-over:</strong> rounded-pixel display font (drop-in) and a fuller <code>animations.css</code> reconcile.</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>
