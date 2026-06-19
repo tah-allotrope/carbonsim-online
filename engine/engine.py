@@ -1782,7 +1782,7 @@ def _event_summary(event_type: str, details: dict[str, Any]) -> str:
     if event_type == "year_started":
         return f"Year {details['year']} began with cap {details['cap']:.2f} (free: {details['free_allocation']:.2f}, auction: {details['auction_supply']:.2f})"
     if event_type == "year_closed":
-        return f"Year {details['year']} closed - penalties: {details['total_penalties']:.2f}, banked: {details['total_banked']:.2f}"
+        return f"Year {details['year']} closed - all-company penalties: {details['total_penalties']:.2f}, banked: {details['total_banked']:.2f}"
     if event_type == "decision_window_opened":
         return "Decision window opened"
     if event_type == "abatement_activated":

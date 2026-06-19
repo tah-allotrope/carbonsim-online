@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import zlib
 from datetime import datetime, timezone
@@ -11,7 +12,9 @@ DB_PATH = Path(__file__).parent / "mayor.db"
 
 
 def _get_db(path: str | None = None) -> sqlite3.Connection:
-    db_path = path or str(DB_PATH)
+    # Honour MAYOR_DB_PATH at call time so tests (and ops overrides) can point at
+    # a separate database instead of polluting the production mayor.db.
+    db_path = path or os.environ.get("MAYOR_DB_PATH") or str(DB_PATH)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")

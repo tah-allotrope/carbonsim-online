@@ -376,7 +376,7 @@ function renderContent() {
           <td>${m.label}</td>
           <td style="font-family:var(--mono)">-${m.abatement_amount} t</td>
           <td style="font-family:var(--mono)">$${fmt(m.cost)}</td>
-          <td>${m.activation_timing}</td>
+          <td>${timingLabel(m.activation_timing)}</td>
           <td>${statusLabel ? `<span class="badge ${statusClass}">${statusLabel}</span>` : `<button class="btn" id="abBtn-${m.measure_id}" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'}, event)" style="padding:6px 12px;font-size:0.8rem">Activate</button>`}</td>
         </tr>`;
       }
@@ -779,6 +779,13 @@ function fmt(n) {
   if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1)+'M';
   if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1)+'K';
   return n.toFixed(1);
+}
+
+function timingLabel(timing) {
+  const labels = { immediate: 'Immediate', next_year: 'Next Year', this_year: 'This Year' };
+  if (labels[timing]) return labels[timing];
+  if (!timing) return '—';
+  return String(timing).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 refresh();

@@ -47,7 +47,7 @@
             Recommended for first-time players. The tutorial uses fixed event cards and lighter guidance.
           </div>
         </div>
-        <button class="btn btn-primary" onclick="startGame()" style="width:100%;justify-content:center">
+        <button class="btn btn-primary" id="startBtn" onclick="startGame(this)" style="width:100%;justify-content:center">
           Start Game
         </button>
       </div>
@@ -89,8 +89,8 @@ function navigateTo(url) {
   }, 250);
 }
 
-async function startGame() {
-  const btn = event.target;
+async function startGame(btn) {
+  btn = btn || document.getElementById('startBtn');
   btn.disabled = true; btn.textContent = 'Creating...';
   try {
     const data = await API.createGame({
@@ -144,18 +144,34 @@ async function loadGames() {
       return;
     }
     el.innerHTML = active.map(g => `
-      <div class="leaderboard-row" style="cursor:pointer" onclick="navigateTo('/game.html?id=${g.game_id}')">
+      <div class="leaderboard-row" data-game="${g.game_id}" style="cursor:pointer" onclick="navigateTo('/game.html?id=${g.game_id}')">
         <div>
           <strong>${g.player_name}</strong>
           <div style="color:var(--muted);font-size:0.8rem;font-family:var(--mono)">
             ${g.difficulty} · Year ${g.current_year}/${g.total_years}
           </div>
         </div>
-        <span class="badge badge-green">Resume</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span class="badge badge-green">Resume</span>
+          <button class="btn" title="Delete this game" aria-label="Delete game"
+            onclick="event.stopPropagation(); deleteGame('${g.game_id}', '${(g.player_name || '').replace(/'/g, "\\'")}')"
+            style="padding:4px 10px;font-size:0.8rem">✕</button>
+        </span>
       </div>
     `).join('');
   } catch (e) {
     el.innerHTML = `<p style="color:var(--red)">Error loading games: ${e.message}</p>`;
+  }
+}
+
+async function deleteGame(gameId, playerName) {
+  if (!confirm(`Delete saved game "${playerName}"? This cannot be undone.`)) return;
+  try {
+    await API.deleteGame(gameId);
+    if (window.AudioManager) AudioManager.playSFX('click');
+    loadGames();
+  } catch (e) {
+    alert('Could not delete game: ' + e.message);
   }
 }
 

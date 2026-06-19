@@ -236,6 +236,12 @@ label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8r
 @media (max-width: 768px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .header { flex-direction: column; align-items: flex-start; }
+  /* Wide tables (e.g. Company Standings) scroll within their card instead of
+     forcing the whole page to scroll sideways. */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+  /* Keep off-screen decorative elements (e.g. hidden timeline tooltips) from
+     creating a horizontal page scroll on narrow viewports. */
+  html, body { overflow-x: hidden; }
 }
 
 .modal-overlay {
