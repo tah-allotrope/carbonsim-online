@@ -95,6 +95,21 @@
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="yearEndModal">
+  <div class="modal" style="max-width:560px">
+    <div style="text-align:center;margin-bottom:16px">
+      <div id="yearEndIcon" style="font-size:2.8rem;margin-bottom:8px">📋</div>
+      <h2 id="yearEndTitle" style="margin:0">Year Review</h2>
+    </div>
+    <div id="yearEndMetrics" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px"></div>
+    <div id="yearEndNarrative" style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;font-size:0.9rem;color:var(--muted);line-height:1.6;margin-bottom:16px"></div>
+    <div id="yearEndPersonalBest" style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;text-align:center"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="width:100%" onclick="closeYearEnd()">Continue to Next Year →</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/effects.js"></script>
 <script src="/js/audio.js"></script>
@@ -372,12 +387,13 @@ function renderContent() {
         const isPending = m.pending || pendingIds.includes(m.measure_id);
         const statusClass = isActive ? 'badge-green' : isPending ? 'badge-orange' : '';
         const statusLabel = isActive ? 'Active' : isPending ? 'Pending' : '';
+        const preview = !statusLabel ? previewHtml('activate_abatement', {measure_id: m.measure_id}) : '';
         html += `<tr>
           <td>${m.label}</td>
           <td style="font-family:var(--mono)">-${m.abatement_amount} t</td>
           <td style="font-family:var(--mono)">$${fmt(m.cost)}</td>
           <td>${timingLabel(m.activation_timing)}</td>
-          <td>${statusLabel ? `<span class="badge ${statusClass}">${statusLabel}</span>` : `<button class="btn" id="abBtn-${m.measure_id}" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'}, event)" style="padding:6px 12px;font-size:0.8rem">Activate</button>`}</td>
+          <td>${statusLabel ? `<span class="badge ${statusClass}">${statusLabel}</span>` : `<div><button class="btn" id="abBtn-${m.measure_id}" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'}, event)" style="padding:6px 12px;font-size:0.8rem">Activate</button>${preview}</div>`}</td>
         </tr>`;
       }
       html += `</table></div>`;
@@ -400,7 +416,8 @@ function renderContent() {
       <div class="glass-panel" style="padding:12px;border-radius:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <div style="flex:1;min-width:180px">
           <label style="font-size:0.8rem;color:var(--muted);display:block;margin-bottom:4px">Quantity to Buy (t):</label>
-          <input type="number" id="offsetQtyInput" min="1" max="1000" value="10" class="input-base" style="width:100%">
+          <input type="number" id="offsetQtyInput" min="1" max="1000" value="10" class="input-base" style="width:100%" oninput="updateOffsetPreview(this.value)">
+          <div id="offsetPreview" style="margin-top:4px;min-height:18px"></div>
         </div>
         <button class="btn btn-primary" onclick="buyOffsets(event)" style="margin-top:20px;height:40px">Buy Offsets</button>
       </div>
@@ -471,6 +488,127 @@ function renderContent() {
   }
 }
 
+// ── Consequence preview (client-side, no API call) ──────────────────────────
+function projectOutcome(action, payload) {
+  const s = gameState && gameState.snapshot || {};
+  const player = s.player_company || s.companies?.[0] || {};
+  const projected = player.projected_emissions || 0;
+  const allowances = player.allowances || 0;
+  const offsetHoldings = player.offset_holdings || 0;
+  const offsetCapPct = s.offset_usage_cap != null ? s.offset_usage_cap : 0.1;
+  const offsetPrice = s.offset_price || 25;
+  const offsetCap = Math.round(projected * offsetCapPct * 100) / 100;
+  const currentUsable = Math.min(offsetHoldings, offsetCap);
+  const currentGap = Math.round((projected - allowances - currentUsable) * 100) / 100;
+
+  let gapDelta = 0, cashDelta = 0, note = '';
+
+  if (action === 'activate_abatement') {
+    const menu = player.abatement_menu || [];
+    const m = menu.find(x => x.measure_id === payload.measure_id);
+    if (!m) return null;
+    cashDelta = -m.cost;
+    if (m.activation_timing === 'immediate') {
+      const newProjected = Math.max(projected - m.abatement_amount, 0);
+      const newUsable = Math.min(offsetHoldings, Math.round(newProjected * offsetCapPct * 100) / 100);
+      const newGap = Math.round((newProjected - allowances - newUsable) * 100) / 100;
+      gapDelta = Math.round((newGap - currentGap) * 100) / 100;
+      note = `−${m.abatement_amount} t this year`;
+    } else {
+      note = `−${m.abatement_amount} t from next year`;
+    }
+  } else if (action === 'buy_offsets') {
+    const qty = parseFloat(payload.quantity) || 0;
+    cashDelta = -Math.round(qty * offsetPrice * 100) / 100;
+    const newHoldings = offsetHoldings + qty;
+    const newUsable = Math.min(newHoldings, offsetCap);
+    const effectiveGain = newUsable - currentUsable;
+    gapDelta = Math.round(-effectiveGain * 100) / 100;
+    if (offsetHoldings >= offsetCap) note = `Already at cap (${offsetCap} t max)`;
+    else if (newHoldings > offsetCap) note = `${(newHoldings - offsetCap).toFixed(1)} t excess (above cap)`;
+  }
+  return { gapDelta, cashDelta, note };
+}
+
+function fmtDelta(v, prefix = '') {
+  if (v == null || v === 0) return '';
+  const sign = v > 0 ? '+' : '';
+  return `${prefix}${sign}${fmt(Math.abs(v))}`;
+}
+
+function previewHtml(action, payload) {
+  const r = projectOutcome(action, payload);
+  if (!r) return '';
+  const gapColor = r.gapDelta < 0 ? 'var(--green)' : r.gapDelta > 0 ? 'var(--red)' : 'var(--muted)';
+  const cashColor = r.cashDelta < 0 ? 'var(--red)' : 'var(--green)';
+  const gapStr = r.gapDelta !== 0 ? `<span style="color:${gapColor};font-size:0.75rem">gap ${fmtDelta(r.gapDelta)} t</span>` : '';
+  const cashStr = r.cashDelta !== 0 ? `<span style="color:${cashColor};font-size:0.75rem">$${fmtDelta(r.cashDelta)}</span>` : '';
+  const noteStr = r.note ? `<span style="color:var(--muted);font-size:0.7rem">${r.note}</span>` : '';
+  const parts = [gapStr, cashStr, noteStr].filter(Boolean);
+  return parts.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">${parts.join('')}</div>` : '';
+}
+
+function updateOffsetPreview(qty) {
+  const el = document.getElementById('offsetPreview');
+  if (!el) return;
+  el.innerHTML = previewHtml('buy_offsets', { quantity: parseFloat(qty) || 0 });
+}
+
+// ── Year-end modal ───────────────────────────────────────────────────────────
+function showYearEndModal(yearSummary, closedYear, snapshot) {
+  const player = (snapshot && (snapshot.player_company || snapshot.companies?.[0])) || {};
+  const results = player.year_results || [];
+  // Find the result for the year that just closed
+  const yr = results.find(r => r.year === closedYear) || results[results.length - 1] || {};
+
+  const isCompliant = (yr.shortfall || 0) <= 0;
+  document.getElementById('yearEndIcon').textContent = isCompliant ? '🏅' : '⚠️';
+  document.getElementById('yearEndTitle').textContent = `Year ${closedYear || ''} Complete`;
+
+  const metrics = [
+    { label: 'Emissions', value: `${fmt(yr.emissions || 0)} t`, color: '' },
+    { label: 'Allocation', value: `${fmt(yr.allocation || 0)} t`, color: '' },
+    { label: 'Shortfall', value: `${fmt(yr.shortfall || 0)} t`, color: (yr.shortfall || 0) > 0 ? 'var(--red)' : 'var(--green)' },
+    { label: 'Penalty', value: `$${fmt(yr.penalty_due || 0)}`, color: (yr.penalty_due || 0) > 0 ? 'var(--red)' : 'var(--green)' },
+    { label: 'Banked', value: `${fmt(yr.banked_allowances || 0)} t`, color: 'var(--accent)' },
+    { label: 'Cash', value: `$${fmt(yr.cash || player.cash || 0)}`, color: '' },
+  ];
+  document.getElementById('yearEndMetrics').innerHTML = metrics.map(m =>
+    `<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px 10px">
+       <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">${m.label}</div>
+       <div style="font-size:1rem;font-weight:700;color:${m.color || 'var(--text)'}">${m.value}</div>
+     </div>`
+  ).join('');
+
+  document.getElementById('yearEndNarrative').textContent = yearSummary || '';
+
+  // Personal-best comparison
+  const pbKey = `pb_${GAME_ID}_penalties`;
+  const prevBest = parseFloat(localStorage.getItem(pbKey) || 'Infinity');
+  const thisPenalty = yr.penalty_due || 0;
+  let pbText = '';
+  if (isCompliant) {
+    if (prevBest === Infinity || prevBest > 0) {
+      pbText = '🌟 Penalty-free year — personal best!';
+      localStorage.setItem(pbKey, '0');
+    } else {
+      pbText = '✅ Penalty-free again';
+    }
+  } else if (thisPenalty < prevBest) {
+    pbText = `📉 New best for this year type: $${fmt(thisPenalty)} penalty`;
+    localStorage.setItem(pbKey, String(thisPenalty));
+  }
+  document.getElementById('yearEndPersonalBest').textContent = pbText;
+
+  document.getElementById('yearEndModal').classList.remove('hidden');
+  if (window.AudioManager) AudioManager.playSFX('success');
+}
+
+function closeYearEnd() {
+  document.getElementById('yearEndModal').classList.add('hidden');
+  refresh();
+}
+
 function doAdvanceYear() {
   const advBtn = document.getElementById('advanceBtn');
   if (advBtn) {
@@ -481,12 +619,13 @@ function doAdvanceYear() {
   if (window.AudioManager) AudioManager.playSFX('year-advance');
   if (CityRenderer) CityRenderer.triggerYearTransition();
 
+  const closingYear = gameState ? (gameState.current_year || 0) : 0;
+
   // Trigger year advanced wipe overlay
   const wipe = document.createElement('div');
   wipe.className = 'year-wipe-overlay active';
-  const currentY = gameState ? (gameState.current_year || 0) : 0;
   wipe.innerHTML = `
-    <div class="year-wipe-title">Year ${currentY + 1}</div>
+    <div class="year-wipe-title">Year ${closingYear + 1}</div>
     <div class="year-wipe-subtitle">Governance Transition</div>
   `;
   document.body.appendChild(wipe);
@@ -494,9 +633,13 @@ function doAdvanceYear() {
   setTimeout(() => {
     API.advanceYear(GAME_ID).then(data => {
       gameState = data;
-      showToast('Year advanced successfully', 'success');
-      refresh();
       setTimeout(() => wipe.remove(), 600);
+      if (data.year_summary && data.phase !== 'complete') {
+        showYearEndModal(data.year_summary, closingYear, data.snapshot);
+      } else {
+        showToast('Year advanced successfully', 'success');
+        refresh();
+      }
     }).catch(e => {
       showError(e.message);
       wipe.remove();

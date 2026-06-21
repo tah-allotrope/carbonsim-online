@@ -55,6 +55,7 @@ class AdvanceYearResponse(BaseModel):
     phase: str
     drawn_cards: list[dict[str, Any]]
     snapshot: dict[str, Any]
+    year_summary: str | None = None
 
 
 class ResolveCardRequest(BaseModel):

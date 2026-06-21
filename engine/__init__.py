@@ -21,6 +21,8 @@ from .engine import (
     build_session_summary,
     apply_shock,
     run_bot_turns,
+    project_outcome,
+    generate_year_summary,
     COMPANY_LIBRARY,
     ABATEMENT_CATALOG,
 )
@@ -53,7 +55,7 @@ from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES
 
 from .cards import CardDeck, draw_cards, resolve_card
 from .achievements import ACHIEVEMENTS, compute_achievements
-from .playtest import run_playtest, run_playtest_batch, summarize_playtests
+from .playtest import run_playtest, run_playtest_batch, summarize_playtests, check_determinism
 from .tutorial import TUTORIAL_CARDS, mark_tutorial_state, tutorial_notes_for_year
 from .coop import (
     add_coop_participant,
@@ -96,6 +98,8 @@ __all__ = [
     "build_session_summary",
     "apply_shock",
     "run_bot_turns",
+    "project_outcome",
+    "generate_year_summary",
     "COMPANY_LIBRARY",
     "ABATEMENT_CATALOG",
     "PHASE_LOBBY",

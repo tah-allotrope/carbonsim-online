@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random as _random
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -43,6 +44,7 @@ def create_initial_state(
     scenario: str | None = None,
     bot_count: int = 0,
     bot_strategy: str = BOT_STRATEGY_MODERATE,
+    rng_seed: int | None = None,
 ) -> dict[str, Any]:
     pack = SCENARIO_PACKS.get(
         scenario or "vietnam_pilot", SCENARIO_PACKS["vietnam_pilot"]
@@ -140,6 +142,7 @@ def create_initial_state(
         "participant_status": {},
         "scenario": scenario or "vietnam_pilot",
         "active_shocks": [],
+        "rng_seed": rng_seed if rng_seed is not None else _random.randint(0, 2**32 - 1),
     }
 
 
@@ -1648,6 +1651,136 @@ def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
             "auction_supply": auction_supply,
         },
     )
+
+
+def project_outcome(
+    state: dict[str, Any],
+    *,
+    company_id: str,
+    action: str,
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    """Pure function: returns {compliance_gap_delta, cash_delta, notes} for a proposed action.
+
+    Does NOT mutate state. Used by the UI to show projected consequences before commit.
+    """
+    try:
+        company = _get_company(state, company_id)
+    except ValueError:
+        return {"compliance_gap_delta": 0.0, "cash_delta": 0.0, "notes": []}
+
+    projected = company.get("projected_emissions", 0.0)
+    allowances = company.get("allowances", 0.0)
+    offset_holdings = company.get("offset_holdings", 0.0)
+    offset_cap_pct = state.get("offset_usage_cap", DEFAULT_OFFSET_USAGE_CAP)
+    offset_price = state.get("offset_price", DEFAULT_OFFSET_PRICE)
+    offset_cap = round(projected * offset_cap_pct, 2)
+    current_usable = min(offset_holdings, offset_cap)
+    current_gap = round(projected - allowances - current_usable, 2)
+
+    notes: list[str] = []
+    new_gap = current_gap
+    cash_delta = 0.0
+
+    if action == "activate_abatement":
+        measure_id = payload.get("measure_id", "")
+        try:
+            measure = _get_measure(company, measure_id)
+        except ValueError:
+            return {"compliance_gap_delta": 0.0, "cash_delta": 0.0, "notes": ["Measure not found"]}
+        cost = measure.get("cost", 0.0)
+        abatement = measure.get("abatement_amount", 0.0)
+        timing = measure.get("activation_timing", "next_year")
+        cash_delta = -cost
+        if timing == "immediate":
+            new_projected = max(projected - abatement, 0.0)
+            new_offset_cap = round(new_projected * offset_cap_pct, 2)
+            new_usable = min(offset_holdings, new_offset_cap)
+            new_gap = round(new_projected - allowances - new_usable, 2)
+            notes.append(f"Cuts emissions {abatement:.0f} t this year")
+        else:
+            notes.append(f"Cuts emissions {abatement:.0f} t from next year")
+
+    elif action == "buy_offsets":
+        quantity = float(payload.get("quantity", 0))
+        price = float(payload.get("price_per_unit", offset_price))
+        cash_delta = -round(quantity * price, 2)
+        new_holdings = offset_holdings + quantity
+        new_usable = min(new_holdings, offset_cap)
+        effective_gain = new_usable - current_usable
+        new_gap = round(current_gap - effective_gain, 2)
+        if offset_holdings >= offset_cap:
+            notes.append(f"Already at cap ({offset_cap:.0f} t max usable) — no compliance benefit")
+        elif new_holdings > offset_cap:
+            excess = round(new_holdings - offset_cap, 1)
+            notes.append(f"{excess:.0f} t excess (above cap, no compliance benefit)")
+
+    elif action == "submit_auction_bid":
+        quantity = float(payload.get("quantity", 0))
+        price = float(payload.get("price", 0))
+        cash_delta = -round(quantity * price, 2)
+        new_gap = round(current_gap - quantity, 2)
+        notes.append("Assumes bid wins at stated price")
+
+    gap_delta = round(new_gap - current_gap, 2)
+    return {
+        "compliance_gap_delta": gap_delta,
+        "cash_delta": round(cash_delta, 2),
+        "notes": notes,
+    }
+
+
+def generate_year_summary(state: dict[str, Any]) -> str:
+    """Template-driven 2-3 sentence narrative for the year-end report screen."""
+    player = next((c for c in state.get("companies", []) if not c.get("is_bot")), None)
+    if not player or not player.get("year_results"):
+        return ""
+    latest = player["year_results"][-1]
+    year = latest.get("year", state.get("current_year", 0))
+    shortfall = latest.get("shortfall", 0.0)
+    penalty = latest.get("penalty_due", 0.0)
+    banked = latest.get("banked_allowances", 0.0)
+    cash = latest.get("cash", player.get("cash", 0.0))
+
+    if shortfall <= 0:
+        if banked > 0:
+            outcome = (
+                f"Year {year} closed with full compliance — "
+                f"you banked {banked:.0f} surplus allowances for future years."
+            )
+        else:
+            outcome = f"Year {year} closed with full compliance. Your emissions stayed within the allocated cap."
+    elif penalty < 500_000:
+        outcome = (
+            f"Year {year} closed with a minor shortfall of {shortfall:.0f} t, "
+            f"incurring a ${penalty:,.0f} penalty."
+        )
+    else:
+        outcome = (
+            f"Year {year} saw a compliance gap of {shortfall:.0f} t — "
+            f"a ${penalty:,.0f} penalty has been charged to your budget."
+        )
+
+    if cash < 300_000:
+        cash_note = "Cash reserves are critically low. Financing options will be constrained next year."
+    elif cash > 3_000_000:
+        cash_note = "Your cash position is strong, leaving room for strategic investment."
+    else:
+        cash_note = f"Cash stands at ${cash:,.0f} heading into Year {year + 1}."
+
+    remaining = state.get("num_years", 15) - year
+    if remaining > 0:
+        factors = state.get("allocation_factors", {})
+        next_factor = factors.get(year + 1) or factors.get(str(year + 1))
+        if next_factor and next_factor < (factors.get(year) or factors.get(str(year), 1.0)):
+            outlook = "The cap tightens next year — plan your abatement and market strategy accordingly."
+        else:
+            s = "s" if remaining != 1 else ""
+            outlook = f"{remaining} compliance year{s} remain in this period."
+    else:
+        outlook = "This was the final compliance year."
+
+    return f"{outcome} {cash_note} {outlook}"
 
 
 def _close_current_year(state: dict[str, Any], now: datetime) -> None:

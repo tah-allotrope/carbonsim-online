@@ -15,7 +15,9 @@ from engine import (
     build_session_summary,
     close_auction,
     force_advance_phase,
+    generate_year_summary,
     open_auction,
+    project_outcome,
     respond_to_trade,
     run_bot_turns,
     start_simulation,
@@ -137,7 +139,9 @@ def _open_decision_window(
                 if card.get("prerequisites", {}).get("min_year") == state.get("current_year")
             ]
         elif STARTER_DECK_PATH:
-            rng = random.Random(hash((game_id, state.get("current_year", 0))))
+            seed = state.get("rng_seed", 0)
+            year = state.get("current_year", 0)
+            rng = random.Random(seed ^ (year * 2654435761 & 0xFFFFFFFF))
             if EXPANSION_DECK_PATH:
                 deck = CardDeck.from_paths(STARTER_DECK_PATH, EXPANSION_DECK_PATH, rng=rng)
             else:
@@ -226,12 +230,15 @@ async def advance_year(game_id: str):
             snapshot=_snapshot(state),
         )
 
+    closed_year_summary: str = ""
+
     # In the decision window, "Advance Year" ends the turn: bots act, then the
     # current year is closed and scored before the next window opens.
     if phase == "decision_window":
         state = run_bot_turns(state, now=now)
         state["drawn_cards"] = []
         state = force_advance_phase(state, now=now)  # decision_window -> compliance (closes & scores)
+        closed_year_summary = generate_year_summary(state)
         state = force_advance_phase(state, now=now)  # compliance -> next year_start (or complete)
 
     # Drain any residual compliance phase (e.g. entered mid-cycle).
@@ -254,6 +261,7 @@ async def advance_year(game_id: str):
         phase=state.get("phase", ""),
         drawn_cards=drawn_cards,
         snapshot=_snapshot(state),
+        year_summary=closed_year_summary or None,
     )
 
 
@@ -303,6 +311,31 @@ async def decision_route(game_id: str, req: DecisionRequest):
     return {"status": "applied", "snapshot": _snapshot(state)}
 
 
+@router.get("/{game_id}/project")
+async def project_outcome_route(game_id: str, action: str, payload: str = "{}"):
+    """Pure read-only endpoint: return projected compliance_gap_delta and cash_delta
+    for a proposed action without mutating game state."""
+    import json as _json
+    row = db_get_game(game_id)
+    if not row:
+        raise HTTPException(404, "Game not found")
+    state = decompress_state(row["state_json"])
+    player = solo_player_company(state)
+    if not player:
+        raise HTTPException(400, "No player company found")
+    try:
+        parsed_payload = _json.loads(payload)
+    except Exception:
+        raise HTTPException(400, "Invalid payload JSON")
+    result = project_outcome(
+        state,
+        company_id=player["company_id"],
+        action=action,
+        payload=parsed_payload,
+    )
+    return result
+
+
 @router.post("/{game_id}/end-year")
 async def end_year(game_id: str):
     row = db_get_game(game_id)
@@ -315,6 +348,10 @@ async def end_year(game_id: str):
     state["drawn_cards"] = []
 
     state = run_bot_turns(state, now=now)
+
+    # capture compliance result before advancing to next year
+    state = force_advance_phase(state, now=now)  # decision_window -> compliance
+    year_summary = generate_year_summary(state)
 
     phase = state.get("phase", "")
     while phase not in ("complete", "year_start"):
@@ -330,6 +367,7 @@ async def end_year(game_id: str):
         "year": state.get("current_year", 0),
         "phase": phase,
         "snapshot": _snapshot(state),
+        "year_summary": year_summary or None,
         "tutorial_note": tutorial_notes_for_year(state.get("current_year", 0)) if state.get("tutorial_mode") else None,
     }
 
