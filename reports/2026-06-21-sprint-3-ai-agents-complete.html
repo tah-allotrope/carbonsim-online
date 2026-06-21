@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: Sprint 3 — Goal-Driven AI Agents</title>
+  <meta name="color-scheme" content="light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --paper: #f7faf4; --paper-strong: #fdfff9; --ink: #1a2218;
+      --ink-soft: #4a5e44; --line: #c2d4ba; --line-strong: #8baa82;
+      --accent: #3a7a4e; --accent-2: #2c6e7a; --accent-3: #7a5c2e;
+      --green: #4a8c3a; --amber: #b08020; --red: #a03030;
+      --shadow: 0 14px 36px rgba(20, 50, 20, 0.08); --radius: 16px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace; --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(180deg, #eef4ea 0%, #f7faf4 28%, #edf3e9 100%); font-family: var(--body); line-height: 1.65; }
+    .page { width: min(980px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 64px; }
+    .hero { padding: 34px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%); }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 10px 0 12px; font-size: 2.05rem; line-height: 1.2; }
+    .lead { font-size: 1.04rem; color: var(--ink-soft); border-left: 3px solid var(--accent); padding-left: 14px; margin: 14px 0 0; }
+    .meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .chip { font-family: var(--mono); font-size: 0.70rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(58,122,78,0.08); }
+    .chip.done { background: rgba(74,140,58,0.12); border-color: var(--green); color: var(--green); font-weight: 600; }
+    .section { margin-top: 22px; padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    .section-num { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-2); margin-bottom: 4px; }
+    h2 { font-family: var(--display); margin: 0 0 16px; font-size: 1.45rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 20px 0 8px; font-size: 1.08rem; color: var(--ink-soft); }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 0 0 12px; padding-left: 22px; }
+    li { margin-bottom: 7px; }
+    code { font-family: var(--mono); background: rgba(58,122,78,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.84em; }
+    strong { color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.89rem; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+    th { font-family: var(--mono); text-transform: uppercase; font-size: 0.66rem; letter-spacing: 0.1em; color: var(--ink-soft); background: rgba(58,122,78,0.05); }
+    tr:last-child td { border-bottom: none; }
+    .ok { color: var(--green); font-weight: 700; }
+    .warn { color: var(--amber); font-weight: 700; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 16px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fdfff9; }
+    .stat-label { font-family: var(--mono); font-size: 0.62rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.12rem; font-weight: 700; margin-top: 5px; color: var(--accent); }
+    .stat-note { font-size: 0.72rem; color: var(--ink-soft); margin-top: 3px; }
+    .callout { border-left: 3px solid var(--accent); padding: 12px 16px; background: rgba(58,122,78,0.06); border-radius: 0 8px 8px 0; margin: 14px 0; }
+    .callout.warn { border-left-color: var(--amber); background: rgba(176,128,32,0.06); }
+    .callout.bug { border-left-color: var(--red); background: rgba(160,48,48,0.05); }
+    .callout-title { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--accent-3); margin-bottom: 6px; }
+    .callout.warn .callout-title { color: var(--amber); }
+    .callout.bug .callout-title { color: var(--red); }
+    .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+    @media (max-width: 640px) { .io-grid, .chart-row { grid-template-columns: 1fr !important; } }
+    .io-col h4 { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-3); margin: 0 0 8px; }
+    .mermaid-frame { overflow-x: auto; padding: 18px; background: rgba(58,122,78,0.04); border: 1px solid var(--line); border-radius: 10px; margin-top: 14px; max-height: 480px; }
+    .mermaid svg { max-width: 100%; }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .chart-frame { height: 260px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fdfff9; }
+    pre.codeblock { background: #1d241a; color: #d6e4cd; padding: 14px 16px; border-radius: 10px; overflow-x: auto; font-family: var(--mono); font-size: 0.78rem; line-height: 1.5; }
+    @media print {
+      body { background: #fff; }
+      .section, .hero { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+      .chart-row, .io-grid { grid-template-columns: 1fr; }
+      .mermaid-frame { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 1. PHASE HEADER -->
+  <div class="hero">
+    <div class="eyebrow">Phase Report &middot; Kairosoft Elevation Sprint 3 &middot; carbonsim-online</div>
+    <h1>Sprint 3 — Goal-Driven AI Agents &amp; Strategy Dominance Sweep</h1>
+    <p class="lead">The three-profile single-year bots are replaced by planning agents that look 2–3 years ahead and wield the full instrument stack. A balance sweep exposed (and a penalty re-tune fixed) a regime where ignoring compliance was the optimal play — plus a latent shared-state bug that was corrupting game-to-game balance.</p>
+    <div class="meta">
+      <span class="chip">Date: 2026-06-21</span>
+      <span class="chip done">Commit ec6b29d</span>
+      <span class="chip done">67 tests pass (+7)</span>
+      <span class="chip done">Determinism ✓</span>
+      <span class="chip">PHASE-03 of 5</span>
+    </div>
+  </div>
+
+  <!-- 2. INPUT -> OUTPUT -->
+  <div class="section">
+    <div class="section-num">Section 1</div>
+    <h2>Input → Output Summary</h2>
+    <div class="io-grid">
+      <div class="io-col">
+        <h4>Inputs (start state)</h4>
+        <ul>
+          <li>3 bot profiles (conservative/moderate/aggressive) with single-year threshold heuristics, no lookahead, inline in <code>run_bot_turns</code>.</li>
+          <li>All solo bots shared one strategy (default moderate).</li>
+          <li>No bilateral OTC in solo play; <code>propose_trade</code>/<code>respond_to_trade</code> existed but bots never used them.</li>
+          <li>No balance-sweep tooling; <code>playtest.py</code> only ran a passive-player batch.</li>
+          <li><code>project_outcome</code> (Sprint 1) and dynamic pricing (Sprint 2) available for agents to plan against.</li>
+        </ul>
+      </div>
+      <div class="io-col">
+        <h4>Outputs (end state)</h4>
+        <ul>
+          <li><code>engine/agents.py</code> — <code>CompanyAgent</code> with multi-year <code>plan_year</code> + <code>respond_to_trade</code>.</li>
+          <li>5 strategy profiles (added <strong>opportunistic</strong>, <strong>speculator</strong>) with horizon/appetite fields.</li>
+          <li><code>run_bot_turns</code> dispatches agents; bots propose &amp; answer OTC trades.</li>
+          <li><code>ai_market_signals()</code> + <code>GET /api/games/{id}/ai-signals</code> competitor intel.</li>
+          <li><code>run_strategy_sweep</code> / <code>print_strategy_sweep</code> dominance harness.</li>
+          <li>Solo games seed a varied strategy mix per difficulty.</li>
+          <li>Balance re-tune + shared-state bug fix.</li>
+        </ul>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Plan Task</th><th>Deliverable</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>TASK-03-01</td><td><code>CompanyAgent</code> dataclass</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-03-02</td><td><code>plan_year</code> — horizon-aware, full instrument stack, uses <code>project_outcome</code></td><td class="ok">Done</td></tr>
+        <tr><td>TASK-03-03</td><td><code>run_bot_turns</code> → agent dispatch; <code>bot_strategy</code> preserved as risk_appetite</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-03-04</td><td>2 new profiles (opportunistic, speculator); 5 total</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-03-05</td><td>AI-initiated OTC proposals (1/bot/yr; own-state only)</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-03-06</td><td><code>run_strategy_sweep(seeds)</code> with win-rate table</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-03-07</td><td>Tune until no strategy &gt;60% win rate; document constants</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-03-08</td><td><code>GET /ai-signals</code> + solo strategy mix</td><td class="ok">Done</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3. LOGIC FLOW -->
+  <div class="section">
+    <div class="section-num">Section 2</div>
+    <h2>Logic Flow</h2>
+    <p>Each bot is wrapped in a <code>CompanyAgent</code>. <code>plan_year</code> is near-pure — it reads state and returns an ordered action list without mutating anything; <code>run_bot_turns</code> is the dispatcher that applies each action through the normal reducer so every bot move is audited exactly like a human move. A second pass lets bot buyers respond to OTC proposals raised this turn.</p>
+    <div class="mermaid-frame">
+      <pre class="mermaid">
+flowchart TB
+  subgraph DISPATCH["run_bot_turns (dispatcher)"]
+    direction TB
+    P1["Pass 1: each bot plans + acts"] --> P2["Pass 2: bot buyers answer OTC proposals"]
+  end
+  subgraph PLAN["CompanyAgent.plan_year (near-pure)"]
+    direction TB
+    A["1. Abatement\nrank cost/tonne, gate by horizon"] --> B["2. Forwards\nhedge future gap if spot cheap"]
+    B --> C["3. VCM\nmulti-year credit stream"]
+    C --> D["4. Spot offsets\ncover residual, respect cap"]
+    D --> E["5. Auction bids\ncover remaining gap"]
+    E --> F["6. OTC propose\nsell surplus to deficit peer"]
+  end
+  P1 -->|"for each bot"| PLAN
+  PLAN -->|"action list"| APPLY["apply_company_decision\n(audited reducer)"]
+  P2 --> RESP["respond_to_trade\naccept if price <= penalty & affordable"]
+
+  style PLAN fill:#eef6ea,stroke:#3a7a4e
+  style DISPATCH fill:#eaf2f4,stroke:#2c6e7a
+      </pre>
+    </div>
+    <p>Horizon awareness comes from <code>_estimate_future_gap</code>: it projects next year's emissions (growth, keeping current abatement) against next year's free allocation (scaled by the public allocation-factor decline). Agents with <code>horizon_years &gt; 1</code> pre-buy forwards/VCM to cover part of that anticipated shortfall; a 1-year planner returns 0 and skips hedging.</p>
+  </div>
+
+  <!-- 4. MATH / ALGORITHM -->
+  <div class="section">
+    <div class="section-num">Section 3</div>
+    <h2>Math / Algorithm Used</h2>
+    <h3>Abatement ranking &amp; horizon gate</h3>
+    <p>Candidate measures are ranked by cost-effectiveness <code>cost / max(abatement_amount, 0.01)</code> (cheapest tonne first, ≤10 evaluated per RISK-03-01). A measure is skipped when its per-tonne cost exceeds the penalty avoided over the horizon — i.e. when <code>cost/tonne &gt; penalty_rate × horizon_years</code> — unless the agent is <em>aggressive</em> (which abates regardless). Conservative agents stop once the running gap falls to <code>projected × (1 − abatement_threshold_fraction)</code>.</p>
+    <h3>Future-gap estimate (horizon lookahead)</h3>
+    <pre class="codeblock">next_emissions = max(baseline × (1+growth)^(next_year-1) − active_cut, 0)
+next_alloc     = current_alloc × (next_factor / this_factor)
+future_gap     = max(next_emissions − next_alloc, 0)        # 0 if horizon ≤ 1</pre>
+    <h3>Spot price seen by agents (Sprint 2 model, reused)</h3>
+    <pre class="codeblock">spot = base_price × (1 + ε × min(demand / supply_cap, 1))      # ε=0.4, S=50t
+forward_locked = round(spot × 1.05, 2)                          # 5% term premium</pre>
+    <h3>OTC sizing &amp; pricing</h3>
+    <pre class="codeblock">surplus  = allowances − effective_projected_emissions
+quantity = min(surplus, peer_compliance_gap) × otc_appetite
+price    = base_price × (1 + 0.3 × otc_appetite)               # speculator charges most</pre>
+    <h3>Sweep win metric — liquidation net worth</h3>
+    <pre class="codeblock">net_worth = cash                                  # already net of penalties + spend
+          + banked_allowances × auction_floor
+          + offset_holdings   × offset_price
+win_rate(strategy) = wins / seeds  (winner = highest net_worth per game)</pre>
+    <p>Net worth was chosen deliberately: ranking on <em>penalties only</em> rewards spending unlimited cash to zero them out (aggressive wins 90%); ranking on <em>cash only</em> rewards hoarding while eating penalties (conservative wins 100%). Net worth values converting spend into compliance assets and exposes the genuine balance question.</p>
+  </div>
+
+  <!-- 5. TOOLS / METHODS -->
+  <div class="section">
+    <div class="section-num">Section 4</div>
+    <h2>Tools / Formulas / Methods</h2>
+    <ul>
+      <li><strong>Python dataclass</strong> — <code>CompanyAgent</code> built from a company dict via <code>from_company</code>, reading its strategy profile from <code>BOT_STRATEGIES</code>.</li>
+      <li><strong>Lazy imports</strong> — <code>agents.py</code> imports engine helpers inside methods, and <code>engine.run_bot_turns</code> imports <code>CompanyAgent</code> lazily, to break the circular dependency.</li>
+      <li><strong>Greedy bounded planning</strong> — at most ~10 abatement candidates, one forward, one VCM, one OTC proposal per agent per year (RISK-03-01 mitigation).</li>
+      <li><strong>Monte-Carlo sweep</strong> — head-to-head games assigning each of 5 strategies to one company; <code>statistics.mean</code> aggregates cash/penalties; deterministic per seed.</li>
+      <li><strong>FastAPI</strong> — read-only <code>GET /api/games/{id}/ai-signals</code> returns each bot's strategy, posture, preferred instruments, and open-trade count.</li>
+      <li><strong>pytest / unittest</strong> — 67 tests including a 20-seed in-suite dominance assertion.</li>
+    </ul>
+  </div>
+
+  <!-- 6. RESULTS & VISUALIZATIONS -->
+  <div class="section">
+    <div class="section-num">Section 5</div>
+    <h2>Results &amp; Visualizations</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-label">Tests</div><div class="stat-value">67</div><div class="stat-note">+7 in test_agents.py; all pass</div></div>
+      <div class="stat"><div class="stat-label">Strategies</div><div class="stat-value">5</div><div class="stat-note">+ opportunistic, speculator</div></div>
+      <div class="stat"><div class="stat-label">Max win rate</div><div class="stat-value ok">45%</div><div class="stat-note">Target &lt;60% — passed</div></div>
+      <div class="stat"><div class="stat-label">Penalty re-tune</div><div class="stat-value">325→1000</div><div class="stat-note">solo_standard $/t</div></div>
+      <div class="stat"><div class="stat-label">New endpoint</div><div class="stat-value">/ai-signals</div><div class="stat-note">competitor intel</div></div>
+      <div class="stat"><div class="stat-label">Bug fixed</div><div class="stat-value">1</div><div class="stat-note">shared allocation_factors alias</div></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-frame"><canvas id="winChart"></canvas></div>
+      <div class="chart-frame"><canvas id="tuneChart"></canvas></div>
+    </div>
+    <p style="margin-top:14px;font-size:0.85rem;color:var(--ink-soft)">
+      <strong>Left:</strong> final 20-seed win-rate distribution at penalty_rate = 1000 (no strategy dominant).
+      <strong>Right:</strong> penalty-tuning curve — the maximum single-strategy win rate as penalty_rate varies, showing the balance minimum at ~1000 (all values on the corrected, un-polluted baseline).
+    </p>
+
+    <h3>Final sweep table (20 seeds, solo_standard, penalty 1000)</h3>
+    <table>
+      <thead><tr><th>Strategy</th><th>Win rate</th><th>Wins</th><th>Mean net worth</th><th>Mean penalties</th></tr></thead>
+      <tbody>
+        <tr><td>moderate</td><td class="ok">0.45</td><td>9</td><td>$306,959</td><td>$216,643</td></tr>
+        <tr><td>conservative</td><td>0.40</td><td>8</td><td>$338,327</td><td>$610,609</td></tr>
+        <tr><td>opportunistic</td><td>0.10</td><td>2</td><td>$184,448</td><td>$205,186</td></tr>
+        <tr><td>aggressive</td><td>0.05</td><td>1</td><td>$131,200</td><td>$53,593</td></tr>
+        <tr><td>speculator</td><td>0.00</td><td>0</td><td>$204,520</td><td>$687,975</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.8rem;color:var(--ink-soft)">Win counts illustrate the 0.45/0.40/0.10/0.05/0.00 split; ties/rounding mean displayed wins are indicative. The exit criterion — no strategy &gt; 60% — is met with margin.</p>
+  </div>
+
+  <!-- 7. LIMITATIONS / SECOND-BEST -->
+  <div class="section">
+    <div class="section-num">Section 6</div>
+    <h2>Limitations / Second-Best Alternative</h2>
+    <ul>
+      <li><strong>Speculator never wins the sweep (0%).</strong> The bank-and-sell profile carries the most penalties ($688k mean) and tops net worth in zero of 20 seeds. It is balanced (well under 60%) but is currently the weakest profile — a candidate for buff in a later pass.</li>
+      <li><strong>Penalty hike is a real difficulty change.</strong> Raising solo_standard from 325 to 1000 $/t makes the human game meaningfully harder. This is intentional (at 325, ignoring compliance was optimal, defeating the carbon theme) but only solo_standard was re-tuned; <code>solo_easy</code> and <code>solo_hard</code> were left as-is and may carry the same under-compliance incentive.</li>
+      <li><strong>Win metric is a modelling choice.</strong> Liquidation net worth is one defensible objective; the live game leaderboard still ranks by cumulative penalties (DEC-002). The two can disagree. A future Sprint 5 star-rating could reconcile them.</li>
+      <li><strong>Second-best AI design:</strong> a full BazaarBot multi-agent clearing market (ALT-001) was rejected — disproportionate complexity at 8 companies. The greedy bounded planner achieves varied, balanced behaviour without a global solver.</li>
+    </ul>
+  </div>
+
+  <!-- 8. ERRORS / WARNINGS / FLAGS -->
+  <div class="section">
+    <div class="section-num">Section 7</div>
+    <h2>Errors / Warnings / Flags Encountered</h2>
+    <div class="callout warn">
+      <div class="callout-title">Flag — num_years=None override</div>
+      First sweep run crashed: passing <code>num_years=None</code> into <code>create_initial_state</code> overrode its default of 3 with <code>None</code>. Fixed by resolving years from the scenario pack inside <code>run_strategy_sweep</code> when not supplied.
+    </div>
+    <div class="callout warn">
+      <div class="callout-title">Flag — Windows console Unicode</div>
+      <code>print_strategy_sweep</code> crashed on cp1252 when printing ⚠/✓/em-dash. Replaced with ASCII-safe markers (<code>[!]</code> / <code>[ok]</code>).
+    </div>
+    <div class="callout bug">
+      <div class="callout-title">Bug fixed — shared mutable scenario state (root cause)</div>
+      Sweep results were unstable across repeated calls in one process: the same penalty=900 gave 0.45 then 0.70. Root cause: <code>state["allocation_factors"]</code> aliased the shared <code>SCENARIO_PACKS[...]["allocation_factors"]</code> dict, and <code>apply_shock("election_pressure")</code> rewrites it <em>in place</em> — so one game's policy shock permanently corrupted the cap schedule for every later game in the process (and silently changed difficulty). Fixed by <code>deepcopy</code>-ing allocation_factors in <code>create_initial_state</code>. The sweep is now stable across repeated calls, which also meant re-tuning the penalty on the <em>correct</em> baseline (900 still dominant → 1000).
+    </div>
+    <div class="callout">
+      <div class="callout-title">Resolved — balance regime, not a code error</div>
+      The sweep surfaced that at the inherited penalty_rate of 325, a pure under-complier dominated every metric. Treated as a design finding and corrected via the documented penalty re-tune (TASK-03-07 explicitly authorizes this).
+    </div>
+  </div>
+
+  <!-- 9. OPEN QUESTIONS / NEXT PHASE SEEDS -->
+  <div class="section">
+    <div class="section-num">Section 8</div>
+    <h2>Open Questions / Next Phase Seeds</h2>
+    <ul>
+      <li><strong>Re-tune easy/hard?</strong> Should <code>solo_easy</code> (penalty 201) and <code>solo_hard</code> (520) get the same compliance-rationality check, or is under-compliance acceptable on easy by design?</li>
+      <li><strong>Buff the speculator?</strong> At 0% sweep wins it is the weakest profile. Worth raising its abatement floor or lowering its OTC premium so it is competitive without becoming dominant.</li>
+      <li><strong>Surface AI signals in the UI.</strong> The <code>/ai-signals</code> endpoint exists but is not yet rendered. A competitor-posture panel in <code>web/game.html</code> would add strategic texture (Sprint 4 candidate).</li>
+      <li><strong>Sprint 4 (Story) dependency.</strong> Cascading cards + <code>policy_stability</code> will feed agents new shocks; <code>plan_year</code> already tolerates dynamic caps, but agent reactions to a <code>regulatory_crackdown</code> should be validated once cards exist.</li>
+      <li><strong>Auctions in live solo play.</strong> The sweep opens/closes auctions each year; the solo REST flow still leaves them dormant. Wiring auction open/close into <code>advance-year</code> would let the player and agents actually compete for auctioned allowances.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis' } });
+
+  Chart.defaults.devicePixelRatio = 1;
+  Chart.defaults.animation = false;
+  Chart.defaults.resizeDelay = 150;
+  Chart.defaults.normalized = true;
+  Chart.defaults.maintainAspectRatio = false;
+
+  // Win-rate distribution (final, penalty=1000)
+  (function () {
+    const ctx = document.getElementById('winChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['moderate', 'conservative', 'opportunistic', 'aggressive', 'speculator'],
+        datasets: [{
+          label: 'Win rate (20 seeds)',
+          data: [0.45, 0.40, 0.10, 0.05, 0.00],
+          backgroundColor: ['#3a7a4e', '#5a9a52', '#2c6e7a', '#b08020', '#a03030'],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: 'Strategy win rate (penalty=1000) — 60% threshold', font: { size: 11 } },
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => (c.parsed.y * 100).toFixed(0) + '%' } }
+        },
+        scales: {
+          y: { min: 0, max: 0.7, ticks: { callback: (v) => (v * 100) + '%' },
+               grid: { color: (c) => c.tick.value === 0.6 ? '#a03030' : 'rgba(0,0,0,0.06)' } }
+        }
+      }
+    });
+  }());
+
+  // Penalty tuning curve — max single-strategy win rate vs penalty_rate
+  (function () {
+    const ctx = document.getElementById('tuneChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [325, 600, 900, 1000, 1050, 1100, 1200, 1400, 1600],
+        datasets: [{
+          label: 'Max win rate',
+          data: [1.00, 0.83, 0.65, 0.45, 0.60, 0.55, 0.70, 0.70, 0.60],
+          borderColor: '#2c6e7a',
+          backgroundColor: 'rgba(44,110,122,0.10)',
+          fill: true, tension: 0.3, pointRadius: 3,
+          pointBackgroundColor: (c) => c.dataIndex === 3 ? '#3a7a4e' : '#2c6e7a',
+        }]
+      },
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: 'Max win rate vs penalty_rate (balance minimum at 1000)', font: { size: 11 } },
+          legend: { display: false }
+        },
+        scales: {
+          x: { title: { display: true, text: 'penalty_rate ($/t)' } },
+          y: { min: 0.3, max: 1.0, ticks: { callback: (v) => (v * 100).toFixed(0) + '%' },
+               grid: { color: (c) => Math.abs(c.tick.value - 0.6) < 1e-9 ? '#a03030' : 'rgba(0,0,0,0.06)' } }
+        }
+      }
+    });
+  }());
+</script>
+</body>
+</html>
