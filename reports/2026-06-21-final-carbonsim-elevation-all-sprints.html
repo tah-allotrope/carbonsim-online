@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: CarbonSim Elevation — All Five Sprints Delivered</title>
+  <meta name="color-scheme" content="light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --paper: #f7faf4; --paper-strong: #fdfff9; --ink: #1a2218;
+      --ink-soft: #4a5e44; --line: #c2d4ba; --line-strong: #8baa82;
+      --accent: #3a7a4e; --accent-2: #2c6e7a; --accent-3: #7a5c2e;
+      --green: #4a8c3a; --amber: #b08020; --red: #a03030;
+      --shadow: 0 14px 36px rgba(20, 50, 20, 0.08); --radius: 16px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace; --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(180deg, #eef4ea 0%, #f7faf4 28%, #edf3e9 100%); font-family: var(--body); line-height: 1.65; }
+    .page { width: min(1000px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 64px; }
+    .hero { padding: 38px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%); }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 10px 0 14px; font-size: 2.25rem; line-height: 1.18; }
+    .takeaway { font-size: 1.08rem; color: var(--ink-soft); border-left: 3px solid var(--accent); padding-left: 14px; margin: 16px 0 0; }
+    .meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .chip { font-family: var(--mono); font-size: 0.70rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(58,122,78,0.08); }
+    .chip.done { background: rgba(74,140,58,0.12); border-color: var(--green); color: var(--green); font-weight: 600; }
+    .section { margin-top: 22px; padding: 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    .section-num { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-2); margin-bottom: 4px; }
+    h2 { font-family: var(--display); margin: 0 0 18px; font-size: 1.55rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 22px 0 8px; font-size: 1.1rem; color: var(--ink-soft); }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 0 0 12px; padding-left: 24px; }
+    li { margin-bottom: 7px; }
+    code { font-family: var(--mono); background: rgba(58,122,78,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.84em; }
+    strong { color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.89rem; }
+    th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--line); }
+    th { font-family: var(--mono); text-transform: uppercase; font-size: 0.66rem; letter-spacing: 0.1em; color: var(--ink-soft); background: rgba(58,122,78,0.05); }
+    tr:last-child td { border-bottom: none; }
+    .ok { color: var(--green); font-weight: 700; }
+    .warn { color: var(--amber); font-weight: 700; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
+    .stat { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #fdfff9; }
+    .stat-label { font-family: var(--mono); font-size: 0.63rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.25rem; font-weight: 700; margin-top: 5px; color: var(--accent); }
+    .stat-note { font-size: 0.72rem; color: var(--ink-soft); margin-top: 3px; }
+    .callout { border-left: 3px solid var(--accent); padding: 14px 18px; background: rgba(58,122,78,0.06); border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .callout.warn { border-left-color: var(--amber); background: rgba(176,128,32,0.06); }
+    .callout-title { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--accent-3); margin-bottom: 6px; }
+    .callout.warn .callout-title { color: var(--amber); }
+    .phase-row { display: grid; grid-template-columns: 92px 1fr; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+    .phase-num { background: rgba(74,140,58,0.14); color: var(--green); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.78rem; font-weight: 700; writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.08em; padding: 16px 0; }
+    .phase-body { padding: 16px 20px; }
+    .phase-title { font-family: var(--display); font-size: 1.08rem; margin: 0 0 6px; }
+    .tag { font-family: var(--mono); font-size: 0.65rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--green); background: rgba(74,140,58,0.1); color: var(--green); }
+    .mermaid-frame { overflow-x: auto; padding: 20px; background: rgba(58,122,78,0.04); border: 1px solid var(--line); border-radius: 10px; margin-top: 16px; max-height: 480px; }
+    .mermaid svg { max-width: 100%; }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    @media (max-width: 640px) { .chart-row { grid-template-columns: 1fr; } }
+    .chart-frame { height: 250px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fdfff9; }
+    .risk-h { color: var(--red); font-weight: 600; } .risk-m { color: var(--amber); font-weight: 600; } .risk-l { color: var(--green); font-weight: 600; }
+    @media print {
+      body { background: #fff; }
+      .section, .hero { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+      .chart-row { grid-template-columns: 1fr; }
+      .mermaid-frame { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 1. TITLE HERO -->
+  <div class="hero">
+    <div class="eyebrow">Final Plan Report &middot; 2026-06-21 &middot; carbonsim-online</div>
+    <h1>CarbonSim Elevation<br>All Five Sprints Delivered</h1>
+    <p class="takeaway">The full Foundation → Market → AI → Story → Meta roadmap is complete: CarbonSim Online now has dynamic market pricing, goal-driven AI opponents, a state-reactive narrative deck, and persistent meta-progression — built entirely on the existing reducer, with balance verified at every step and 152 automated tests green.</p>
+    <div class="meta">
+      <span class="chip">Repo: carbonsim-online</span>
+      <span class="chip done">5 / 5 sprints complete</span>
+      <span class="chip done">152 tests pass</span>
+      <span class="chip done">Determinism preserved</span>
+      <span class="chip">Plan: plans/2026-06-21-carbonsim-elevation-plan.md</span>
+    </div>
+  </div>
+
+  <!-- 2. EXECUTIVE SUMMARY -->
+  <div class="section">
+    <div class="section-num">Section 2</div>
+    <h2>Executive Summary</h2>
+    <p><strong>The roadmap is done.</strong> CarbonSim Online began this effort as a functional but shallow compliance simulator — static offset prices, three single-year bot heuristics, one-shot event cards, and an XP bar wired to nothing. Five sprints later it is a tight strategy game with the mechanical depth the brief targeted: prices that respond to demand, AI competitors that plan multiple years ahead and trade with the player, an event deck that remembers its own consequences, a regulatory-climate meter that bends the rules, and a persistent unlock tree that carries progress between sessions across three real-world carbon markets.</p>
+    <p>Crucially, every layer was added <strong>on top of the existing pure-reducer architecture</strong> — never a rewrite. The research brief's central warning (a static offset price creates a dominant strategy) was answered in Sprint 2 and then defended at every subsequent sprint with a Monte-Carlo dominance sweep. Where new mechanics threatened balance — twice, materially — the regressions were caught by that sweep and corrected before merge.</p>
+    <div class="callout">
+      <div class="callout-title">Recommendation</div>
+      Ship it. The five-sprint core is feature-complete, tested, and balanced. The highest-value next investments are not new systems but <em>connecting</em> the ones now in place: hard-gate the unlock-tree nodes to the mechanics they name, teach the AI to use financing, and add the end-game star rating (DEC-002) that ties XP, survival, and penalties into a single win screen.
+    </div>
+  </div>
+
+  <!-- 3. BACKGROUND & OBJECTIVE -->
+  <div class="section">
+    <div class="section-num">Section 3</div>
+    <h2>Background &amp; Objective</h2>
+    <p>CarbonSim Online is a FastAPI + vanilla-JS carbon-compliance management game with a canvas isometric city. The player runs a Vietnamese industrial company through a multi-year emissions-trading scheme, balancing abatement, offsets, auctions, and trades against a declining cap.</p>
+    <p><strong>Objective:</strong> <em>"Elevate CarbonSim Online to Kairosoft/Sid Meier/tycoon sophistication while deeply reflecting carbon-market domain mechanics."</em> The architecture was already sound — an OpenRCT2-style deterministic reducer with an immutable audit log and snapshot system. Research confirmed this is the right architecture at ~8-company scale and must not be replaced. Every sprint therefore layered mechanics onto the reducer, sequenced by leverage-per-effort: determinism first, then market feedback, AI, story, and meta-progression last.</p>
+  </div>
+
+  <!-- 4. INPUTS & SCOPE -->
+  <div class="section">
+    <div class="section-num">Section 4</div>
+    <h2>Inputs &amp; Scope</h2>
+    <h3>Inputs</h3>
+    <ul>
+      <li><code>plans/2026-06-21-carbonsim-elevation-plan.md</code> — the 5-sprint plan (primary source).</li>
+      <li><code>research/2026-06-21_carbonsim-elevation-brainstorm.md</code> — 16 resolved scope/mechanic decisions.</li>
+      <li><code>research/2026-06-21_management-sim-architecture.md</code> — 224-source brief: reducer confirmation, BazaarBot demand-feedback prescription, ECS rejection.</li>
+      <li><code>research/2026-06-20_sim-game-design-architecture-2.md</code> — decision-legibility as the cheapest high-impact win.</li>
+    </ul>
+    <h3>Scope boundaries (held throughout)</h3>
+    <table>
+      <thead><tr><th>Delivered</th><th>Explicitly out of scope</th></tr></thead>
+      <tbody>
+        <tr><td>Dynamic offset pricing, full instrument stack</td><td>Real-time multiplayer / lockstep networking</td></tr>
+        <tr><td>Goal-driven AI with multi-year horizon</td><td>LLM-generated card text (non-deterministic)</td></tr>
+        <tr><td>State-reactive cascading cards + policy stability</td><td>Deep DNE regulatory fidelity</td></tr>
+        <tr><td>Capex/loans, XP unlock tree, jurisdiction skins</td><td>ECS engine refactor (wrong scale)</td></tr>
+        <tr><td>Year-end ceremony, city climate canvas</td><td>Online leaderboards, mobile/native ports</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5. ASSUMPTIONS & CONSTRAINTS -->
+  <div class="section">
+    <div class="section-num">Section 5</div>
+    <h2>Assumptions &amp; Constraints</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Statement</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td><code>ASM-001</code></td><td><code>project_outcome</code> is a pure, side-effect-free preview function.</td><td class="ok">Held — used by UI and AI agents.</td></tr>
+        <tr><td><code>ASM-002</code></td><td>Forwards / VCM / loans serialize in company state, no migration tooling.</td><td class="ok">Held — list fields survive zlib-JSON save/load.</td></tr>
+        <tr><td><code>ASM-003</code></td><td>Narrative text is template-driven, not LLM.</td><td class="ok">Held — deterministic year summaries.</td></tr>
+        <tr><td><code>CON-001</code></td><td>20–40 min solo session budget.</td><td class="warn">Plausible; median session length not formally measured.</td></tr>
+        <tr><td><code>CON-002</code></td><td>No new Python deps beyond FastAPI + stdlib.</td><td class="ok">Held — all arithmetic is pure stdlib.</td></tr>
+        <tr><td><code>CON-003</code></td><td>Multi-year state must not break <code>force_advance_phase</code>/<code>_start_year</code>.</td><td class="ok">Held — all new state serviced in <code>_start_year</code>.</td></tr>
+        <tr><td><code>DEC-001</code></td><td>Strategy game first — mechanics are the medium.</td><td class="ok">Drove the Sprint 3 &amp; 4 penalty re-tunes.</td></tr>
+        <tr><td><code>DEC-002</code></td><td>Hard binary win/lose + star rating.</td><td class="warn">Meta layer in place; star rating itself deferred (see Open Questions).</td></tr>
+        <tr><td><code>DEC-003</code></td><td>Vietnam-anchored with jurisdiction skins.</td><td class="ok">EU ETS + California ARB delivered &amp; balanced.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6. METHODOLOGY -->
+  <div class="section">
+    <div class="section-num">Section 6</div>
+    <h2>Methodology</h2>
+    <ul>
+      <li><strong>Reducer-first, additive layering.</strong> Every sprint added state and serviced it through the existing <code>apply_company_decision</code> / <code>_start_year</code> / <code>_close_current_year</code> hooks. No mechanic ever became the new emissions source of truth — even capex rides alongside the original <code>active_abatement_ids</code>.</li>
+      <li><strong>Balance as a gate, not an afterthought.</strong> From Sprint 3 onward, a seeded Monte-Carlo <code>run_strategy_sweep</code> ran every sprint. The rule: no single strategy may exceed a 60% win rate. This caught two real regressions and drove every balance re-tune.</li>
+      <li><strong>Determinism as a regression guard.</strong> A same-seed determinism check ran each sprint; it also surfaced a latent shared-state bug in Sprint 3.</li>
+      <li><strong>Migration guards for forward-compatibility.</strong> Each new state field is <code>setdefault</code>-guarded in <code>_start_year</code>, so saves from earlier sprints load without a migration step.</li>
+      <li><strong>Per-sprint ceremony.</strong> Each sprint ended with implementation → commit/push → a phase report; this document is the capstone synthesis.</li>
+    </ul>
+    <div class="mermaid-frame">
+      <pre class="mermaid">
+flowchart LR
+  S1["Sprint 1\nFoundation\nseed + preview + year-end"] --> S2["Sprint 2\nMarket\ndynamic price + instruments"]
+  S2 --> S3["Sprint 3\nAI agents\nmulti-year planning"]
+  S3 --> S4["Sprint 4\nStory\npolicy stability + cards"]
+  S4 --> S5["Sprint 5\nMeta\ncapex + XP + jurisdictions"]
+  S5 --> DONE["Tycoon-grade\nCarbonSim ✓"]
+  GATE{"Dominance sweep\n& determinism\nevery sprint"} -.-> S3
+  GATE -.-> S4
+  GATE -.-> S5
+  style S1 fill:#d4edda,stroke:#4a8c3a
+  style S2 fill:#d4edda,stroke:#4a8c3a
+  style S3 fill:#d4edda,stroke:#4a8c3a
+  style S4 fill:#d4edda,stroke:#4a8c3a
+  style S5 fill:#d4edda,stroke:#4a8c3a
+  style DONE fill:#cfe8d4,stroke:#2c6e7a
+      </pre>
+    </div>
+  </div>
+
+  <!-- 7. PHASE-BY-PHASE -->
+  <div class="section">
+    <div class="section-num">Section 7</div>
+    <h2>Phase-by-Phase Analysis</h2>
+
+    <div class="phase-row">
+      <div class="phase-num">SPRINT 1</div>
+      <div class="phase-body">
+        <div class="phase-title">Foundation — Determinism, Consequence Preview, Year-End Ceremony <span class="tag">65eafb9</span></div>
+        <p>Seeded RNG through state for true replay, a pure <code>project_outcome</code> so every decision can show its compliance/cash impact before commit, and a Kairosoft-style year-end report. This was the enabling layer: without the seed, later balance sweeps would be meaningless; without <code>project_outcome</code>, neither the UI previews nor the Sprint 3 AI could reason about consequences.</p>
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div class="phase-num">SPRINT 2</div>
+      <div class="phase-body">
+        <div class="phase-title">Market — Dynamic Pricing + Full Instrument Stack <span class="tag">c6a9a6f</span></div>
+        <p>Replaced the static offset price with a BazaarBot demand-response model (<em>P = P₀(1 + ε·min(d/S,1))</em>, ε=0.4) and surfaced forwards and VCM project investment. The negative feedback loop the research prescribed: buying offsets raises their price within the year, killing the buy-everything dominant strategy. Playtest penalty variation came in at a 5.1% coefficient of variation — well inside tolerance.</p>
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div class="phase-num">SPRINT 3</div>
+      <div class="phase-body">
+        <div class="phase-title">AI — Goal-Driven Agents + Dominance Sweep <span class="tag">ec6b29d</span></div>
+        <p>Replaced single-year bot heuristics with <code>CompanyAgent</code>s that plan over a 2–3 year horizon across the full instrument stack and propose OTC trades. The new <code>run_strategy_sweep</code> immediately earned its keep: it revealed that at the inherited penalty rate, simply <em>ignoring compliance</em> was the optimal play — which would have hollowed out the carbon theme. Raising the penalty so compliance is rational flattened the field to a 0.45 max win rate. The sweep also exposed a latent shared-state bug (the cap schedule aliased a global dict and was mutated in place).</p>
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div class="phase-num">SPRINT 4</div>
+      <div class="phase-body">
+        <div class="phase-title">Story — Cascading Cards + Policy Stability + City Canvas <span class="tag">da4b1ce</span></div>
+        <p>A <code>policy_stability</code> meter (0–100) bends the cap and fires crackdowns/relief; cards gained <code>requires_condition</code>, <code>sets_condition</code>, <code>follow_on_cards</code>, and multi-year <code>effect_duration</code>, turning isolated events into arcs. The feedback loop initially created a death-spiral that re-broke balance; mean-reverting the meter and removing a penalty-rate ratchet restored it. The city canvas now shows the regulatory climate as a visible haze.</p>
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div class="phase-num">SPRINT 5</div>
+      <div class="phase-body">
+        <div class="phase-title">Meta — Capex Abatement + XP Unlock Tree + Jurisdiction Skins <span class="tag">1493c6c</span></div>
+        <p>Abatement became a capex asset financeable by loan, with annual opex and seeded tech-failure risk; an XP engine feeds a 7-node unlock tree persisted to a <code>player_profiles</code> table; and the whole sim re-skins to EU ETS or California. The recurring lesson held one last time — each jurisdiction's distinct offset economics moved the balance point, so each had its penalty re-tuned until no strategy passed 60%.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. FINDINGS & RECOMMENDATION -->
+  <div class="section">
+    <div class="section-num">Section 8</div>
+    <h2>Findings &amp; Recommendation</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-label">Sprints</div><div class="stat-value ok">5 / 5</div><div class="stat-note">all merged to master</div></div>
+      <div class="stat"><div class="stat-label">Tests</div><div class="stat-value">152</div><div class="stat-note">engine + server, green</div></div>
+      <div class="stat"><div class="stat-label">Strategies</div><div class="stat-value">5</div><div class="stat-note">none &gt;55% win rate</div></div>
+      <div class="stat"><div class="stat-label">Jurisdictions</div><div class="stat-value">3</div><div class="stat-note">all balanced</div></div>
+      <div class="stat"><div class="stat-label">Decision types</div><div class="stat-value">7</div><div class="stat-note">incl. forwards, VCM, finance</div></div>
+      <div class="stat"><div class="stat-label">Determinism</div><div class="stat-value ok">✓</div><div class="stat-note">guarded every sprint</div></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-frame"><canvas id="sweepChart"></canvas></div>
+      <div class="chart-frame"><canvas id="jurChart"></canvas></div>
+    </div>
+    <p style="margin-top:14px;font-size:0.85rem;color:var(--ink-soft)">
+      <strong>Left:</strong> final strategy win-rate distribution (Vietnam, 20 seeds) — a flat, competitive field.
+      <strong>Right:</strong> max single-strategy win rate per jurisdiction, all under the 60% dominance line.
+    </p>
+
+    <h3>Key findings</h3>
+    <ul>
+      <li><strong>The architecture held.</strong> Five layers of mechanics, zero rewrites. The reducer + audit log + snapshot pattern absorbed everything, validating the research's "do not change it" verdict.</li>
+      <li><strong>Balance is the load-bearing discipline.</strong> Three separate penalty re-tunes (Sprint 3, and per-jurisdiction in Sprint 5) plus the Sprint 4 meter redesign all traced back to one truth: a mechanic is only fun if no single response dominates. The sweep made that measurable.</li>
+      <li><strong>Additive beats invasive.</strong> Capex/loans/tech-risk shipped without touching the emissions math by riding alongside it — preserving four sprints of tuning.</li>
+    </ul>
+    <h3>Tradeoffs &amp; rejected options</h3>
+    <ul>
+      <li>Cap <em>modulation</em> over full formula replacement (Sprint 4) — kept calibrated decline curves intact.</li>
+      <li>Demand-accumulator over a full BazaarBot clearing market (ALT-001) — same feedback loop, a fraction of the complexity.</li>
+      <li>Template year-end text over LLM generation (ALT-002) — deterministic and offline.</li>
+      <li>ECS refactor rejected outright (ALT-003) — wrong scale at ~8 companies.</li>
+    </ul>
+  </div>
+
+  <!-- 9. IMPLEMENTATION PATH -->
+  <div class="section">
+    <div class="section-num">Section 9</div>
+    <h2>Implementation Path (what's next)</h2>
+    <p>The plan is delivered; these are the natural follow-ons, ordered by value-to-effort. None require new architecture.</p>
+    <table>
+      <thead><tr><th>#</th><th>Next step</th><th>Why now</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><strong>Star rating &amp; binary win gate (DEC-002).</strong> Tie XP, survival, and penalties into one end-game screen.</td><td>The only headline plan decision not yet fully surfaced; the meta data already exists.</td></tr>
+        <tr><td>2</td><td><strong>Hard-gate unlock nodes.</strong> Wire limit orders / 2-year forwards / speculator AI to their unlock levels.</td><td>The tree displays and persists; connecting it makes progression meaningful.</td></tr>
+        <tr><td>3</td><td><strong>Teach the AI to finance &amp; react to tech-failure.</strong></td><td>Makes the Sprint 5 loan/opex economics matter competitively.</td></tr>
+        <tr><td>4</td><td><strong>Jurisdiction selector + finance/assets panel in the UI.</strong></td><td>Backend is ready and balanced; these are surfacing tasks.</td></tr>
+        <tr><td>5</td><td><strong>Unify the two XP systems.</strong> Collapse the client heuristic and server engine into one source.</td><td>Removes a maintenance hazard and a potential player-facing discrepancy.</td></tr>
+        <tr><td>6</td><td><strong>Author the rest of the card chains</strong> and re-tune easy/hard penalties.</td><td>Pure content; the cascading-card schema and tuning method are in place.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 10. RISKS / OPEN QUESTIONS -->
+  <div class="section">
+    <div class="section-num">Section 10</div>
+    <h2>Risks / Open Questions</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Severity</th><th>Note / mitigation</th></tr></thead>
+      <tbody>
+        <tr><td>Session length never formally measured (CON-001)</td><td class="risk-m">Med</td><td>Instrument median simulated session time in the playtest batch; trim an instrument (VCM most cuttable) if &gt;40 min.</td></tr>
+        <tr><td>Two coexisting XP systems</td><td class="risk-m">Med</td><td>Client HUD heuristic vs. canonical server XP can disagree; unify (Path #5).</td></tr>
+        <tr><td>Unlock nodes display but don't all gate mechanics</td><td class="risk-l">Low</td><td>Plumbing done; gating is follow-on (Path #2).</td></tr>
+        <tr><td>Bots ignore financing / tech-failure</td><td class="risk-l">Low</td><td>Sweep is conservative on the loan mechanic; address in Path #3.</td></tr>
+        <tr><td>easy / hard jurisdictions only lightly balance-checked</td><td class="risk-l">Low</td><td>solo_standard + both jurisdiction skins are swept; extend coverage.</td></tr>
+        <tr><td>Shared <code>.modal-overlay</code> centering quirk</td><td class="risk-l">Low</td><td>Pre-existing (affects shipped Save modal too); cosmetic.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 11. APPENDICES -->
+  <div class="section">
+    <div class="section-num">Section 11</div>
+    <h2>Appendices / Evidence Notes</h2>
+
+    <h3>A. Delivery ledger</h3>
+    <table>
+      <thead><tr><th>Sprint</th><th>Impl commit</th><th>Phase report</th></tr></thead>
+      <tbody>
+        <tr><td>1 — Foundation</td><td><code>65eafb9</code></td><td>2026-06-21-sprint-1-foundation-complete.html</td></tr>
+        <tr><td>2 — Market</td><td><code>c6a9a6f</code></td><td>2026-06-21-sprint-2-market-complete.html</td></tr>
+        <tr><td>3 — AI</td><td><code>ec6b29d</code></td><td>2026-06-21-sprint-3-ai-agents-complete.html</td></tr>
+        <tr><td>4 — Story</td><td><code>da4b1ce</code></td><td>2026-06-21-sprint-4-story-policy-complete.html</td></tr>
+        <tr><td>5 — Meta</td><td><code>1493c6c</code></td><td>2026-06-21-sprint-5-meta-progression-complete.html</td></tr>
+      </tbody>
+    </table>
+
+    <h3>B. Final balance (20-seed dominance sweep)</h3>
+    <table>
+      <thead><tr><th>Jurisdiction</th><th>penalty_rate</th><th>Max win rate</th><th>Pass (&lt;60%)</th></tr></thead>
+      <tbody>
+        <tr><td>Vietnam (solo_standard)</td><td>1000</td><td>0.40</td><td class="ok">✓</td></tr>
+        <tr><td>EU ETS Phase 4</td><td>950</td><td>0.55</td><td class="ok">✓</td></tr>
+        <tr><td>California ARB</td><td>1100</td><td>0.50</td><td class="ok">✓</td></tr>
+      </tbody>
+    </table>
+
+    <h3>C. Key constants</h3>
+    <table>
+      <thead><tr><th>Constant</th><th>Value</th><th>Set in</th></tr></thead>
+      <tbody>
+        <tr><td>Offset price elasticity (ε)</td><td>0.4</td><td>Sprint 2</td></tr>
+        <tr><td>Annual offset supply cap (S)</td><td>50 t</td><td>Sprint 2</td></tr>
+        <tr><td>Forward premium</td><td>spot × 1.05</td><td>Sprint 2</td></tr>
+        <tr><td>Bot strategies</td><td>5 (conservative→speculator)</td><td>Sprint 3</td></tr>
+        <tr><td>Policy-stability cap modifier @70</td><td>1.0 (neutral)</td><td>Sprint 4</td></tr>
+        <tr><td>XP level thresholds</td><td>0/200/500/1000/2000/4000</td><td>Sprint 5</td></tr>
+      </tbody>
+    </table>
+
+    <h3>D. Glossary</h3>
+    <table>
+      <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Reducer</td><td>Pure <code>apply_company_decision(state, action) → state</code>; the auditable core.</td></tr>
+        <tr><td>Dominance sweep</td><td>Monte-Carlo tournament checking no strategy wins &gt;60% — the balance gate.</td></tr>
+        <tr><td>policy_stability</td><td>0–100 regulatory-climate meter; bends the cap and triggers crackdown/relief.</td></tr>
+        <tr><td>Cascading card</td><td>Event card that sets conditions, spawns follow-ons, or persists multi-year.</td></tr>
+        <tr><td>Capex / finance_abatement</td><td>Abatement as a financeable asset with opex, life, and failure risk.</td></tr>
+        <tr><td>Jurisdiction skin</td><td>JSON overlay re-skinning the sim to EU ETS or California economics.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis' } });
+  Chart.defaults.devicePixelRatio = 1;
+  Chart.defaults.animation = false;
+  Chart.defaults.resizeDelay = 150;
+  Chart.defaults.normalized = true;
+  Chart.defaults.maintainAspectRatio = false;
+
+  (function () {
+    const ctx = document.getElementById('sweepChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['aggressive', 'moderate', 'conservative', 'opportunistic', 'speculator'],
+        datasets: [{ label: 'Win rate', data: [0.40, 0.30, 0.20, 0.10, 0.00],
+          backgroundColor: ['#3a7a4e', '#5a9a52', '#2c6e7a', '#7a5c2e', '#a03030'], borderRadius: 4 }]
+      },
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'Strategy win rate — Vietnam (20 seeds)', font: { size: 11 } }, legend: { display: false },
+          tooltip: { callbacks: { label: (c) => (c.parsed.y*100).toFixed(0)+'%' } } },
+        scales: { y: { min: 0, max: 0.7, ticks: { callback: (v) => (v*100)+'%' },
+          grid: { color: (c) => c.tick.value === 0.6 ? '#a03030' : 'rgba(0,0,0,0.06)' } } }
+      }
+    });
+  }());
+
+  (function () {
+    const ctx = document.getElementById('jurChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: { labels: ['Vietnam', 'EU ETS', 'California'],
+        datasets: [{ label: 'Max win rate', data: [0.40, 0.55, 0.50],
+          backgroundColor: ['#3a7a4e', '#2c6e7a', '#7a5c2e'], borderRadius: 4 }] },
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'Max win rate by jurisdiction (≤60% target)', font: { size: 11 } }, legend: { display: false },
+          tooltip: { callbacks: { label: (c) => (c.parsed.y*100).toFixed(0)+'%' } } },
+        scales: { y: { min: 0, max: 0.7, ticks: { callback: (v) => (v*100)+'%' },
+          grid: { color: (c) => c.tick.value === 0.6 ? '#a03030' : 'rgba(0,0,0,0.06)' } } }
+      }
+    });
+  }());
+</script>
+</body>
+</html>
