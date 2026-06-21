@@ -398,6 +398,33 @@ SCENARIO_PACKS = {
     },
 }
 
+VCM_CATALOG = [
+    {
+        "project_id": "vcm_redd_plus",
+        "label": "REDD+ Forest Conservation",
+        "description": "Protect 500 ha of tropical forest in the Mekong Delta.",
+        "annual_credits": 8.0,
+        "duration_years": 3,
+        "cost": 150_000.0,
+    },
+    {
+        "project_id": "vcm_rice_methane",
+        "label": "Rice Paddy Methane Reduction",
+        "description": "Alternate wetting-and-drying technique across partner farms.",
+        "annual_credits": 5.0,
+        "duration_years": 3,
+        "cost": 80_000.0,
+    },
+    {
+        "project_id": "vcm_cookstove",
+        "label": "Clean Cookstove Distribution",
+        "description": "Distribute efficient cookstoves to 10,000 rural households.",
+        "annual_credits": 3.0,
+        "duration_years": 3,
+        "cost": 50_000.0,
+    },
+]
+
 TECH_UNLOCK_TEMPLATES = {
     "default": {
         "measure_label": "Process Optimization",

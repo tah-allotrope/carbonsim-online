@@ -64,7 +64,7 @@ class ResolveCardRequest(BaseModel):
 
 
 class DecisionRequest(BaseModel):
-    action: str = Field(pattern=r"^(activate_abatement|buy_offsets|propose_trade|respond_to_trade|submit_auction_bid)$")
+    action: str = Field(pattern=r"^(activate_abatement|buy_offsets|propose_trade|respond_to_trade|submit_auction_bid|buy_forward|invest_vcm)$")
     payload: dict[str, Any] = Field(default_factory=dict)
 
 

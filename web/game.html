@@ -399,28 +399,113 @@ function renderContent() {
       html += `</table></div>`;
     }
 
-    html += `<div class="card"><div class="card-title">Offsets & Market</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
-        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-          <span style="color:var(--muted)">Offset Price: <strong style="color:var(--text)">$${fmt(s.offset_price || 25)}/t</strong></span>
-          <span style="color:var(--muted)">Penalty Rate: <strong style="color:var(--text)">$${fmt(s.penalty_rate || 200)}/t</strong></span>
-          <span style="color:var(--muted)">Offset Cap: <strong style="color:var(--text)">${((s.offset_usage_cap || 0.1)*100).toFixed(0)}% of Emissions</strong></span>
+    // ── Market info ───────────────────────────────────────────────────────────
+    const livePrice = s.current_offset_price || s.offset_price || 25;
+    const basePrice = s.offset_price || 25;
+    const demandPct = s.annual_offset_supply_cap > 0 ? Math.min(1, (s.offset_demand_this_year || 0) / s.annual_offset_supply_cap) : 0;
+    const priceMove = livePrice - basePrice;
+    const priceMoveStr = priceMove > 0 ? `<span style="color:var(--orange);font-size:0.75rem">▲ +$${priceMove.toFixed(2)}/t demand pressure</span>` : `<span style="color:var(--green);font-size:0.75rem">Base price (no demand pressure)</span>`;
+    const lastAuction = s.last_auction_clearing_price > 0 ? `$${fmt(s.last_auction_clearing_price)}/EUA` : 'No auctions cleared';
+
+    html += `<div class="card"><div class="card-title">Offsets &amp; Market</div>
+
+      <!-- Market ticker strip -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">VCM Spot</span>
+          <span style="font-size:1.15rem;font-weight:700;font-family:var(--mono);color:${priceMove > 0 ? 'var(--orange)' : 'var(--green)'}">$${livePrice.toFixed(2)}</span>
+          <span style="margin-top:2px">${priceMoveStr}</span>
         </div>
-        <div style="font-size:0.9rem;background:rgba(255,255,255,0.03);padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.05)">
-          <span>Holdings: <strong>${fmt(offsetHoldings)} t</strong></span>
-          <span style="margin:0 8px;color:var(--muted)">|</span>
-          <span>Usable: <strong style="color:${usableOffsets >= maxUsableOffsets && offsetHoldings > 0 ? 'var(--orange)' : 'var(--text)'}">${fmt(usableOffsets)} / ${fmt(maxUsableOffsets)} t</strong></span>
+        <div style="width:1px;background:rgba(255,255,255,0.08);align-self:stretch"></div>
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Last Auction</span>
+          <span style="font-size:1.1rem;font-weight:700;font-family:var(--mono)">${lastAuction}</span>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.08);align-self:stretch"></div>
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Penalty Rate</span>
+          <span style="font-size:1.1rem;font-weight:700;font-family:var(--mono)">$${fmt(s.penalty_rate || 200)}/t</span>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.08);align-self:stretch"></div>
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Offset Cap</span>
+          <span style="font-size:1.1rem;font-weight:700;font-family:var(--mono)">${((s.offset_usage_cap || 0.1)*100).toFixed(0)}%</span>
+        </div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end">
+          <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Holdings</span>
+          <span style="font-size:1rem;font-weight:700"><span style="color:var(--text)">${fmt(offsetHoldings)}</span> <span style="color:var(--muted);font-size:0.8rem">t</span></span>
+          <span style="font-size:0.78rem;color:${usableOffsets >= maxUsableOffsets && offsetHoldings > 0 ? 'var(--orange)' : 'var(--muted)'}">Usable: ${fmt(usableOffsets)} / ${fmt(maxUsableOffsets)} t</span>
         </div>
       </div>
-      
-      <div class="glass-panel" style="padding:12px;border-radius:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="flex:1;min-width:180px">
-          <label style="font-size:0.8rem;color:var(--muted);display:block;margin-bottom:4px">Quantity to Buy (t):</label>
-          <input type="number" id="offsetQtyInput" min="1" max="1000" value="10" class="input-base" style="width:100%" oninput="updateOffsetPreview(this.value)">
-          <div id="offsetPreview" style="margin-top:4px;min-height:18px"></div>
+
+      <!-- Spot buy -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Spot Buy (Immediate)</div>
+        <div class="glass-panel" style="padding:12px;border-radius:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px">
+            <label style="font-size:0.8rem;color:var(--muted);display:block;margin-bottom:4px">Quantity (t):</label>
+            <input type="number" id="offsetQtyInput" min="1" max="1000" value="10" class="input-base" style="width:100%" oninput="updateOffsetPreview(this.value)">
+            <div id="offsetPreview" style="margin-top:4px;min-height:18px"></div>
+          </div>
+          <button class="btn btn-primary" onclick="buyOffsets(event)" style="margin-top:20px;height:40px">Buy Spot</button>
         </div>
-        <button class="btn btn-primary" onclick="buyOffsets(event)" style="margin-top:20px;height:40px">Buy Offsets</button>
       </div>
+
+      <!-- Forward contracts -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:0.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Forward Contracts (Lock Price, Deliver Next Year)</div>
+        ${(player.forward_contracts||[]).length > 0 ? `
+        <div style="margin-bottom:8px">
+          ${(player.forward_contracts||[]).map(fc => `
+          <div style="display:flex;gap:10px;align-items:center;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;margin-bottom:4px;font-size:0.82rem">
+            <span style="color:var(--muted)">${fc.contract_id}</span>
+            <span><strong>${fc.quantity} t</strong> @ <strong style="color:var(--orange)">$${fc.locked_price.toFixed(2)}/t</strong></span>
+            <span style="color:var(--muted)">→ delivers Year ${fc.delivery_year}</span>
+          </div>`).join('')}
+        </div>` : ''}
+        <div class="glass-panel" style="padding:12px;border-radius:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px">
+            <label style="font-size:0.8rem;color:var(--muted);display:block;margin-bottom:4px">Forward Qty (t): <span id="fwdPreviewLabel" style="float:right;color:var(--muted)"></span></label>
+            <input type="number" id="fwdQtyInput" min="1" max="500" value="5" class="input-base" style="width:100%" oninput="updateFwdPreview(this.value)">
+            <div id="fwdPreview" style="margin-top:4px;min-height:18px"></div>
+          </div>
+          <button class="btn btn-primary" onclick="buyForward(event)" style="margin-top:20px;height:40px">Lock Forward</button>
+        </div>
+      </div>
+
+      <!-- VCM Projects -->
+      <div>
+        <div style="font-size:0.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">VCM Project Investment (Annual Credits)</div>
+        ${(player.vcm_projects||[]).length > 0 ? `
+        <div style="margin-bottom:8px">
+          ${(player.vcm_projects||[]).map(p => `
+          <div style="display:flex;gap:10px;align-items:center;padding:6px 10px;background:rgba(62,207,142,0.07);border:1px solid rgba(62,207,142,0.15);border-radius:6px;margin-bottom:4px;font-size:0.82rem">
+            <span style="color:var(--green)">●</span>
+            <span><strong>${p.label}</strong></span>
+            <span style="color:var(--muted)">${p.annual_credits} t/yr</span>
+            <span style="color:var(--muted)">${p.remaining_years} yr${p.remaining_years !== 1 ? 's' : ''} left</span>
+          </div>`).join('')}
+        </div>` : ''}
+        ${(s.vcm_catalog||[]).map(proj => {
+          const already = (player.vcm_projects||[]).some(p => p.project_id === proj.project_id);
+          const prevHtml = already ? '' : previewHtml('invest_vcm', {project_id: proj.project_id});
+          return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px">
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:0.88rem">${proj.label}</div>
+              <div style="color:var(--muted);font-size:0.78rem;margin-top:2px">${proj.description}</div>
+              <div style="display:flex;gap:10px;margin-top:4px;font-size:0.78rem">
+                <span style="color:var(--green)">${proj.annual_credits} t/yr × ${proj.duration_years} yrs</span>
+                <span style="color:var(--muted)">Cost: $${fmt(proj.cost)}</span>
+                ${prevHtml ? `<span>${prevHtml}</span>` : ''}
+              </div>
+            </div>
+            ${already
+              ? `<span class="badge badge-green" style="align-self:center;white-space:nowrap">Invested</span>`
+              : `<button class="btn btn-primary" onclick="investVCM('${proj.project_id}', event)" style="align-self:center;white-space:nowrap;padding:6px 12px;font-size:0.8rem">Invest</button>`}
+          </div>`;
+        }).join('')}
+      </div>
+
     </div>`;
   }
 
@@ -496,7 +581,8 @@ function projectOutcome(action, payload) {
   const allowances = player.allowances || 0;
   const offsetHoldings = player.offset_holdings || 0;
   const offsetCapPct = s.offset_usage_cap != null ? s.offset_usage_cap : 0.1;
-  const offsetPrice = s.offset_price || 25;
+  const livePrice = s.current_offset_price || s.offset_price || 25;
+  const basePrice = s.offset_price || 25;
   const offsetCap = Math.round(projected * offsetCapPct * 100) / 100;
   const currentUsable = Math.min(offsetHoldings, offsetCap);
   const currentGap = Math.round((projected - allowances - currentUsable) * 100) / 100;
@@ -519,13 +605,26 @@ function projectOutcome(action, payload) {
     }
   } else if (action === 'buy_offsets') {
     const qty = parseFloat(payload.quantity) || 0;
-    cashDelta = -Math.round(qty * offsetPrice * 100) / 100;
+    cashDelta = -Math.round(qty * livePrice * 100) / 100;
     const newHoldings = offsetHoldings + qty;
     const newUsable = Math.min(newHoldings, offsetCap);
     const effectiveGain = newUsable - currentUsable;
     gapDelta = Math.round(-effectiveGain * 100) / 100;
     if (offsetHoldings >= offsetCap) note = `Already at cap (${offsetCap} t max)`;
     else if (newHoldings > offsetCap) note = `${(newHoldings - offsetCap).toFixed(1)} t excess (above cap)`;
+  } else if (action === 'buy_forward') {
+    const qty = parseFloat(payload.quantity) || 0;
+    const lockedPrice = Math.round(livePrice * 1.05 * 100) / 100;
+    cashDelta = -Math.round(qty * lockedPrice * 100) / 100;
+    const yr = (gameState && gameState.current_year || 0) + 1;
+    note = `Delivers Year ${yr} @ $${lockedPrice.toFixed(2)}/t locked`;
+  } else if (action === 'invest_vcm') {
+    const catalog = s.vcm_catalog || [];
+    const proj = catalog.find(p => p.project_id === payload.project_id);
+    if (!proj) return null;
+    cashDelta = -proj.cost;
+    const yr = (gameState && gameState.current_year || 0) + 1;
+    note = `${proj.annual_credits} t/yr × ${proj.duration_years} yrs — starts Year ${yr}`;
   }
   return { gapDelta, cashDelta, note };
 }
@@ -552,6 +651,38 @@ function updateOffsetPreview(qty) {
   const el = document.getElementById('offsetPreview');
   if (!el) return;
   el.innerHTML = previewHtml('buy_offsets', { quantity: parseFloat(qty) || 0 });
+}
+
+function updateFwdPreview(qty) {
+  const el = document.getElementById('fwdPreview');
+  if (!el) return;
+  el.innerHTML = previewHtml('buy_forward', { quantity: parseFloat(qty) || 0 });
+}
+
+async function buyForward(evt) {
+  if (evt) evt.target.disabled = true;
+  const qty = parseFloat(document.getElementById('fwdQtyInput')?.value || 0);
+  if (!qty || qty <= 0) { if (evt) evt.target.disabled = false; return; }
+  try {
+    const data = await API.decision(GAME_ID, 'buy_forward', { quantity: qty });
+    if (data.snapshot) { gameState.snapshot = data.snapshot; render(); }
+    showToast(`Forward contract locked: ${qty} t`, 'success');
+  } catch (e) {
+    showToast('Forward purchase failed: ' + (e.message || e), 'error');
+  }
+  if (evt) evt.target.disabled = false;
+}
+
+async function investVCM(projectId, evt) {
+  if (evt) evt.target.disabled = true;
+  try {
+    const data = await API.decision(GAME_ID, 'invest_vcm', { project_id: projectId });
+    if (data.snapshot) { gameState.snapshot = data.snapshot; render(); }
+    showToast('VCM project investment confirmed', 'success');
+  } catch (e) {
+    showToast('VCM invest failed: ' + (e.message || e), 'error');
+  }
+  if (evt) evt.target.disabled = false;
 }
 
 // ── Year-end modal ───────────────────────────────────────────────────────────

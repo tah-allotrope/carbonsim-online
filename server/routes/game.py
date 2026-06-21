@@ -101,6 +101,8 @@ def _available_actions(state: dict[str, Any]) -> list[str]:
     if phase == "decision_window":
         actions.append("activate_abatement")
         actions.append("buy_offsets")
+        actions.append("buy_forward")
+        actions.append("invest_vcm")
         actions.append("submit_auction_bid")
         actions.append("propose_trade")
         actions.append("respond_to_trade")

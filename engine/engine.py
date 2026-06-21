@@ -28,7 +28,7 @@ from .constants import (
     YEARLY_ALLOCATION_FACTORS,
     PHASE_LABELS,
 )
-from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG
+from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG, VCM_CATALOG
 
 COMPANY_LIBRARY = SCENARIO_PACKS["vietnam_pilot"]["company_library"]
 ABATEMENT_CATALOG = SCENARIO_PACKS["vietnam_pilot"]["abatement_catalog"]
@@ -98,6 +98,8 @@ def create_initial_state(
                 "abatement_cost_committed": 0.0,
                 "auction_allowances_won": 0.0,
                 "year_results": [],
+                "forward_contracts": [],
+                "vcm_projects": [],
                 "is_bot": is_bot,
                 "bot_strategy": bot_strategy if is_bot else None,
             }
@@ -143,6 +145,11 @@ def create_initial_state(
         "scenario": scenario or "vietnam_pilot",
         "active_shocks": [],
         "rng_seed": rng_seed if rng_seed is not None else _random.randint(0, 2**32 - 1),
+        "offset_demand_this_year": 0.0,
+        "offset_price_elasticity": pack.get("offset_price_elasticity", 0.4),
+        "annual_offset_supply_cap": pack.get("annual_offset_supply_cap", 50.0),
+        "current_offset_price": pack.get("offset_price", DEFAULT_OFFSET_PRICE),
+        "last_auction_clearing_price": 0.0,
     }
 
 
@@ -198,12 +205,20 @@ def apply_company_decision(
         quantity = round(float(payload.get("quantity", 0)), 2)
         if quantity <= 0:
             return state
-        offset_price = payload.get(
-            "price_per_unit", state.get("offset_price", DEFAULT_OFFSET_PRICE)
-        )
+        base_price = state.get("offset_price", DEFAULT_OFFSET_PRICE)
+        elasticity = state.get("offset_price_elasticity", 0.4)
+        supply_cap = max(state.get("annual_offset_supply_cap", 50.0), 1.0)
+        demand = state.get("offset_demand_this_year", 0.0)
+        live_price = round(base_price * (1 + elasticity * min(demand / supply_cap, 1.0)), 2)
+        offset_price = payload.get("price_per_unit", live_price)
         total_cost = round(quantity * float(offset_price), 2)
         company["offset_holdings"] = round(company["offset_holdings"] + quantity, 2)
         company["cash"] = round(company["cash"] - total_cost, 2)
+        new_demand = round(demand + quantity, 2)
+        state["offset_demand_this_year"] = new_demand
+        state["current_offset_price"] = round(
+            base_price * (1 + elasticity * min(new_demand / supply_cap, 1.0)), 2
+        )
         _recalculate_company_projection(state, company)
         _append_event(
             state,
@@ -213,6 +228,78 @@ def apply_company_decision(
                 "year": state["current_year"],
                 "company_id": company_id,
                 "quantity": quantity,
+                "price_per_unit": float(offset_price),
+            },
+        )
+        return state
+
+    if action == "buy_forward":
+        quantity = round(float(payload.get("quantity", 0)), 2)
+        if quantity <= 0:
+            return state
+        base_price = state.get("offset_price", DEFAULT_OFFSET_PRICE)
+        elasticity = state.get("offset_price_elasticity", 0.4)
+        supply_cap = max(state.get("annual_offset_supply_cap", 50.0), 1.0)
+        demand = state.get("offset_demand_this_year", 0.0)
+        spot_price = round(base_price * (1 + elasticity * min(demand / supply_cap, 1.0)), 2)
+        locked_price = round(spot_price * 1.05, 2)  # 5% forward term premium
+        total_cost = round(quantity * locked_price, 2)
+        if company["cash"] < total_cost:
+            return state
+        delivery_year = state["current_year"] + 1
+        contract_id = f"FWD-Y{state['current_year']}-{len(company['forward_contracts']) + 1:02d}"
+        company["cash"] = round(company["cash"] - total_cost, 2)
+        company["forward_contracts"].append({
+            "contract_id": contract_id,
+            "quantity": quantity,
+            "locked_price": locked_price,
+            "purchase_year": state["current_year"],
+            "delivery_year": delivery_year,
+        })
+        _append_event(
+            state,
+            "forward_purchased",
+            decision_time,
+            {
+                "year": state["current_year"],
+                "company_id": company_id,
+                "quantity": quantity,
+                "locked_price": locked_price,
+                "delivery_year": delivery_year,
+                "contract_id": contract_id,
+            },
+        )
+        return state
+
+    if action == "invest_vcm":
+        project_id = payload.get("project_id", "")
+        proj_template = next((p for p in VCM_CATALOG if p["project_id"] == project_id), None)
+        if not proj_template:
+            return state
+        if any(p["project_id"] == project_id for p in company.get("vcm_projects", [])):
+            return state  # already invested
+        cost = proj_template["cost"]
+        if company["cash"] < cost:
+            return state
+        company["cash"] = round(company["cash"] - cost, 2)
+        company["vcm_projects"].append({
+            "project_id": project_id,
+            "label": proj_template["label"],
+            "annual_credits": proj_template["annual_credits"],
+            "remaining_years": proj_template["duration_years"],
+            "cost": cost,
+            "invested_year": state["current_year"],
+        })
+        _append_event(
+            state,
+            "vcm_invested",
+            decision_time,
+            {
+                "year": state["current_year"],
+                "company_id": company_id,
+                "project_id": project_id,
+                "cost": cost,
+                "annual_credits": proj_template["annual_credits"],
             },
         )
         return state
@@ -796,6 +883,14 @@ def build_player_snapshot(
         "company_trade_book": company_trade_book,
         "leaderboard": leaderboard,
         "recent_events": recent_events,
+        "offset_price": state.get("offset_price", DEFAULT_OFFSET_PRICE),
+        "current_offset_price": state.get("current_offset_price", state.get("offset_price", DEFAULT_OFFSET_PRICE)),
+        "offset_usage_cap": state.get("offset_usage_cap", DEFAULT_OFFSET_USAGE_CAP),
+        "penalty_rate": state.get("penalty_rate", DEFAULT_PENALTY_RATE),
+        "last_auction_clearing_price": state.get("last_auction_clearing_price", 0.0),
+        "offset_demand_this_year": state.get("offset_demand_this_year", 0.0),
+        "annual_offset_supply_cap": state.get("annual_offset_supply_cap", 50.0),
+        "vcm_catalog": VCM_CATALOG,
     }
 
 
@@ -1569,12 +1664,17 @@ def _company_snapshot(state: dict[str, Any], company: dict[str, Any]) -> dict[st
         ],
         "auction_allowances_won": company["auction_allowances_won"],
         "year_results": company["year_results"],
+        "forward_contracts": company.get("forward_contracts", []),
+        "vcm_projects": company.get("vcm_projects", []),
         "is_bot": company.get("is_bot", False),
     }
 
 
 def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
     state["current_year"] = year
+    # Reset demand accumulator and restore base offset price for the new year
+    state["offset_demand_this_year"] = 0.0
+    state["current_offset_price"] = state.get("offset_price", DEFAULT_OFFSET_PRICE)
     # Retrieve allocation factor supporting both string and integer keys
     factors = state.get("allocation_factors", {})
     allocation_factor = factors.get(year)
@@ -1616,6 +1716,51 @@ def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
         )
         company["auction_allowances_won"] = 0.0
         _activate_pending_abatements(company)
+
+        # Deliver maturing forward contracts
+        delivered_ids: list[str] = []
+        for fc in company.get("forward_contracts", []):
+            if fc["delivery_year"] == year:
+                company["offset_holdings"] = round(company["offset_holdings"] + fc["quantity"], 2)
+                delivered_ids.append(fc["contract_id"])
+                _append_event(
+                    state,
+                    "forward_delivered",
+                    now,
+                    {
+                        "year": year,
+                        "company_id": company["company_id"],
+                        "quantity": fc["quantity"],
+                        "contract_id": fc["contract_id"],
+                    },
+                )
+        if delivered_ids:
+            company["forward_contracts"] = [
+                fc for fc in company["forward_contracts"] if fc["contract_id"] not in delivered_ids
+            ]
+            _recalculate_company_projection(state, company)
+
+        # Generate annual VCM project credits
+        for proj in company.get("vcm_projects", []):
+            if proj["remaining_years"] > 0:
+                company["offset_holdings"] = round(
+                    company["offset_holdings"] + proj["annual_credits"], 2
+                )
+                proj["remaining_years"] -= 1
+                _append_event(
+                    state,
+                    "vcm_credits_generated",
+                    now,
+                    {
+                        "year": year,
+                        "company_id": company["company_id"],
+                        "project_id": proj["project_id"],
+                        "credits": proj["annual_credits"],
+                        "remaining_years": proj["remaining_years"],
+                    },
+                )
+            if proj["remaining_years"] > 0:
+                _recalculate_company_projection(state, company)
 
     state["auctions"] = [
         a for a in state.get("auctions", []) if a["year"] != year
@@ -1721,6 +1866,32 @@ def project_outcome(
         cash_delta = -round(quantity * price, 2)
         new_gap = round(current_gap - quantity, 2)
         notes.append("Assumes bid wins at stated price")
+
+    elif action == "buy_forward":
+        quantity = float(payload.get("quantity", 0))
+        base_price = state.get("offset_price", DEFAULT_OFFSET_PRICE)
+        elasticity = state.get("offset_price_elasticity", 0.4)
+        supply_cap = max(state.get("annual_offset_supply_cap", 50.0), 1.0)
+        demand = state.get("offset_demand_this_year", 0.0)
+        spot_price = round(base_price * (1 + elasticity * min(demand / supply_cap, 1.0)), 2)
+        locked_price = round(spot_price * 1.05, 2)
+        cash_delta = -round(quantity * locked_price, 2)
+        delivery_year = state.get("current_year", 0) + 1
+        notes.append(f"Delivers {quantity:.0f} t credits in Year {delivery_year}")
+        notes.append(f"Locked at ${locked_price:.2f}/t (spot + 5% premium)")
+
+    elif action == "invest_vcm":
+        project_id = payload.get("project_id", "")
+        proj_template = next((p for p in VCM_CATALOG if p["project_id"] == project_id), None)
+        if not proj_template:
+            return {"compliance_gap_delta": 0.0, "cash_delta": 0.0, "notes": ["Project not found"]}
+        cash_delta = -proj_template["cost"]
+        annual = proj_template["annual_credits"]
+        duration = proj_template["duration_years"]
+        total = annual * duration
+        delivery_year = state.get("current_year", 0) + 1
+        notes.append(f"{annual:.0f} t/yr for {duration} yrs = {total:.0f} t total")
+        notes.append(f"Credits start Year {delivery_year}")
 
     gap_delta = round(new_gap - current_gap, 2)
     return {
@@ -1851,6 +2022,10 @@ def _close_current_year(state: dict[str, Any], now: datetime) -> None:
     cleared = [
         a for a in state["auctions"] if a["year"] == year and a["status"] == "cleared"
     ]
+    if cleared:
+        state["last_auction_clearing_price"] = round(
+            max(a["clearing_price"] for a in cleared), 2
+        )
     for auction in cleared:
         for company in state["companies"]:
             for result in company["year_results"]:

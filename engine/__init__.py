@@ -51,7 +51,7 @@ from .constants import (
     PHASE_LABELS,
 )
 
-from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES
+from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES, VCM_CATALOG
 
 from .cards import CardDeck, draw_cards, resolve_card
 from .achievements import ACHIEVEMENTS, compute_achievements
@@ -126,6 +126,7 @@ __all__ = [
     "SCENARIO_PACKS",
     "SHOCK_CATALOG",
     "TECH_UNLOCK_TEMPLATES",
+    "VCM_CATALOG",
     "CardDeck",
     "draw_cards",
     "resolve_card",
