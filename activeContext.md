@@ -1,43 +1,30 @@
-# Active Context
+# Active Context — Sprint 3: AI Goal-Driven Agents
 
-## Current Sprint
+Plan: `plans/2026-06-21-carbonsim-elevation-plan.md` → PHASE-03
+Cadence: implement fully → commit + push master → `/report Sprint 3`.
 
-Sprint 5 — Retro SFX Re-voice & Iso Renderer Perf/A11y Polish (`plans/2026-06-13-retro-sfx-perf-polish-plan.md`)
+## Tasks
+- [ ] TASK-03-01: `CompanyAgent` dataclass in `engine/agents.py` (company_id, sector, risk_appetite, horizon_years, cash_target_fraction, preferred_instruments).
+- [ ] TASK-03-02: `CompanyAgent.plan_year(state) -> list[Action]` — horizon-aware gap projection, abatement ranking, offset/forward/VCM/auction budgeting, OTC proposal. Uses `project_outcome`.
+- [ ] TASK-03-03: Replace `run_bot_turns` internals with agent dispatch. Preserve `bot_strategy` field as risk_appetite. Add bot OTC trade responses.
+- [ ] TASK-03-04: Two new strategy profiles in `constants.py`: `opportunistic`, `speculator`. Extend all 5 profiles with horizon/appetite fields. Total 5.
+- [ ] TASK-03-05: AI-initiated OTC proposals (cap 1/bot/year; bot uses own projected state, reads peer compliance_gap only).
+- [ ] TASK-03-06: `run_strategy_sweep(seeds)` in `playtest.py` — head-to-head 5-strategy games; win_rate/mean_cash/mean_penalties; flag >60% win rate.
+- [ ] TASK-03-07: Run sweep 20 seeds; tune constants until no strategy >60% win rate. Document final constants.
+- [ ] TASK-03-08: `GET /api/games/{id}/ai-signals` endpoint — competitor postures. Assign varied strategies to solo bots.
+- [ ] Tests: `engine/tests/test_agents.py`.
 
-## Retro Isometric Tycoon Roadmap
+## Verification
+- `python -m pytest engine/tests/` all pass.
+- `run_strategy_sweep(range(20))` → no strategy >60% win rate.
+- Determinism check still passes.
 
-| Sprint | Title | Status |
-|---|---|---|
-| 1 | Retro Asset Pipeline & Static Serving | complete |
-| 2 | Retro Design Token System & Chrome | complete |
-| 3 | Isometric Renderer & State Mapping | complete |
-| 4 | Retro Reskin Across All Screens | complete |
-| 5 | Retro SFX & Perf/A11y Polish | complete |
-
-## Plan
-
-- [x] PHASE-01: Chiptune SFX re-voice + pixel-style effects
-- [x] PHASE-02: Iso renderer performance hardening
-- [x] PHASE-03: Accessibility parity & sign-off
-
-## Sprint 5 Results
-
-- **92 tests passing** (unchanged — SFX, effects, renderer, and CSS are visual/frontend layers).
-- `web/js/audio.js` re-voiced to chiptune square/triangle register with short envelopes and simple arpeggios.
-- `web/js/effects.js` `particleBurst` converted to blocky pixel-step particles.
-- `web/js/isocity.js` particles drawn as pixel rectangles; performance hardened with DPR cap, adaptive particle cap, debounced resize, and background-tab guard.
-- Reduced-motion path fully wired: RAF stops, static city renders, DOM particles hidden, all CSS transitions/animations disabled.
-- Contrast fixes across all four screens: year-wipe title, event category text, toast titles, badge/streak text, achievement popup, timeline/progress/xp tracks.
-- Global `:focus-visible` rule added; canvas stays `aria-hidden` decorative.
-- `docs/design-language.md` Accessibility section updated with verified ratios.
-- `web/js/skyline.js` deletion committed.
-
-## Final Roadmap Report
-
-`reports/2026-06-13-final-retro-isometric-tycoon-roadmap.html`
-
-## Notes
-
-- Derived from `reports/2026-06-13-retro-isometric-tycoon-gap-analysis.md`
-- Aesthetic: isometric tycoon (SimCity 2000 / Theme Hospital register)
-- Tech: vanilla JS + canvas + FastAPI; no new frontend framework
+## Review (complete)
+- **All 8 tasks done.** 67 tests pass (was 60; +7 in `test_agents.py`). Determinism holds.
+- `engine/agents.py` — `CompanyAgent` dataclass + near-pure `plan_year` (abatement→forward→VCM→offsets→auction→OTC), `respond_to_trade`, `_estimate_future_gap` horizon lookahead.
+- `run_bot_turns` rewritten to dispatch agents (pass 1 plan/act, pass 2 OTC responses). `ai_market_signals()` added + `GET /api/games/{id}/ai-signals`.
+- 5 strategy profiles in `constants.py` (added opportunistic, speculator; extended all with horizon/appetite fields).
+- `run_strategy_sweep` / `print_strategy_sweep` in `playtest.py`. Head-to-head, ranked by liquidation net worth.
+- Solo games now seed a varied bot strategy mix per difficulty.
+- **Balance finding (TASK-03-07):** at penalty_rate=325 a pure under-complier dominated (paying penalties cheaper than abating) → defeats carbon mechanics. Raised solo_standard penalty_rate 325→1000. Final 20-seed sweep: moderate 0.45, conservative 0.40, opportunistic 0.10, aggressive 0.05, speculator 0.0 — no strategy >60%.
+- **Latent bug fixed:** `state["allocation_factors"]` aliased the shared `SCENARIO_PACKS` dict; `apply_shock(election_pressure)` mutated it in place, corrupting later games in the same process. Now deep-copied in `create_initial_state`. Sweep is now stable across repeated calls.

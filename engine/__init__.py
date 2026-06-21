@@ -21,11 +21,14 @@ from .engine import (
     build_session_summary,
     apply_shock,
     run_bot_turns,
+    ai_market_signals,
     project_outcome,
     generate_year_summary,
     COMPANY_LIBRARY,
     ABATEMENT_CATALOG,
 )
+
+from .agents import CompanyAgent
 
 from .constants import (
     PHASE_LOBBY,
@@ -46,6 +49,8 @@ from .constants import (
     BOT_STRATEGY_CONSERVATIVE,
     BOT_STRATEGY_MODERATE,
     BOT_STRATEGY_AGGRESSIVE,
+    BOT_STRATEGY_OPPORTUNISTIC,
+    BOT_STRATEGY_SPECULATOR,
     BOT_STRATEGIES,
     YEARLY_ALLOCATION_FACTORS,
     PHASE_LABELS,
@@ -55,7 +60,14 @@ from .scenarios import SCENARIO_PACKS, SHOCK_CATALOG, TECH_UNLOCK_TEMPLATES, VCM
 
 from .cards import CardDeck, draw_cards, resolve_card
 from .achievements import ACHIEVEMENTS, compute_achievements
-from .playtest import run_playtest, run_playtest_batch, summarize_playtests, check_determinism
+from .playtest import (
+    run_playtest,
+    run_playtest_batch,
+    summarize_playtests,
+    check_determinism,
+    run_strategy_sweep,
+    print_strategy_sweep,
+)
 from .tutorial import TUTORIAL_CARDS, mark_tutorial_state, tutorial_notes_for_year
 from .coop import (
     add_coop_participant,
@@ -98,6 +110,8 @@ __all__ = [
     "build_session_summary",
     "apply_shock",
     "run_bot_turns",
+    "ai_market_signals",
+    "CompanyAgent",
     "project_outcome",
     "generate_year_summary",
     "COMPANY_LIBRARY",
@@ -120,6 +134,8 @@ __all__ = [
     "BOT_STRATEGY_CONSERVATIVE",
     "BOT_STRATEGY_MODERATE",
     "BOT_STRATEGY_AGGRESSIVE",
+    "BOT_STRATEGY_OPPORTUNISTIC",
+    "BOT_STRATEGY_SPECULATOR",
     "BOT_STRATEGIES",
     "YEARLY_ALLOCATION_FACTORS",
     "PHASE_LABELS",
@@ -135,6 +151,9 @@ __all__ = [
     "run_playtest",
     "run_playtest_batch",
     "summarize_playtests",
+    "check_determinism",
+    "run_strategy_sweep",
+    "print_strategy_sweep",
     "TUTORIAL_CARDS",
     "mark_tutorial_state",
     "tutorial_notes_for_year",

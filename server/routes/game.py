@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from engine import (
+    ai_market_signals,
     apply_company_decision,
     apply_shock,
     build_player_snapshot,
@@ -336,6 +337,16 @@ async def project_outcome_route(game_id: str, action: str, payload: str = "{}"):
         payload=parsed_payload,
     )
     return result
+
+
+@router.get("/{game_id}/ai-signals")
+async def ai_signals_route(game_id: str):
+    """Competitor intelligence: each AI company's strategy, posture, and open OTC offers."""
+    row = db_get_game(game_id)
+    if not row:
+        raise HTTPException(404, "Game not found")
+    state = decompress_state(row["state_json"])
+    return {"signals": ai_market_signals(state)}
 
 
 @router.post("/{game_id}/end-year")

@@ -300,7 +300,13 @@ SCENARIO_PACKS = {
         "label": "Solo Standard",
         "description": "15-year solo game with moderate cap decline and standard penalties. Balanced challenge for experienced workshop participants.",
         "num_years": 15,
-        "penalty_rate": 325.0,
+        # Sprint 3 balance tuning (TASK-03-07): raised from 325 -> 1000 so that
+        # full compliance is the economically rational play. The strategy sweep
+        # showed that at 325 a pure under-complier dominates (paying penalties is
+        # cheaper than abating), which defeats the carbon mechanics (DEC-001).
+        # At 1000 the field is flattest: no strategy exceeds 45% win rate across
+        # 20 seeds (moderate 0.45, conservative 0.40, opportunistic 0.10).
+        "penalty_rate": 1000.0,
         "offset_usage_cap": 0.10,
         "offset_price": 28.0,
         "auction_count_per_year": 2,

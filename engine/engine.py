@@ -59,7 +59,10 @@ def create_initial_state(
     effective_offset_cap = (
         offset_usage_cap if offset_usage_cap is not None else pack["offset_usage_cap"]
     )
-    allocation_factors = pack.get("allocation_factors", YEARLY_ALLOCATION_FACTORS)
+    # Deep-copy so per-game mutations (e.g. apply_shock(election_pressure),
+    # which rewrites allocation_factors in place) never leak back into the
+    # shared SCENARIO_PACKS dict and corrupt subsequent games in the process.
+    allocation_factors = deepcopy(pack.get("allocation_factors", YEARLY_ALLOCATION_FACTORS))
     scenario_library = pack["company_library"]
     scenario_abatement = pack["abatement_catalog"]
 
@@ -1540,97 +1543,101 @@ def run_bot_turns(
     *,
     now: datetime,
 ) -> dict[str, Any]:
+    """Drive all bot companies for the current decision window.
+
+    Sprint 3: each bot is planned by a goal-driven ``CompanyAgent`` (see
+    ``engine/agents.py``) that looks across a multi-year horizon and uses the
+    full instrument stack. This function is the dispatcher — it applies the
+    agent's planned actions through the normal reducer so every move is audited
+    exactly like a human move. A second pass lets bot buyers respond to any
+    bilateral OTC trades proposed to them this turn.
+    """
+    from .agents import CompanyAgent  # lazy import to avoid circular dependency
+
     current_time = _normalize_time(now)
+    bots = [company for company in state["companies"] if company.get("is_bot")]
+    agents = {bot["company_id"]: CompanyAgent.from_company(bot) for bot in bots}
+
+    # Pass 1: each bot plans and acts (including proposing OTC trades).
+    for bot in bots:
+        agent = agents[bot["company_id"]]
+        for action in agent.plan_year(state):
+            try:
+                apply_company_decision(
+                    state,
+                    company_id=bot["company_id"],
+                    action=action["action"],
+                    payload=action.get("payload", {}),
+                    now=current_time,
+                )
+            except (ValueError, KeyError):
+                # Greedy plan may include an action that is no longer valid once
+                # earlier actions consumed cash/allowances; skip it.
+                continue
+
+    # Pass 2: bot buyers respond to open OTC proposals targeting them.
+    for trade in state["trades"]:
+        if trade["status"] != "proposed":
+            continue
+        buyer_id = trade["buyer_company_id"]
+        agent = agents.get(buyer_id)
+        if agent is None:
+            continue  # human-targeted proposals are left for the player to answer
+        decision = agent.respond_to_trade(state, trade)
+        try:
+            respond_to_trade(
+                state,
+                trade_id=trade["trade_id"],
+                responder_company_id=buyer_id,
+                response=decision,
+                now=current_time,
+            )
+        except ValueError:
+            continue
+
+    return state
+
+
+def ai_market_signals(state: dict[str, Any]) -> list[dict[str, Any]]:
+    """Competitor-intelligence summary: each bot's posture and open trades.
+
+    Read-only. Derives a coarse posture from each bot's current compliance gap
+    and its strategy's preferred instruments, plus its count of open OTC offers.
+    """
+    from .agents import CompanyAgent
+
+    signals = []
     for company in state["companies"]:
         if not company.get("is_bot"):
             continue
-        strategy = BOT_STRATEGIES.get(
-            company.get("bot_strategy", BOT_STRATEGY_MODERATE),
-            BOT_STRATEGIES[BOT_STRATEGY_MODERATE],
+        agent = CompanyAgent.from_company(company)
+        gap = company.get("compliance_gap", 0.0)
+        if gap > company.get("projected_emissions", 0.0) * 0.05:
+            posture = "covering_shortfall"
+        elif gap < 0:
+            posture = "banking_surplus"
+        else:
+            posture = "balanced"
+        open_trades = sum(
+            1
+            for trade in state.get("trades", [])
+            if trade["status"] == "proposed"
+            and trade["seller_company_id"] == company["company_id"]
         )
-
-        _activate_pending_abatements(company)
-
-        abatement_threshold = strategy["abatement_threshold_fraction"]
-        for measure in company["abatement_menu"]:
-            if (
-                measure["measure_id"] in company["active_abatement_ids"]
-                or measure["measure_id"] in company["pending_abatement_ids"]
-            ):
-                continue
-            if company["allowances"] >= company["projected_emissions"]:
-                break
-            ordered = sorted(
-                [
-                    m
-                    for m in company["abatement_menu"]
-                    if m["measure_id"] not in company["active_abatement_ids"]
-                    and m["measure_id"] not in company["pending_abatement_ids"]
-                ],
-                key=lambda m: m["cost"] / max(m["abatement_amount"], 0.01),
-            )
-            if not ordered:
-                break
-            target = ordered[0]
-            if target["cost"] > company["cash"]:
-                continue
-            if company["allowances"] >= company["projected_emissions"] * abatement_threshold:
-                break
-            apply_company_decision(
-                state,
-                company_id=company["company_id"],
-                action="activate_abatement",
-                payload={"measure_id": target["measure_id"]},
-                now=current_time,
-            )
-
-        _recalculate_company_projection(state, company)
-        gap = company["projected_emissions"] - company["allowances"]
-        if gap > 0:
-            offset_qty = round(gap * strategy["offset_gap_fraction"], 2)
-            if offset_qty > 0:
-                total_cost = round(
-                    offset_qty * state.get("offset_price", DEFAULT_OFFSET_PRICE), 2
-                )
-                if total_cost <= company["cash"]:
-                    apply_company_decision(
-                        state,
-                        company_id=company["company_id"],
-                        action="buy_offsets",
-                        payload={"quantity": offset_qty},
-                        now=current_time,
-                    )
-
-        for auction in state["auctions"]:
-            if auction["status"] != "open" or auction["year"] != state["current_year"]:
-                continue
-            if company["allowances"] >= company["projected_emissions"]:
-                break
-            bid_qty = round(
-                (company["projected_emissions"] - company["allowances"])
-                * strategy["auction_bid_fraction"],
-                2,
-            )
-            if bid_qty <= 0:
-                continue
-            bid_price = state["auction_price_floor"] + (
-                state["auction_price_ceiling"] - state["auction_price_floor"]
-            ) * strategy["auction_bid_fraction"]
-            if bid_qty * bid_price > company["cash"]:
-                continue
-            try:
-                submit_auction_bid(
-                    state,
-                    company_id=company["company_id"],
-                    auction_id=auction["auction_id"],
-                    quantity=bid_qty,
-                    price=round(bid_price, 2),
-                    now=current_time,
-                )
-            except ValueError:
-                continue
-
-    return state
+        signals.append(
+            {
+                "company_id": company["company_id"],
+                "company_name": company.get("company_name", company["company_id"]),
+                "sector_label": company.get("sector", "").replace("_", " ").title(),
+                "strategy": agent.risk_appetite,
+                "strategy_label": agent.profile.get("label", agent.risk_appetite.title()),
+                "posture": posture,
+                "preferred_instruments": agent.preferred_instruments,
+                "open_trades": open_trades,
+                "compliance_gap": round(gap, 2),
+            }
+        )
+    return signals
 
 
 def _company_snapshot(state: dict[str, Any], company: dict[str, Any]) -> dict[str, Any]:

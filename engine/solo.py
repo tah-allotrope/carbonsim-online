@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+from .constants import (
+    BOT_STRATEGY_AGGRESSIVE,
+    BOT_STRATEGY_CONSERVATIVE,
+    BOT_STRATEGY_MODERATE,
+    BOT_STRATEGY_OPPORTUNISTIC,
+    BOT_STRATEGY_SPECULATOR,
+)
 from .engine import create_initial_state, start_simulation
 from .scenarios import SCENARIO_PACKS
 
@@ -13,6 +20,25 @@ BOT_COUNT_MAP = {
     "easy": 2,
     "standard": 3,
     "hard": 5,
+}
+
+# Deterministic strategy mix so a solo player faces a varied field of opponents
+# rather than a wall of identical moderate bots. Harder difficulties skew toward
+# the more demanding opportunistic/speculator profiles.
+SOLO_STRATEGY_ROTATION = {
+    "easy": [BOT_STRATEGY_CONSERVATIVE, BOT_STRATEGY_MODERATE],
+    "standard": [
+        BOT_STRATEGY_MODERATE,
+        BOT_STRATEGY_AGGRESSIVE,
+        BOT_STRATEGY_OPPORTUNISTIC,
+    ],
+    "hard": [
+        BOT_STRATEGY_AGGRESSIVE,
+        BOT_STRATEGY_OPPORTUNISTIC,
+        BOT_STRATEGY_SPECULATOR,
+        BOT_STRATEGY_MODERATE,
+        BOT_STRATEGY_CONSERVATIVE,
+    ],
 }
 
 
@@ -36,6 +62,15 @@ def create_solo_game(
         scenario=scenario_key,
         bot_count=bot_count,
     )
+
+    # Assign a varied strategy mix across the bot field (Sprint 3). Done before
+    # start_simulation so agents read their strategy from year 1.
+    rotation = SOLO_STRATEGY_ROTATION.get(difficulty, SOLO_STRATEGY_ROTATION["standard"])
+    bot_index = 0
+    for company in state.get("companies", []):
+        if company.get("is_bot"):
+            company["bot_strategy"] = rotation[bot_index % len(rotation)]
+            bot_index += 1
 
     state = start_simulation(state, _utc_now())
     state["player_name"] = player_name
