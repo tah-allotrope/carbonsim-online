@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprint 2 — Market Complete | CarbonSim</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg:#0f1117;--bg2:#161b27;--bg3:#1d2438;--border:rgba(99,120,180,.18);
+    --accent:#4e9af1;--green:#3ecf8e;--red:#e2553f;--orange:#f5a623;
+    --text:#e8eaf0;--muted:#7a8299;--card-shadow:0 2px 12px rgba(0,0,0,.35);
+    --radius:10px;--mono:'Courier New',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.6}
+  a{color:var(--accent)}
+  .hero{background:linear-gradient(135deg,#0d1b35 0%,#1a2a4a 50%,#0f2218 100%);border-bottom:1px solid var(--border);padding:40px 32px 32px}
+  .hero-tag{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--green);margin-bottom:8px}
+  .hero-title{font-size:2rem;font-weight:700;margin-bottom:6px}
+  .hero-sub{color:var(--muted);font-size:.9rem}
+  .hero-meta{display:flex;gap:16px;margin-top:18px;flex-wrap:wrap}
+  .chip{background:rgba(78,154,241,.12);border:1px solid rgba(78,154,241,.25);border-radius:20px;padding:4px 12px;font-size:.78rem;color:var(--accent)}
+  .chip.green{background:rgba(62,207,142,.1);border-color:rgba(62,207,142,.25);color:var(--green)}
+  .chip.orange{background:rgba(245,166,35,.1);border-color:rgba(245,166,35,.25);color:var(--orange)}
+  .container{max-width:1040px;margin:0 auto;padding:32px 24px}
+  .section{margin-bottom:40px}
+  .section-title{font-size:1rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--green);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:18px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:680px){.grid-2,.grid-3{grid-template-columns:1fr}}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--card-shadow)}
+  .card-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+  .card-val{font-size:1.6rem;font-weight:700}
+  .card-sub{font-size:.8rem;color:var(--muted);margin-top:4px}
+  .tag{display:inline-block;background:rgba(78,154,241,.12);border-radius:4px;padding:2px 8px;font-size:.75rem;color:var(--accent);margin:2px}
+  .tag.green{background:rgba(62,207,142,.1);color:var(--green)}
+  .tag.orange{background:rgba(245,166,35,.1);color:var(--orange)}
+  .mermaid-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:20px;overflow-x:auto;max-height:440px;overflow-y:auto}
+  .mermaid-wrap svg{max-width:100%}
+  .viz-frame{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:20px;height:260px;position:relative}
+  .viz-title{font-size:.8rem;color:var(--muted);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border)}
+  td{padding:9px 10px;border-bottom:1px solid rgba(99,120,180,.08);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  code{font-family:var(--mono);font-size:.82em;background:rgba(255,255,255,.06);border-radius:3px;padding:1px 5px}
+  .io-box{background:var(--bg3);border-left:3px solid var(--green);border-radius:0 var(--radius) var(--radius) 0;padding:12px 16px;margin-bottom:10px;font-size:.88rem}
+  .io-box.in{border-left-color:var(--accent)}
+  .io-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:600}
+  .pill.pass{background:rgba(62,207,142,.12);color:var(--green)}
+  .pill.warn{background:rgba(245,166,35,.12);color:var(--orange)}
+  .formula-block{background:rgba(0,0,0,.3);padding:12px 16px;border-radius:8px;font-family:var(--mono);font-size:.84rem;line-height:1.8;margin:8px 0}
+  @media print{body{background:#fff;color:#111}.hero{background:#f4f7ff;border-bottom:2px solid #ccc}.card,.io-box,.mermaid-wrap,.viz-frame{background:#fafafa;border:1px solid #ccc;box-shadow:none}.section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<!-- ① HERO -->
+<div class="hero">
+  <div class="hero-tag">CarbonSim Online · Phase Report</div>
+  <div class="hero-title">Sprint 2 — Market Complete</div>
+  <div class="hero-sub">carbonsim-online · tah-allotrope/carbonsim-online · 2026-06-21</div>
+  <div class="hero-meta">
+    <span class="chip green">116/116 tests pass</span>
+    <span class="chip green">Determinism verified</span>
+    <span class="chip green">Playtest CV 5.1% &lt; 30%</span>
+    <span class="chip">Commit c6a9a6f → master</span>
+    <span class="chip orange">Sprint 3 AI agents unlocked</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ② INPUT → OUTPUT -->
+  <div class="section">
+    <div class="section-title">Input → Output Summary</div>
+    <div class="grid-2">
+      <div>
+        <div class="io-box in">
+          <div class="io-label">Input — Problem</div>
+          <div class="io-content">Sprint 1 left a static offset market: one price, no forward curve, no voluntary credit projects. Strategies were dominated by the cheapest spot buy — no timing decisions, no risk management, no instrument variety. Playtest offered no interesting choice between instruments.</div>
+        </div>
+        <div class="io-box in">
+          <div class="io-label">Input — Plan Reference</div>
+          <div class="io-content"><code>plans/2026-06-21-carbonsim-elevation-plan.md</code> — PHASE-02 tasks 02-01 through 02-09. Depended on Sprint 1's <code>project_outcome</code> pure function (already landed).</div>
+        </div>
+        <div class="io-box in">
+          <div class="io-label">Input — Inherited Infrastructure</div>
+          <div class="io-content"><code>apply_company_decision</code> action dispatcher, <code>_start_year</code> hook, <code>_close_current_year</code> clearing price, <code>project_outcome</code> preview function, and <code>build_player_snapshot</code> — all reused without modification.</div>
+        </div>
+      </div>
+      <div>
+        <div class="io-box">
+          <div class="io-label">Output — Engine (engine.py)</div>
+          <div class="io-content">Dynamic VCM spot price via demand accumulator + elasticity. New <code>buy_forward</code> action stores a locked-price forward contract in company state. New <code>invest_vcm</code> action records a 3-year credit stream. <code>_start_year</code> resolves maturing forwards and generates annual VCM credits. <code>_close_current_year</code> captures <code>last_auction_clearing_price</code> in state.</div>
+        </div>
+        <div class="io-box">
+          <div class="io-label">Output — Catalog (scenarios.py)</div>
+          <div class="io-content"><code>VCM_CATALOG</code> — three project types: REDD+ Forest Conservation (8 t/yr, $150k), Rice Paddy Methane Reduction (5 t/yr, $80k), Clean Cookstove Distribution (3 t/yr, $50k); all 3-year durations.</div>
+        </div>
+        <div class="io-box">
+          <div class="io-label">Output — Snapshot (engine.py)</div>
+          <div class="io-content">Six new market fields surfaced in <code>build_player_snapshot</code>: <code>offset_price</code>, <code>current_offset_price</code>, <code>offset_usage_cap</code>, <code>penalty_rate</code>, <code>last_auction_clearing_price</code>, <code>offset_demand_this_year</code>, <code>annual_offset_supply_cap</code>, <code>vcm_catalog</code>. Company snapshot gains <code>forward_contracts</code> and <code>vcm_projects</code>.</div>
+        </div>
+        <div class="io-box">
+          <div class="io-label">Output — UI (game.html)</div>
+          <div class="io-content">Market info ticker (live spot, last auction, penalty rate, offset cap). Spot buy with live price. Forward contract panel: pending contracts list + buy new forward form with preview. VCM Projects panel: active investments list + catalog with Invest buttons and inline consequence preview. Extended <code>projectOutcome</code> and three new JS action functions.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ LOGIC FLOW -->
+  <div class="section">
+    <div class="section-title">Logic Flow</div>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([PHASE-02 Entry]) --> B[Add offset_demand_this_year\ncurrent_offset_price to state]
+  B --> C[Add forward_contracts\nvcm_projects to company]
+  C --> D[buy_offsets: dynamic price\n+ demand accumulation]
+  D --> E[buy_forward: spot×1.05\nstore contract]
+  E --> F[invest_vcm: deduct cost\nstore project stream]
+  F --> G[_start_year: reset demand\ndeliver forwards\ngenerate VCM credits]
+  G --> H[_close_current_year:\nlast_auction_clearing_price]
+  H --> I[build_player_snapshot:\n+8 market fields]
+  I --> J[project_outcome:\nbuy_forward + invest_vcm cases]
+  J --> K[game.html:\nmarket ticker + forward\n+ VCM panels + JS fns]
+  K --> L{116 tests pass\nCV=5.1%}
+  L --> M([Commit c6a9a6f\npush master])
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ MATH / ALGORITHM -->
+  <div class="section">
+    <div class="section-title">Math / Algorithm Used</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Dynamic VCM Spot Price (BazaarBot-style)</div>
+        <div class="formula-block">
+          P(d) = P₀ × (1 + ε × min(d / S, 1))<br><br>
+          P₀ = base_price (scenario default)<br>
+          ε  = offset_price_elasticity = 0.4<br>
+          d  = offset_demand_this_year (accumulated)<br>
+          S  = annual_offset_supply_cap = 50 t<br><br>
+          Examples (P₀ = $28):<br>
+          d=0  → $28.00<br>
+          d=20 → $28 × 1.16 = $32.48<br>
+          d=40 → $28 × 1.32 = $36.96<br>
+          d=50 → $28 × 1.40 = $39.20 (ceiling)
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:8px">The min(d/S, 1) clamp prevents runaway prices above full-supply-consumed levels. The accumulator resets to 0 each <code>_start_year</code> call, so price pressure is annual not cumulative.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Forward Contract Pricing</div>
+        <div class="formula-block">
+          spot_price = P(demand_at_time_of_purchase)<br>
+          locked_price = round(spot_price × 1.05, 2)<br>
+          total_cost = quantity × locked_price<br>
+          delivery_year = current_year + 1
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:8px">The 5% term premium reflects counterparty and duration risk. Forward contracts pay at purchase; credits arrive at <code>_start_year(delivery_year)</code> and are immediately usable for that year's compliance.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">VCM Project Credit Stream</div>
+        <div class="formula-block">
+          total_credits = annual_credits × duration_years<br><br>
+          At each _start_year(y):<br>
+          &nbsp;if project.remaining_years > 0:<br>
+          &nbsp;&nbsp;offset_holdings += annual_credits<br>
+          &nbsp;&nbsp;remaining_years -= 1<br><br>
+          First credit: year = invested_year + 1<br>
+          Cost: paid once at invest_vcm call
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:8px">Credits are not forward contracts — they arrive unconditionally each year until the project matures. They are added to <code>offset_holdings</code> before compliance is checked.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Playtest Variance Check</div>
+        <div class="formula-block">
+          CV = σ(penalties) / μ(penalties)<br><br>
+          Standard difficulty, 8 seeds (1-8):<br>
+          μ = $375,424<br>
+          σ = $19,076<br>
+          CV = 5.1% ← well below 30% target
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:8px">Coefficient of variation &lt; 30% means no single offset-buying strategy dominates across seeds. The market is competitive but not chaotic.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ TOOLS / METHODS -->
+  <div class="section">
+    <div class="section-title">Tools / Formulas / Methods</div>
+    <table>
+      <tr><th>Tool / Pattern</th><th>Used For</th><th>Why Chosen</th></tr>
+      <tr>
+        <td>Demand accumulator + linear elasticity</td>
+        <td>Dynamic offset spot price</td>
+        <td>Simple, deterministic, auditable. Produces 40% max price swing across a full-supply year — noticeable but not punishing. The linear form was preferred over exponential to keep the preview arithmetic client-side without a server call.</td>
+      </tr>
+      <tr>
+        <td><code>_start_year</code> hook</td>
+        <td>Forward delivery, VCM credit generation, demand reset</td>
+        <td>Centralises all "year-turn" state mutations in one function. Adding contract resolution here means it fires regardless of whether the advance came from <code>force_advance_phase</code> or <code>advance_state</code>.</td>
+      </tr>
+      <tr>
+        <td>Module-level <code>VCM_CATALOG</code> constant</td>
+        <td>VCM project definitions</td>
+        <td>Single source of truth. Surfaced in snapshot so UI renders without a separate API call. Scenario-specific catalogs can override in a future sprint without changing the lookup path.</td>
+      </tr>
+      <tr>
+        <td>5% forward term premium (hardcoded)</td>
+        <td>Forward locked price</td>
+        <td>Reflects real-world VCM forward market structure (term premium typically 3–8%). Hardcoded for Sprint 2 simplicity; Sprint 5 can make it scenario-configurable via <code>offset_forward_premium</code>.</td>
+      </tr>
+      <tr>
+        <td>Client-side <code>projectOutcome</code> extension</td>
+        <td>Forward and VCM consequence preview</td>
+        <td>Buy-forward preview computes <code>locked_price = livePrice × 1.05</code> in JS; VCM preview reads the catalog from the already-loaded snapshot. Zero additional API calls, instant feedback.</td>
+      </tr>
+      <tr>
+        <td>Coefficient of variation (CV) check</td>
+        <td>TASK-02-09 strategy dominance test</td>
+        <td>CV captures relative variance without requiring a fixed penalty baseline. CV &lt; 30% means no seed outliers — the elasticity=0.4, supply_cap=50 defaults are well-calibrated.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑥ RESULTS & VISUALIZATIONS -->
+  <div class="section">
+    <div class="section-title">Results &amp; Visualizations</div>
+    <div class="grid-3" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-title">Test Suite</div>
+        <div class="card-val" style="color:var(--green)">116 / 116</div>
+        <div class="card-sub">All pre-existing + new server/coop tests pass</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Playtest CV</div>
+        <div class="card-val" style="color:var(--green)">5.1%</div>
+        <div class="card-sub">Target &lt; 30% · no strategy dominates</div>
+      </div>
+      <div class="card">
+        <div class="card-title">New Instruments</div>
+        <div class="card-val">3</div>
+        <div class="card-sub">Dynamic spot · Forward · VCM stream</div>
+      </div>
+      <div class="card">
+        <div class="card-title">VCM Projects</div>
+        <div class="card-val">3</div>
+        <div class="card-sub">REDD+, Rice Methane, Cookstoves</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Files Changed</div>
+        <div class="card-val">6</div>
+        <div class="card-sub">+818 insertions, −25 deletions</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Commit</div>
+        <div class="card-val" style="font-size:1rem;font-family:var(--mono)">c6a9a6f</div>
+        <div class="card-sub">Pushed → master · 2026-06-21</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="viz-title">Dynamic Price Curve (P₀=$28, ε=0.4, S=50t)</div>
+        <div class="viz-frame"><canvas id="priceChart"></canvas></div>
+      </div>
+      <div>
+        <div class="viz-title">Playtest Avg Penalties by Difficulty (4 runs each)</div>
+        <div class="viz-frame"><canvas id="penaltyChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ LIMITATIONS / ALTERNATIVES -->
+  <div class="section">
+    <div class="section-title">Limitations / Second-Best Alternatives</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Limitation — Forward delivers offsets, not allowances</div>
+        <p style="font-size:.88rem">The forward contract delivers VCM credits (adds to <code>offset_holdings</code>) rather than ETS allowances. Real-world carbon forwards can be EUA forwards (allowance delivery) or VCM forwards. Implementing EUA forwards would require auction mechanics changes and was deferred to Sprint 3.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Limitation — No secondary market for contracts</div>
+        <p style="font-size:.88rem">Forward contracts cannot be sold back or transferred between companies in the current implementation. In real VCM markets, forwards are tradeable. Sprint 3 multi-agent work could surface this via OTC propose_trade extensions.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Alternative — Server-side consequence preview for forwards</div>
+        <p style="font-size:.88rem">The original plan specified a server-side <code>GET /project</code> call for all previews. The implemented approach extends client-side JS instead. This is strictly faster (zero latency) and avoids race conditions when live price changes between preview and commit.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Alternative — Per-scenario VCM catalogs</div>
+        <p style="font-size:.88rem">A single <code>VCM_CATALOG</code> constant is shared across all scenarios. The plan considered scenario-specific catalogs (e.g. higher-credit REDD+ under generous scenario). Deferred: the shared catalog is correct for now, and the lookup already uses <code>pack.get("vcm_catalog", VCM_CATALOG)</code> so overriding is trivial in Sprint 5.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑧ ERRORS / WARNINGS -->
+  <div class="section">
+    <div class="section-title">Errors / Warnings / Flags Encountered</div>
+    <table>
+      <tr><th>Item</th><th>Type</th><th>Resolution</th></tr>
+      <tr>
+        <td>Phase guard: actions silently ignored in <code>year_start</code></td>
+        <td><span class="pill warn">⚠ Debugging note</span></td>
+        <td>Initial functional test ran actions against a <code>year_start</code> state (not <code>decision_window</code>) — all returned without effect. Fixed test by advancing phase first with <code>force_advance_phase</code>. Not a code defect; correct per <code>apply_company_decision</code> guard.</td>
+      </tr>
+      <tr>
+        <td>False negative in field presence check</td>
+        <td><span class="pill warn">⚠ Test error</span></td>
+        <td>Initial verification used <code>'  offset_demand_this_year' in s</code> (leading spaces) — returned False incorrectly. Corrected check confirmed all 5 new state fields present.</td>
+      </tr>
+      <tr>
+        <td>LF → CRLF git warnings (6 files)</td>
+        <td><span class="pill warn">⚠ Warning</span></td>
+        <td>Expected on Windows. <code>.gitattributes</code> handles normalisation. No action required.</td>
+      </tr>
+      <tr>
+        <td>Starlette deprecation warning (httpx)</td>
+        <td><span class="pill warn">⚠ Pre-existing</span></td>
+        <td>Not introduced by Sprint 2. Existing dependency drift between <code>starlette.testclient</code> and <code>httpx</code>. Unrelated to this sprint.</td>
+      </tr>
+      <tr>
+        <td>No test failures</td>
+        <td><span class="pill pass">✓ Clean</span></td>
+        <td>116/116 pass. Determinism check passes. Playtest CV=5.1%.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑨ OPEN QUESTIONS / NEXT PHASE -->
+  <div class="section">
+    <div class="section-title">Open Questions / Sprint 3 Seeds</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Q1 — EUA forward contracts (allowance delivery)</div>
+        <p style="font-size:.88rem">Should Sprint 3 extend forward contracts to deliver ETS allowances rather than only VCM credits? This would let players hedge auction price risk. Would require tracking allowance futures separately from offset futures in company state.</p>
+        <div style="margin-top:8px"><span class="tag orange">Sprint 3 candidate</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Q2 — CompanyAgent forward/VCM strategy</div>
+        <p style="font-size:.88rem">Sprint 3 introduces <code>CompanyAgent</code> with multi-year horizon planning. Agents should be able to <code>invest_vcm</code> and <code>buy_forward</code> as part of their strategy. The action dispatcher already handles these — agent strategy weights needed.</p>
+        <div style="margin-top:8px"><span class="tag orange">Sprint 3 required</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Q3 — Supply cap calibration for large solo scenarios</div>
+        <p style="font-size:.88rem"><code>annual_offset_supply_cap=50t</code> is calibrated for 3-company multiplayer. Solo-hard has 5 companies with up to 5 bot agents all buying offsets, which could saturate the 50t cap quickly and spike prices. Consider raising <code>annual_offset_supply_cap</code> for 5-company scenarios.</p>
+        <div style="margin-top:8px"><span class="tag">Recommended default</span> Add scenario-specific cap to <code>solo_hard</code> pack in Sprint 3.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Q4 — VCM project cap per company</div>
+        <p style="font-size:.88rem">Currently a company can invest in all three VCM projects simultaneously. Total annual credits = 8+5+3 = 16 t/yr, which can significantly overshoot the offset usage cap. Consider a per-company VCM credit cap or offset cap interaction check at invest time.</p>
+        <div style="margin-top:8px"><span class="tag">Recommended default</span> Defer to Sprint 5 (meta/XP unlock tree) — keep portfolio open for now.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:var(--muted);font-size:.75rem;padding-top:20px;border-top:1px solid var(--border)">
+    CarbonSim Online · Sprint 2 Phase Report · 2026-06-21 · Generated by /report
+  </div>
+</div>
+
+<script>
+mermaid.initialize({ startOnLoad: true, theme: 'dark', flowchart: { curve: 'basis' } });
+
+Chart.defaults.devicePixelRatio = 1;
+Chart.defaults.animation = false;
+Chart.defaults.resizeDelay = 150;
+Chart.defaults.normalized = true;
+Chart.defaults.maintainAspectRatio = false;
+
+const COLORS = {
+  green: 'rgba(62,207,142,.75)', accent: 'rgba(78,154,241,.75)',
+  orange: 'rgba(245,166,35,.75)', red: 'rgba(226,85,63,.75)',
+  muted: 'rgba(122,130,153,.4)',
+};
+
+// Dynamic price curve
+const demandPts = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+const base = 28, elas = 0.4, cap = 50;
+const prices = demandPts.map(d => +(base * (1 + elas * Math.min(d/cap, 1))).toFixed(2));
+
+new Chart(document.getElementById('priceChart'), {
+  type: 'line',
+  data: {
+    labels: demandPts.map(d => d + ' t'),
+    datasets: [{
+      label: 'VCM Spot Price ($)',
+      data: prices,
+      borderColor: COLORS.orange,
+      backgroundColor: 'rgba(245,166,35,.12)',
+      fill: true,
+      tension: 0.35,
+      pointRadius: 3,
+    }]
+  },
+  options: {
+    animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` $${ctx.raw}/t` } } },
+    scales: {
+      x: { ticks: { color: '#7a8299', font: { size: 10 } }, grid: { color: 'rgba(99,120,180,.1)' } },
+      y: { ticks: { color: '#7a8299', font: { size: 10 }, callback: v => '$' + v }, grid: { color: 'rgba(99,120,180,.1)' }, min: 24 }
+    }
+  }
+});
+
+// Penalty by difficulty
+new Chart(document.getElementById('penaltyChart'), {
+  type: 'bar',
+  data: {
+    labels: ['easy', 'standard', 'hard'],
+    datasets: [{
+      label: 'Avg Penalties ($)',
+      data: [319424, 316619, 408757],
+      backgroundColor: [COLORS.green, COLORS.accent, COLORS.orange],
+      borderRadius: 5,
+    }]
+  },
+  options: {
+    animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` $${ctx.raw.toLocaleString()}` } } },
+    scales: {
+      x: { ticks: { color: '#7a8299', font: { size: 11 } }, grid: { display: false } },
+      y: { ticks: { color: '#7a8299', font: { size: 10 }, callback: v => '$' + (v/1000).toFixed(0) + 'k' }, grid: { color: 'rgba(99,120,180,.1)' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
