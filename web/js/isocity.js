@@ -21,6 +21,7 @@ const Isocity = (function () {
   let floaters = [];
   let flashOpacity = 0;
   let flashColor = null;
+  let policyStability = 70; // Sprint 4: drives the city-wide climate haze
 
   const TILE_W = 64;
   const TILE_H = 32;
@@ -365,6 +366,24 @@ const Isocity = (function () {
     if (flashOpacity < 0) flashOpacity = 0;
   }
 
+  // City-wide policy-climate haze (Sprint 4): a low policy_stability washes the
+  // whole city in a brown regulatory-crisis haze; a high one leaves clear skies.
+  // Neutral around 70 (the starting value) so a healthy game shows no tint.
+  function drawClimateOverlay() {
+    const s = policyStability;
+    if (s < 60) {
+      // 60 -> 0 maps to alpha 0 -> ~0.32
+      const alpha = Math.min(0.32, ((60 - s) / 60) * 0.32);
+      ctx.fillStyle = 'rgba(120, 92, 46, ' + alpha + ')';
+      ctx.fillRect(0, 0, width, height);
+    } else if (s > 85) {
+      // Favorable climate: faint clear-blue lift.
+      const alpha = Math.min(0.12, ((s - 85) / 15) * 0.12);
+      ctx.fillStyle = 'rgba(120, 170, 190, ' + alpha + ')';
+      ctx.fillRect(0, 0, width, height);
+    }
+  }
+
   /* --- Sprite-sheet frame animation core (Sprint 3) --- */
   function drawSprite(img, fw, fh, col, row, dx, dy, flip) {
     if (!img) return;
@@ -539,6 +558,9 @@ const Isocity = (function () {
     ents.sort(function (a, z) { return a.y - z.y; });
     ents.forEach(function (e) { if (e.b) drawPlotStructure(e.b); else drawCitizen(e.c); });
 
+    // Layer 2.5: policy-climate haze over the city (under particles/markers).
+    drawClimateOverlay();
+
     // Layer 3: particles (smoke + effect bursts).
     spawnParticles();
     updateParticles();
@@ -576,8 +598,16 @@ const Isocity = (function () {
   function update(snapshot) {
     if (!snapshot) return;
     snapshotCache = snapshot;
+    if (typeof snapshot.policy_stability === 'number') {
+      policyStability = snapshot.policy_stability;
+    }
     buildPlots(snapshot);
     setCitizenCount(desiredCitizenCount(snapshot));
+    if (reducedMotion) drawStatic();
+  }
+
+  function setPolicyClimate(stability) {
+    if (typeof stability === 'number') policyStability = stability;
     if (reducedMotion) drawStatic();
   }
 
@@ -616,6 +646,14 @@ const Isocity = (function () {
     flashOpacity = 0.6;
   }
 
+  // "City clears" celebration: a green sweep across every plot when a
+  // penalty-free year closes (Sprint 4, TASK-04-07).
+  function triggerCityClears() {
+    burstParticles(function () { return true; }, '90,160,90', 10, 2.2);
+    flashColor = 'rgba(150, 210, 150,';
+    flashOpacity = 0.35;
+  }
+
   function destroy() {
     if (animId) cancelAnimationFrame(animId);
     window.removeEventListener('resize', resize);
@@ -640,6 +678,8 @@ const Isocity = (function () {
     triggerAbatementEffect,
     triggerOffsetEffect,
     triggerYearTransition,
+    triggerCityClears,
+    setPolicyClimate,
     float,
     emote,
   };

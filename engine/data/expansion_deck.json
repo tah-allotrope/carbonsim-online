@@ -669,6 +669,231 @@
           }
         }
       ]
+    },
+    {
+      "card_id": "policy_crackdown",
+      "title": "Regulatory Crackdown",
+      "description": "With policy stability collapsing, the Ministry launches an emergency compliance crackdown. Inspectors fan out and the penalty regime hardens across every sector.",
+      "category": "policy",
+      "effect_type": "allowance_withdrawal",
+      "effect_params": {
+        "magnitude": 0.06
+      },
+      "prerequisites": {
+        "min_year": 1,
+        "max_year": 25
+      },
+      "requires_condition": "regulatory_crackdown",
+      "weight": 8,
+      "choices": [
+        {
+          "id": "comply",
+          "label": "Fall in line",
+          "description": "Absorb the tighter regime and protect your licence to operate.",
+          "effect_type": "none",
+          "effect_params": {}
+        },
+        {
+          "id": "petition",
+          "label": "Petition the Ministry",
+          "description": "Spend cash lobbying for a softer rollout.",
+          "effect_type": "cost_shock",
+          "effect_params": {
+            "magnitude": 0.05
+          }
+        }
+      ]
+    },
+    {
+      "card_id": "policy_relief",
+      "title": "Policy Relief Package",
+      "description": "A stable, confident regulator rewards the market with a relief package: extra free allowances and a friendlier outlook for investment.",
+      "category": "opportunity",
+      "effect_type": "allowance_boost",
+      "effect_params": {
+        "magnitude": 0.06
+      },
+      "prerequisites": {
+        "min_year": 1,
+        "max_year": 25
+      },
+      "requires_condition": "policy_relief",
+      "weight": 8
+    },
+    {
+      "card_id": "policy_106",
+      "title": "CBAM Border Tax Threat",
+      "description": "The EU signals a Carbon Border Adjustment Mechanism that would tax the embedded carbon in your exports. Industry must decide how to respond.",
+      "category": "policy",
+      "effect_type": "none",
+      "effect_params": {},
+      "prerequisites": {
+        "min_year": 2,
+        "max_year": 25
+      },
+      "weight": 5,
+      "choices": [
+        {
+          "id": "lobby",
+          "label": "Lobby for a delay",
+          "description": "Coordinate an industry lobbying push — costly now, but it may buy time.",
+          "effect_type": "cost_shock",
+          "effect_params": {
+            "magnitude": 0.04
+          },
+          "sets_condition": "cbam_lobbied",
+          "follow_on_cards": [
+            "policy_107"
+          ]
+        },
+        {
+          "id": "comply",
+          "label": "Decarbonise to comply",
+          "description": "Accept the border tax and lean into abatement.",
+          "effect_type": "cbam_threat",
+          "effect_params": {
+            "magnitude": 0.08
+          }
+        }
+      ]
+    },
+    {
+      "card_id": "policy_107",
+      "title": "CBAM Delayed",
+      "description": "The lobbying paid off — the border mechanism is pushed back a year, easing immediate pressure and freeing up cash flow.",
+      "category": "opportunity",
+      "effect_type": "cash_boost",
+      "effect_params": {
+        "magnitude": 0.05
+      },
+      "prerequisites": {
+        "min_year": 2,
+        "max_year": 25
+      },
+      "requires_condition": "cbam_lobbied",
+      "weight": 2
+    },
+    {
+      "card_id": "crisis_106",
+      "title": "Compliance Deadline Missed",
+      "description": "A reporting deadline slips through the cracks. The regulator takes note and places your operation under closer scrutiny.",
+      "category": "crisis",
+      "effect_type": "cost_shock",
+      "effect_params": {
+        "magnitude": 0.05
+      },
+      "prerequisites": {
+        "min_year": 2,
+        "max_year": 25
+      },
+      "weight": 4,
+      "sets_condition": "regulator_watching",
+      "follow_on_cards": [
+        "policy_108"
+      ]
+    },
+    {
+      "card_id": "policy_108",
+      "title": "Targeted Regulator Audit",
+      "description": "Now on the watch list, your facility draws a targeted audit. Documentation and remediation carry a real cost.",
+      "category": "policy",
+      "effect_type": "cost_shock",
+      "effect_params": {
+        "magnitude": 0.06
+      },
+      "prerequisites": {
+        "min_year": 2,
+        "max_year": 25
+      },
+      "requires_condition": "regulator_watching",
+      "weight": 3
+    },
+    {
+      "card_id": "opportunity_106",
+      "title": "Green Tech Breakthrough",
+      "description": "A consortium offers early access to a breakthrough abatement technology. Adopting now positions you ahead of the field.",
+      "category": "opportunity",
+      "effect_type": "none",
+      "effect_params": {},
+      "prerequisites": {
+        "min_year": 1,
+        "max_year": 25
+      },
+      "weight": 5,
+      "choices": [
+        {
+          "id": "adopt",
+          "label": "Adopt early",
+          "description": "Invest in the new tech and unlock a first-mover advantage next year.",
+          "effect_type": "tech_unlock",
+          "effect_params": {
+            "sector": "all",
+            "measure_label": "Breakthrough Retrofit",
+            "abatement_amount": 9.0,
+            "cost": 70000.0,
+            "activation_timing": "next_year"
+          },
+          "sets_condition": "early_mover",
+          "follow_on_cards": [
+            "opportunity_107"
+          ]
+        },
+        {
+          "id": "wait",
+          "label": "Wait and see",
+          "description": "Let others take the risk first.",
+          "effect_type": "none",
+          "effect_params": {}
+        }
+      ]
+    },
+    {
+      "card_id": "opportunity_107",
+      "title": "Early-Mover Bonus",
+      "description": "Your early adoption pays off: a green-finance grant rewards first movers with fresh capital.",
+      "category": "opportunity",
+      "effect_type": "cash_boost",
+      "effect_params": {
+        "magnitude": 0.06
+      },
+      "prerequisites": {
+        "min_year": 1,
+        "max_year": 25
+      },
+      "requires_condition": "early_mover",
+      "weight": 2
+    },
+    {
+      "card_id": "crisis_107",
+      "title": "Persistent Drought",
+      "description": "A multi-year drought throttles hydropower. Thermal plants must run harder, lifting emissions for several years running.",
+      "category": "crisis",
+      "effect_type": "emissions_spike",
+      "effect_params": {
+        "magnitude": 0.06
+      },
+      "effect_duration": 2,
+      "prerequisites": {
+        "min_year": 1,
+        "max_year": 25
+      },
+      "weight": 4
+    },
+    {
+      "card_id": "market_106",
+      "title": "Sustained Carbon Price Rally",
+      "description": "Tightening supply sends carbon prices on a sustained rally that bites into compliance budgets over multiple years.",
+      "category": "market",
+      "effect_type": "cost_shock",
+      "effect_params": {
+        "magnitude": 0.04
+      },
+      "effect_duration": 2,
+      "prerequisites": {
+        "min_year": 2,
+        "max_year": 25
+      },
+      "weight": 4
     }
   ]
 }

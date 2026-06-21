@@ -45,13 +45,31 @@ class CardDeck:
             cards.extend(deck._cards)
         return cls(cards, rng)
 
+    def take_by_id(self, card_id: str) -> dict[str, Any] | None:
+        """Pull a specific card out of the draw pile by id (follow-on injection).
+
+        Returns the card and moves it to the discard pile, or ``None`` if it is
+        not currently in the draw pile (already drawn this run, or absent).
+        """
+        for card in self._cards:
+            if card.get("card_id") == card_id:
+                self._cards.remove(card)
+                self._discard.append(card)
+                return card
+        return None
+
     def draw(self, count: int = 3, state: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         eligible = [c for c in self._cards if _prereqs_met(c, state)]
         if len(eligible) < count:
             self._reshuffle()
             eligible = [c for c in self._cards if _prereqs_met(c, state)]
 
-        weights = [max(c.get("weight", 1), 0.1) for c in eligible]
+        # State-weighted draw (TASK-04-04): base weight scaled by how the card's
+        # category fits the current policy climate.
+        weights = [
+            max(c.get("weight", 1), 0.1) * _state_weight_multiplier(c, state)
+            for c in eligible
+        ]
         drawn: list[dict[str, Any]] = []
         used_indices: set[int] = set()
 
@@ -82,10 +100,32 @@ class CardDeck:
         return len(self._discard)
 
 
+def _state_weight_multiplier(card: dict[str, Any], state: dict[str, Any] | None) -> float:
+    """Bias the draw toward crisis cards in an unstable climate and toward
+    opportunity cards in a favorable one (TASK-04-04)."""
+    if state is None:
+        return 1.0
+    stability = state.get("policy_stability", 70.0)
+    category = card.get("category", "")
+    mult = 1.0
+    if category == "crisis" and stability < 40:
+        mult *= 2.0
+    if category == "opportunity" and stability > 75:
+        mult *= 2.0
+    if category == "policy" and stability < 30:
+        mult *= 1.5  # crackdown-flavored policy cards surface in a crisis
+    return mult
+
+
 def _prereqs_met(card: dict[str, Any], state: dict[str, Any] | None) -> bool:
     if state is None:
         return True
     prereqs = card.get("prerequisites", {})
+    # requires_condition gate (TASK-04-03/04): the card is only eligible once a
+    # prior card has set the required flag in active_conditions.
+    required = card.get("requires_condition") or prereqs.get("requires_condition")
+    if required and required not in state.get("active_conditions", []):
+        return False
     year = state.get("current_year", 0)
     if "min_year" in prereqs and year < prereqs["min_year"]:
         return False
@@ -133,6 +173,11 @@ def resolve_card(
 
     effect_type = card.get("effect_type", "none")
     effect_params = dict(card.get("effect_params", {}))
+    # Cascading-card metadata defaults from the card; a chosen choice may add or
+    # override each field (TASK-04-03).
+    sets_condition = card.get("sets_condition")
+    follow_on_cards = list(card.get("follow_on_cards", []))
+    effect_duration = int(card.get("effect_duration", 1) or 1)
 
     if choice_id and card.get("choices"):
         match = [c for c in card["choices"] if c["id"] == choice_id]
@@ -142,6 +187,11 @@ def resolve_card(
             if chosen_effect != "none":
                 effect_type = chosen_effect
                 effect_params = dict(chosen.get("effect_params", {}))
+                effect_duration = int(chosen.get("effect_duration", effect_duration) or effect_duration)
+            if chosen.get("sets_condition"):
+                sets_condition = chosen["sets_condition"]
+            if chosen.get("follow_on_cards"):
+                follow_on_cards = list(chosen["follow_on_cards"])
 
     if effect_type != "none":
         magnitude = effect_params.get("magnitude", 0.1)
@@ -153,6 +203,24 @@ def resolve_card(
             shock_params=shock_params,
             now=now,
         )
+        # effect_duration > 1: the apply_shock above covers the current year; the
+        # remaining years are queued as a multi-turn active effect (TASK-04-06).
+        if effect_duration > 1:
+            state.setdefault("active_effects", []).append({
+                "effect_type": effect_type,
+                "effect_params": dict(effect_params),
+                "remaining_years": effect_duration - 1,
+                "source_card": card["card_id"],
+            })
+
+    if sets_condition:
+        conditions = state.setdefault("active_conditions", [])
+        if sets_condition not in conditions:
+            conditions.append(sets_condition)
+
+    if follow_on_cards:
+        injections = state.setdefault("pending_card_injections", [])
+        injections.extend(follow_on_cards)
 
     _append_event(state, "card_resolved", now, {
         "card_id": card["card_id"],
@@ -160,6 +228,9 @@ def resolve_card(
         "category": card["category"],
         "choice_id": choice_id,
         "effect_type": effect_type,
+        "sets_condition": sets_condition,
+        "follow_on_cards": follow_on_cards,
+        "effect_duration": effect_duration,
         "year": state.get("current_year", 0),
     })
 
@@ -173,7 +244,26 @@ def draw_cards(
     now: datetime | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     now = now or datetime.now(timezone.utc)
-    drawn = deck.draw(count=count, state=state)
+    drawn: list[dict[str, Any]] = []
+
+    # Force-draw any queued follow-on cards first (TASK-04-03), then fill the
+    # rest of the hand with the normal state-weighted random draw.
+    pending = state.get("pending_card_injections", [])
+    if pending:
+        still_pending: list[str] = []
+        for card_id in pending:
+            if len(drawn) >= count:
+                still_pending.append(card_id)
+                continue
+            card = deck.take_by_id(card_id)
+            if card is not None:
+                drawn.append(card)
+            # If the card is not in the deck (already used), silently drop it.
+        state["pending_card_injections"] = still_pending
+
+    if len(drawn) < count:
+        drawn.extend(deck.draw(count=count - len(drawn), state=state))
+
     for card in drawn:
         _append_event(state, "card_drawn", now, {
             "card_id": card["card_id"],

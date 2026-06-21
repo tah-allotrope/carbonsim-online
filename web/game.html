@@ -28,6 +28,7 @@
     <div class="header-meta">
       <span class="badge badge-blue" id="phaseBadge">Loading</span>
       <span class="badge" id="yearBadge">Year 0/0</span>
+      <span class="badge" id="policyClimateBadge" title="Policy climate — driven by overall compliance. A crisis tightens the cap; a favorable climate eases it.">Climate: --</span>
       <button class="btn" id="muteBtn" onclick="toggleMute()" title="Mute Sound">🔊</button>
       <button class="btn" onclick="showSaveModal()">Save</button>
       <button class="btn" onclick="showLoadModal()">Load</button>
@@ -209,7 +210,30 @@ function render() {
   document.getElementById('yearBadge').className = y >= total ? 'badge badge-green' : 'badge badge-blue';
   document.getElementById('yearProgress').style.width = `${(y / total) * 100}%`;
 
+  updatePolicyClimateBadge(g.snapshot || {});
+
   renderContent();
+}
+
+// Sprint 4: Policy Climate HUD indicator + city haze sync.
+function updatePolicyClimateBadge(snapshot) {
+  const badge = document.getElementById('policyClimateBadge');
+  if (!badge) return;
+  const stability = typeof snapshot.policy_stability === 'number' ? snapshot.policy_stability : 70;
+  const climate = snapshot.policy_climate || 'stable';
+  const meta = {
+    crisis:    { label: 'Crisis',    cls: 'badge badge-red' },
+    warning:   { label: 'Warning',   cls: 'badge badge-orange' },
+    stable:    { label: 'Stable',    cls: 'badge badge-blue' },
+    favorable: { label: 'Favorable', cls: 'badge badge-green' },
+  }[climate] || { label: climate, cls: 'badge' };
+  badge.textContent = `Climate: ${meta.label} (${Math.round(stability)})`;
+  badge.className = meta.cls;
+  const conds = snapshot.active_conditions || [];
+  if (conds.length) {
+    badge.title = 'Policy climate. Active conditions: ' + conds.join(', ').replace(/_/g, ' ');
+  }
+  if (window.Isocity && Isocity.setPolicyClimate) Isocity.setPolicyClimate(stability);
 }
 
 function renderContent() {
@@ -733,6 +757,11 @@ function showYearEndModal(yearSummary, closedYear, snapshot) {
 
   document.getElementById('yearEndModal').classList.remove('hidden');
   if (window.AudioManager) AudioManager.playSFX('success');
+
+  // Sprint 4: a penalty-free close sweeps the city clean.
+  if (isCompliant && (yr.penalty_due || 0) <= 0 && window.Isocity && Isocity.triggerCityClears) {
+    Isocity.triggerCityClears();
+  }
 }
 
 function closeYearEnd() {

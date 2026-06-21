@@ -153,6 +153,16 @@ def create_initial_state(
         "annual_offset_supply_cap": pack.get("annual_offset_supply_cap", 50.0),
         "current_offset_price": pack.get("offset_price", DEFAULT_OFFSET_PRICE),
         "last_auction_clearing_price": 0.0,
+        # Sprint 4 — Story / policy stability.
+        # policy_stability (0-100) drives the dynamic cap modulation and the
+        # auto crackdown/relief triggers. Starts at 70 (neutral: cap modifier
+        # is 1.0 at 70 so Sprint 1-3 balance is unchanged on a fresh game).
+        "policy_stability": float(pack.get("policy_stability", 70.0)),
+        "active_conditions": [],
+        # Multi-turn card effects: each entry re-applies for `remaining_years`.
+        "active_effects": [],
+        # Card ids queued by follow_on_cards, force-drawn next decision window.
+        "pending_card_injections": [],
     }
 
 
@@ -894,7 +904,23 @@ def build_player_snapshot(
         "offset_demand_this_year": state.get("offset_demand_this_year", 0.0),
         "annual_offset_supply_cap": state.get("annual_offset_supply_cap", 50.0),
         "vcm_catalog": VCM_CATALOG,
+        # Sprint 4 — policy climate.
+        "policy_stability": state.get("policy_stability", 70.0),
+        "policy_climate": _policy_climate_label(state.get("policy_stability", 70.0)),
+        "active_conditions": list(state.get("active_conditions", [])),
+        "cap_modifier": state.get("cap_modifier", 1.0),
     }
+
+
+def _policy_climate_label(stability: float) -> str:
+    """Banded label for the HUD indicator."""
+    if stability < 30:
+        return "crisis"
+    if stability < 50:
+        return "warning"
+    if stability > 85:
+        return "favorable"
+    return "stable"
 
 
 def build_facilitator_snapshot(
@@ -1679,6 +1705,17 @@ def _company_snapshot(state: dict[str, Any], company: dict[str, Any]) -> dict[st
 
 def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
     state["current_year"] = year
+    # Migration guards for Sprint 4 fields (legacy saves created pre-PHASE-04).
+    state.setdefault("policy_stability", 70.0)
+    state.setdefault("active_conditions", [])
+    state.setdefault("active_effects", [])
+    state.setdefault("pending_card_injections", [])
+
+    # Apply any multi-turn active effects for this year, then decrement them.
+    _apply_active_effects(state, now)
+    # Policy-stability auto triggers (crackdown / relief) before the cap is set.
+    _apply_policy_triggers(state, year, now)
+
     # Reset demand accumulator and restore base offset price for the new year
     state["offset_demand_this_year"] = 0.0
     state["current_offset_price"] = state.get("offset_price", DEFAULT_OFFSET_PRICE)
@@ -1687,11 +1724,19 @@ def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
     allocation_factor = factors.get(year)
     if allocation_factor is None:
         allocation_factor = factors.get(str(year), 0.80)
+    # Policy stability modulates the cap: a stable regulator hands out more
+    # allowances (relief), an unstable one tightens (crackdown). The modifier is
+    # exactly 1.0 at the starting stability of 70, so a fresh game keeps the
+    # Sprint 1-3 balance; it only diverges as stability drifts.
+    stability = state.get("policy_stability", 70.0)
+    cap_modifier = round(1.0 + ((stability - 70.0) / 100.0) * 0.15, 4)
+    cap_modifier = max(0.88, min(1.10, cap_modifier))
+    state["cap_modifier"] = cap_modifier
     total_baseline = sum(
         company["baseline_emissions"] * (1 + company["growth_rate"]) ** (year - 1)
         for company in state["companies"]
     )
-    state["current_cap"] = round(total_baseline * allocation_factor, 2)
+    state["current_cap"] = round(total_baseline * allocation_factor * cap_modifier, 2)
 
     auction_supply = round(
         state["current_cap"] * state.get("auction_share_of_cap", DEFAULT_AUCTION_SHARE_OF_CAP),
@@ -2058,6 +2103,142 @@ def _close_current_year(state: dict[str, Any], now: datetime) -> None:
         },
     )
 
+    _update_policy_stability(state, year, now)
+
+
+def _update_policy_stability(state: dict[str, Any], year: int, now: datetime) -> None:
+    """Adjust policy_stability from this year's compliance outcomes (TASK-04-01).
+
+    +5 if aggregate compliance rate > 80%; +3 more above 85%; -10 if more than
+    30% of companies paid penalties; -15 if an election_pressure shock fired this
+    year. Clamped to [0, 100].
+    """
+    state.setdefault("policy_stability", 70.0)
+    companies = state.get("companies", [])
+    if not companies:
+        return
+    n = len(companies)
+    compliant = sum(
+        1
+        for c in companies
+        if (c["year_results"][-1]["shortfall"] if c.get("year_results") else 0) <= 0
+    )
+    penalized = sum(
+        1
+        for c in companies
+        if (c["year_results"][-1]["penalty_due"] if c.get("year_results") else 0) > 0
+    )
+    compliance_rate = compliant / n
+    penalty_rate_frac = penalized / n
+
+    before = state["policy_stability"]
+    # Mean reversion toward a neutral baseline keeps stability from pinning at an
+    # extreme (a permanent death-spiral or runaway relief) when the field is
+    # structurally over- or under-compliant; the outcome deltas then push around
+    # that baseline.
+    delta = (60.0 - before) * 0.10
+    if compliance_rate > 0.80:
+        delta += 4.0
+    if compliance_rate > 0.85:
+        delta += 2.0
+    if penalty_rate_frac > 0.30:
+        delta -= 6.0
+    # An election_pressure shock applied this year shakes regulatory confidence.
+    if any(
+        s.get("shock_type") == "election_pressure" and s.get("year") == year
+        for s in state.get("active_shocks", [])
+    ):
+        delta -= 10.0
+
+    state["policy_stability"] = round(max(0.0, min(100.0, before + delta)), 2)
+    if state["policy_stability"] != before:
+        _append_event(
+            state,
+            "policy_stability_changed",
+            now,
+            {
+                "year": year,
+                "before": before,
+                "after": state["policy_stability"],
+                "delta": round(state["policy_stability"] - before, 2),
+                "compliance_rate": round(compliance_rate, 2),
+            },
+        )
+
+
+def _apply_active_effects(state: dict[str, Any], now: datetime) -> None:
+    """Re-apply multi-turn card effects for the new year, then decrement them.
+
+    Each entry is ``{effect_type, effect_params, remaining_years}``. The effect
+    is applied through the normal shock pipeline once per active year; entries
+    reaching zero remaining years are dropped.
+    """
+    effects = state.get("active_effects", [])
+    if not effects:
+        return
+    surviving: list[dict[str, Any]] = []
+    for effect in effects:
+        etype = effect.get("effect_type", "none")
+        remaining = effect.get("remaining_years", 0)
+        if etype != "none" and remaining > 0:
+            params = dict(effect.get("effect_params", {}))
+            magnitude = params.pop("magnitude", 0.1)
+            try:
+                apply_shock(
+                    state,
+                    shock_type=etype,
+                    magnitude=magnitude,
+                    shock_params=params,
+                    now=now,
+                )
+            except ValueError:
+                pass
+        effect["remaining_years"] = remaining - 1
+        if effect["remaining_years"] > 0:
+            surviving.append(effect)
+    state["active_effects"] = surviving
+
+
+def _apply_policy_triggers(state: dict[str, Any], year: int, now: datetime) -> None:
+    """Auto crackdown / relief when policy_stability crosses thresholds (TASK-04-02).
+
+    Implemented engine-side (deterministic, no deck dependency): a crackdown sets
+    the ``regulatory_crackdown`` condition and raises the penalty rate for the
+    year; relief sets ``policy_relief`` and grants a one-off allowance boost. The
+    matching narrative cards also exist in the deck for the drawn path.
+    """
+    stability = state.get("policy_stability", 70.0)
+    conditions = state.setdefault("active_conditions", [])
+
+    if stability < 30 and "regulatory_crackdown" not in conditions:
+        conditions.append("regulatory_crackdown")
+        conditions[:] = [c for c in conditions if c != "policy_relief"]
+        # One-time allowance withdrawal — a non-ratcheting hit. (Deliberately not
+        # cbam_threat, which permanently multiplies penalty_rate and compounds
+        # into a death-spiral when the crackdown card is re-drawn each year.)
+        apply_shock(state, shock_type="allowance_withdrawal", magnitude=0.08, now=now)
+        _append_event(
+            state,
+            "policy_climate_shift",
+            now,
+            {"year": year, "shift": "regulatory_crackdown", "policy_stability": stability},
+        )
+    elif stability > 85 and "policy_relief" not in conditions:
+        conditions.append("policy_relief")
+        conditions[:] = [c for c in conditions if c != "regulatory_crackdown"]
+        apply_shock(state, shock_type="allowance_boost", magnitude=0.08, now=now)
+        _append_event(
+            state,
+            "policy_climate_shift",
+            now,
+            {"year": year, "shift": "policy_relief", "policy_stability": stability},
+        )
+    elif 30 <= stability <= 85:
+        # Climate normalised — clear the extreme conditions.
+        conditions[:] = [
+            c for c in conditions if c not in ("regulatory_crackdown", "policy_relief")
+        ]
+
 
 def _projected_emissions(company: dict[str, Any], year: int) -> float:
     base = company["baseline_emissions"] * (1 + company["growth_rate"]) ** (year - 1)
@@ -2126,6 +2307,10 @@ def _event_summary(event_type: str, details: dict[str, Any]) -> str:
         return f"Phase force-advanced from {details.get('from_phase', 'unknown')} in year {details['year']}"
     if event_type == "shock_applied":
         return f"Shock '{details['shock_type']}' (magnitude {details['magnitude']}) applied in year {details['year']}"
+    if event_type == "policy_stability_changed":
+        return f"Policy stability {details['before']:.0f} -> {details['after']:.0f} ({details['delta']:+.0f}) in year {details['year']}"
+    if event_type == "policy_climate_shift":
+        return f"Policy climate shift: {details['shift'].replace('_', ' ')} in year {details['year']}"
     if event_type == "card_resolved":
         title = details.get("title", details.get("card_id", "unknown"))
         return f"Event card '{title}' resolved in year {details['year']}"
