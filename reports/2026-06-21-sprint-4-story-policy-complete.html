@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: Sprint 4 — Story, Policy Stability &amp; City Canvas</title>
+  <meta name="color-scheme" content="light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --paper: #f7faf4; --paper-strong: #fdfff9; --ink: #1a2218;
+      --ink-soft: #4a5e44; --line: #c2d4ba; --line-strong: #8baa82;
+      --accent: #3a7a4e; --accent-2: #2c6e7a; --accent-3: #7a5c2e;
+      --green: #4a8c3a; --amber: #b08020; --red: #a03030;
+      --shadow: 0 14px 36px rgba(20, 50, 20, 0.08); --radius: 16px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace; --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(180deg, #eef4ea 0%, #f7faf4 28%, #edf3e9 100%); font-family: var(--body); line-height: 1.65; }
+    .page { width: min(980px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 64px; }
+    .hero { padding: 34px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%); }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 10px 0 12px; font-size: 2.0rem; line-height: 1.2; }
+    .lead { font-size: 1.04rem; color: var(--ink-soft); border-left: 3px solid var(--accent); padding-left: 14px; margin: 14px 0 0; }
+    .meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .chip { font-family: var(--mono); font-size: 0.70rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(58,122,78,0.08); }
+    .chip.done { background: rgba(74,140,58,0.12); border-color: var(--green); color: var(--green); font-weight: 600; }
+    .section { margin-top: 22px; padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    .section-num { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-2); margin-bottom: 4px; }
+    h2 { font-family: var(--display); margin: 0 0 16px; font-size: 1.45rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 20px 0 8px; font-size: 1.08rem; color: var(--ink-soft); }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 0 0 12px; padding-left: 22px; }
+    li { margin-bottom: 7px; }
+    code { font-family: var(--mono); background: rgba(58,122,78,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.84em; }
+    strong { color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.89rem; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+    th { font-family: var(--mono); text-transform: uppercase; font-size: 0.66rem; letter-spacing: 0.1em; color: var(--ink-soft); background: rgba(58,122,78,0.05); }
+    tr:last-child td { border-bottom: none; }
+    .ok { color: var(--green); font-weight: 700; }
+    .warn { color: var(--amber); font-weight: 700; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 16px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fdfff9; }
+    .stat-label { font-family: var(--mono); font-size: 0.62rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.12rem; font-weight: 700; margin-top: 5px; color: var(--accent); }
+    .stat-note { font-size: 0.72rem; color: var(--ink-soft); margin-top: 3px; }
+    .callout { border-left: 3px solid var(--accent); padding: 12px 16px; background: rgba(58,122,78,0.06); border-radius: 0 8px 8px 0; margin: 14px 0; }
+    .callout.warn { border-left-color: var(--amber); background: rgba(176,128,32,0.06); }
+    .callout.bug { border-left-color: var(--red); background: rgba(160,48,48,0.05); }
+    .callout-title { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--accent-3); margin-bottom: 6px; }
+    .callout.warn .callout-title { color: var(--amber); }
+    .callout.bug .callout-title { color: var(--red); }
+    .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+    @media (max-width: 640px) { .io-grid, .chart-row { grid-template-columns: 1fr !important; } }
+    .io-col h4 { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-3); margin: 0 0 8px; }
+    .mermaid-frame { overflow-x: auto; padding: 18px; background: rgba(58,122,78,0.04); border: 1px solid var(--line); border-radius: 10px; margin-top: 14px; max-height: 520px; }
+    .mermaid svg { max-width: 100%; }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .chart-frame { height: 260px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fdfff9; }
+    pre.codeblock { background: #1d241a; color: #d6e4cd; padding: 14px 16px; border-radius: 10px; overflow-x: auto; font-family: var(--mono); font-size: 0.78rem; line-height: 1.5; }
+    @media print {
+      body { background: #fff; }
+      .section, .hero { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+      .chart-row, .io-grid { grid-template-columns: 1fr; }
+      .mermaid-frame { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 1. PHASE HEADER -->
+  <div class="hero">
+    <div class="eyebrow">Phase Report &middot; Kairosoft Elevation Sprint 4 &middot; carbonsim-online</div>
+    <h1>Sprint 4 — Story: Cascading Cards, Policy Stability &amp; City Canvas</h1>
+    <p class="lead">Flat one-shot event cards become a state-reactive story generator: a living <code>policy_stability</code> meter bends the cap and triggers crackdowns/relief, cards set conditions and spawn follow-on chains that persist across years, and the city canvas now shows the regulatory climate as a visible haze.</p>
+    <div class="meta">
+      <span class="chip">Date: 2026-06-21</span>
+      <span class="chip done">Commit da4b1ce</span>
+      <span class="chip done">79 engine / 138 total tests</span>
+      <span class="chip done">Determinism ✓</span>
+      <span class="chip done">Browser-verified</span>
+      <span class="chip">PHASE-04 of 5</span>
+    </div>
+  </div>
+
+  <!-- 2. INPUT -> OUTPUT -->
+  <div class="section">
+    <div class="section-num">Section 1</div>
+    <h2>Input → Output Summary</h2>
+    <div class="io-grid">
+      <div class="io-col">
+        <h4>Inputs (start state)</h4>
+        <ul>
+          <li>70 event cards with binary one-shot effects; no memory between draws.</li>
+          <li>Scripted, fixed allocation-factor cap schedule per scenario.</li>
+          <li>XP/policy meters absent; the cap never reacted to player behaviour.</li>
+          <li>City canvas: per-plot smog + clean/dirty building tiers (Sprint 3), but no city-wide climate signal.</li>
+          <li>Cards drawn by static weight + simple prerequisites only.</li>
+        </ul>
+      </div>
+      <div class="io-col">
+        <h4>Outputs (end state)</h4>
+        <ul>
+          <li><code>policy_stability</code> (0–100) meter driving a dynamic cap modifier + auto crackdown/relief.</li>
+          <li>Cascading cards: <code>requires_condition</code>, <code>sets_condition</code>, <code>follow_on_cards</code>, <code>effect_duration</code>.</li>
+          <li><code>active_effects</code> multi-turn tracker; <code>active_conditions</code> flags; injection queue.</li>
+          <li>State-weighted draw (crisis ↑ in instability, opportunity ↑ in calm).</li>
+          <li>10 new cascading cards forming 5 narrative chains.</li>
+          <li>City-wide policy-climate haze + "city clears" celebration; Policy Climate HUD badge.</li>
+        </ul>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Plan Task</th><th>Deliverable</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>TASK-04-01</td><td><code>policy_stability</code> + <code>active_conditions</code> + yearly stability update</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-04-02</td><td>Stability-driven cap modulation + auto crackdown/relief</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-04-03</td><td>Card schema extensions in <code>resolve_card</code> + injection queue</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-04-04</td><td>State-weighted draw + <code>requires_condition</code> gate</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-04-05</td><td>10 cascading cards (crackdown/relief + chains)</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-04-06</td><td><code>active_effects</code> multi-turn tracking in <code>_start_year</code></td><td class="ok">Done</td></tr>
+        <tr><td>TASK-04-07</td><td>City climate haze + "city clears" burst</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-04-08</td><td>Snapshot fields + Policy Climate HUD indicator</td><td class="ok">Done</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3. LOGIC FLOW -->
+  <div class="section">
+    <div class="section-num">Section 2</div>
+    <h2>Logic Flow</h2>
+    <p>The year loop now carries a feedback cycle. At year close, compliance outcomes move <code>policy_stability</code>. At the next year start, stability sets the cap modifier and may fire a crackdown or relief, multi-turn effects re-apply and decrement, and queued follow-on cards are force-drawn. Card resolution can set conditions, queue follow-ons, and register durable effects — closing the loop.</p>
+    <div class="mermaid-frame">
+      <pre class="mermaid">
+flowchart TB
+  CLOSE["Year close: _close_current_year"] --> UPD["_update_policy_stability\n(mean-revert + outcome deltas)"]
+  UPD --> START["Next year: _start_year"]
+  START --> EFF["_apply_active_effects\n(re-apply + decrement)"]
+  START --> TRIG["_apply_policy_triggers\ncrackdown <30 / relief >85"]
+  START --> CAP["cap = baseline x factor x cap_modifier(stability)"]
+  START --> INJ["draw_cards force-draws\npending_card_injections"]
+  INJ --> RESOLVE["resolve_card"]
+  RESOLVE -->|sets_condition| COND["active_conditions"]
+  RESOLVE -->|follow_on_cards| QUEUE["pending_card_injections"]
+  RESOLVE -->|effect_duration>1| AE["active_effects"]
+  COND -->|requires_condition gate| DRAW["state-weighted draw"]
+  AE --> EFF
+  QUEUE --> INJ
+  RESOLVE --> CLOSE
+
+  style UPD fill:#eef6ea,stroke:#3a7a4e
+  style TRIG fill:#f7ece0,stroke:#7a5c2e
+  style CAP fill:#eaf2f4,stroke:#2c6e7a
+      </pre>
+    </div>
+  </div>
+
+  <!-- 4. MATH / ALGORITHM -->
+  <div class="section">
+    <div class="section-num">Section 3</div>
+    <h2>Math / Algorithm Used</h2>
+    <h3>Policy stability update (year close)</h3>
+    <pre class="codeblock">delta  = (60 - stability) * 0.10           # mean reversion toward neutral
+delta += 4   if compliance_rate > 0.80
+delta += 2   if compliance_rate > 0.85
+delta -= 6   if penalized_fraction > 0.30
+delta -= 10  if an election_pressure shock fired this year
+stability = clamp(stability + delta, 0, 100)</pre>
+    <p>Mean reversion is the key stabiliser: without it, a structurally over- or under-compliant field drives stability to an absorbing 0 or 100. Reverting 10% toward 60 each year gives the outcome deltas something to push against, producing a meter that drifts rather than latches.</p>
+    <h3>Cap modulation (year start)</h3>
+    <pre class="codeblock">cap_modifier = clamp(1 + ((stability - 70) / 100) * 0.15, 0.88, 1.10)
+current_cap  = total_baseline * allocation_factor * cap_modifier</pre>
+    <p>The modifier is exactly <strong>1.0 at the starting stability of 70</strong>, so a fresh game reproduces the Sprint 1–3 balance to the cent; it only diverges as stability drifts. The 0.15 coefficient and tight clamp were chosen after the first (0.30, wide-clamp) attempt produced a death-spiral (see Errors).</p>
+    <h3>State-weighted draw</h3>
+    <pre class="codeblock">weight = base_weight
+       * 2.0  if category == crisis      and stability < 40
+       * 2.0  if category == opportunity and stability > 75
+       * 1.5  if category == policy       and stability < 30</pre>
+    <h3>Cascading card resolution</h3>
+    <ul>
+      <li><code>sets_condition</code> → append flag to <code>active_conditions</code>.</li>
+      <li><code>requires_condition</code> → card ineligible until the flag is present (gate in <code>_prereqs_met</code>).</li>
+      <li><code>follow_on_cards</code> → push ids to <code>pending_card_injections</code>; next <code>draw_cards</code> force-draws them via <code>CardDeck.take_by_id</code>.</li>
+      <li><code>effect_duration = D</code> → apply once now, queue <code>active_effects</code> with <code>remaining_years = D − 1</code>.</li>
+    </ul>
+  </div>
+
+  <!-- 5. TOOLS / METHODS -->
+  <div class="section">
+    <div class="section-num">Section 4</div>
+    <h2>Tools / Formulas / Methods</h2>
+    <ul>
+      <li><strong>Pure reducer extensions</strong> — all new state mutated only through <code>_start_year</code> / <code>_close_current_year</code> / <code>resolve_card</code>, preserving the audited reducer model.</li>
+      <li><strong>Migration guards</strong> — <code>state.setdefault(...)</code> for every new field at the top of <code>_start_year</code> so legacy saves load without a schema migration (RISK-04-01).</li>
+      <li><strong>JSON deck authoring</strong> — 10 cascading cards appended to <code>expansion_deck.json</code> via script (no hand-edited JSON).</li>
+      <li><strong>Canvas 2D</strong> — full-canvas climate tint layer in <code>isocity.js</code>, ordered under particles/markers; respects the reduced-motion path.</li>
+      <li><strong>pytest / unittest</strong> — 12 new tests in <code>test_policy_story.py</code>; full 138-test suite (engine + server).</li>
+      <li><strong>Browser preview</strong> — FastAPI app served via a new <code>scripts/preview_run.py</code>; badge + crisis-haze verified live, zero console errors.</li>
+    </ul>
+  </div>
+
+  <!-- 6. RESULTS & VISUALIZATIONS -->
+  <div class="section">
+    <div class="section-num">Section 5</div>
+    <h2>Results &amp; Visualizations</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-label">Engine tests</div><div class="stat-value">79</div><div class="stat-note">+12 test_policy_story.py</div></div>
+      <div class="stat"><div class="stat-label">Total tests</div><div class="stat-value">138</div><div class="stat-note">engine + server, all pass</div></div>
+      <div class="stat"><div class="stat-label">New cards</div><div class="stat-value">10</div><div class="stat-note">5 narrative chains</div></div>
+      <div class="stat"><div class="stat-label">Cap modifier @70</div><div class="stat-value ok">1.00</div><div class="stat-note">balance-neutral default</div></div>
+      <div class="stat"><div class="stat-label">Sweep max win</div><div class="stat-value ok">40%</div><div class="stat-note">Sprint 3 balance held</div></div>
+      <div class="stat"><div class="stat-label">Determinism</div><div class="stat-value ok">✓</div><div class="stat-note">seed 42 stable</div></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-frame"><canvas id="stabChart"></canvas></div>
+      <div class="chart-frame"><canvas id="capChart"></canvas></div>
+    </div>
+    <p style="margin-top:14px;font-size:0.85rem;color:var(--ink-soft)">
+      <strong>Left:</strong> measured <code>policy_stability</code> trajectory across a 15-year all-bot game (seed 3) after the fix — a controlled decline that settles low rather than collapsing.
+      <strong>Right:</strong> the resulting <code>cap_modifier</code> — bounded near 0.90 at worst (vs. the pre-fix 0.79 free-fall), keeping the cap responsive but not punitive.
+    </p>
+
+    <h3>Cascading-card chains authored</h3>
+    <table>
+      <thead><tr><th>Chain</th><th>Mechanic exercised</th></tr></thead>
+      <tbody>
+        <tr><td>Regulatory Crackdown / Policy Relief</td><td><code>requires_condition</code> — surface only when the engine sets the climate flag</td></tr>
+        <tr><td>CBAM Threat → CBAM Delayed</td><td>choice <code>sets_condition</code> + <code>follow_on_cards</code> (lobby spawns relief next year)</td></tr>
+        <tr><td>Deadline Missed → Regulator Audit</td><td><code>sets_condition: regulator_watching</code> + follow-on audit</td></tr>
+        <tr><td>Green Tech → Early-Mover Bonus</td><td>adopt choice unlocks tech + spawns a bonus card</td></tr>
+        <tr><td>Persistent Drought / Price Rally</td><td><code>effect_duration: 2</code> multi-turn effects</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 7. LIMITATIONS / SECOND-BEST -->
+  <div class="section">
+    <div class="section-num">Section 6</div>
+    <h2>Limitations / Second-Best Alternative</h2>
+    <ul>
+      <li><strong>Cap modulation, not replacement.</strong> The plan suggested fully replacing the scripted allocation factors with a stability formula. Instead, stability <em>modulates</em> the existing factor schedule (modifier neutral at 70). This was deliberate: it preserves the carefully-tuned per-scenario decline curves and the Sprint 1–3 balance, and keeps every existing cap test valid. The pure-formula version is the rejected second-best — cleaner on paper, but it would have discarded calibrated content and broken regression tests.</li>
+      <li><strong>Auto-triggers are engine-side, not deck-drawn.</strong> Crackdown/relief fire deterministically from the engine and <em>also</em> have matching narrative cards gated by the condition. This avoids a hard dependency on deck plumbing in <code>_start_year</code>, at the cost of a small double-signal (engine effect + card) when both land.</li>
+      <li><strong>Stability still trends low in the all-bot sweep.</strong> Because several bot strategies intentionally under-comply, the sweep field keeps penalised-fraction above 30%, so stability settles low (~2–15). This is correct for a stress test of mixed strategies; a human game with a compliant player sees a far gentler meter.</li>
+      <li><strong>Follow-on injection is best-effort.</strong> If an injected card id is no longer in the draw pile (already drawn this run), it is silently dropped rather than reshuffled back in.</li>
+    </ul>
+  </div>
+
+  <!-- 8. ERRORS / WARNINGS / FLAGS -->
+  <div class="section">
+    <div class="section-num">Section 7</div>
+    <h2>Errors / Warnings / Flags Encountered</h2>
+    <div class="callout bug">
+      <div class="callout-title">Bug — policy-stability death-spiral broke Sprint 3 balance</div>
+      First implementation regressed the Sprint 3 dominance test: aggressive won 90% and net worths went deeply negative. Two compounding ratchets were at fault — (1) low stability tightened the cap, causing more shortfall → lower stability → tighter cap (positive feedback), and (2) the auto-crackdown used <code>cbam_threat</code>, which <em>permanently multiplies</em> <code>penalty_rate</code>; the eligible <code>policy_crackdown</code> card was then re-drawn every year, ratcheting the rate from 1000 → 1571. Fixed by: softer cap coefficient (0.30 → 0.15) with a tight clamp, mean-reverting stability, and switching both the trigger and the card to a non-ratcheting <code>allowance_withdrawal</code>. Re-verified: sweep max win rate back to ~40%, no dominant strategy.
+    </div>
+    <div class="callout warn">
+      <div class="callout-title">Flag — missing preview launcher</div>
+      <code>.claude/launch.json</code> referenced <code>scripts/preview_run.py</code>, which did not exist. Created it (with project-root <code>sys.path</code> insertion + <code>chdir</code> so <code>server</code> imports resolve regardless of the launcher's cwd).
+    </div>
+    <div class="callout warn">
+      <div class="callout-title">Flag — badge CSS class name</div>
+      The Policy Climate "warning" state initially used a non-existent <code>badge-amber</code> class; corrected to the existing <code>badge-orange</code>.
+    </div>
+  </div>
+
+  <!-- 9. OPEN QUESTIONS / NEXT PHASE SEEDS -->
+  <div class="section">
+    <div class="section-num">Section 8</div>
+    <h2>Open Questions / Next Phase Seeds</h2>
+    <ul>
+      <li><strong>Agent reaction to the climate.</strong> Sprint 3 agents tolerate the dynamic cap but don't yet <em>strategise</em> around crackdowns. Should <code>CompanyAgent.plan_year</code> pre-empt a looming crackdown (stability nearing 30) by over-buying ahead of the tightening?</li>
+      <li><strong>Author the remaining chains.</strong> The plan targeted ~20 follow-on cards across categories; 10 are authored. The mechanic is fully wired, so the rest is content authoring.</li>
+      <li><strong>Surface conditions in the UI.</strong> <code>active_conditions</code> are in the snapshot and the badge tooltip, but a dedicated "active conditions / effects" panel would make multi-turn state legible to the player.</li>
+      <li><strong>Sprint 5 (Meta) interaction.</strong> Capex abatement + loans + XP unlock tree will lean on <code>policy_stability</code> (e.g. tech-failure cards, relief-driven unlock pacing) — the cascading-card schema is ready to carry those.</li>
+      <li><strong>Per-difficulty stability tuning.</strong> The meter is calibrated on <code>solo_standard</code>; <code>solo_easy</code> / <code>solo_hard</code> may want different mean-reversion targets or trigger thresholds.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis' } });
+
+  Chart.defaults.devicePixelRatio = 1;
+  Chart.defaults.animation = false;
+  Chart.defaults.resizeDelay = 150;
+  Chart.defaults.normalized = true;
+  Chart.defaults.maintainAspectRatio = false;
+
+  // Measured stability trajectory (seed 3, all-bot 15-year game, post-fix).
+  const years = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+  const stability = [70,75,73.5,72.2,64.9,58.5,52.6,47.4,42.6,28.4,15.5,14.0,2.6,2.3,2.1];
+  const capmod = [1.0,1.008,1.005,1.003,0.992,0.983,0.974,0.966,0.959,0.938,0.918,0.916,0.899,0.898,0.898];
+
+  (function () {
+    const ctx = document.getElementById('stabChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: { labels: years, datasets: [{
+        label: 'policy_stability', data: stability,
+        borderColor: '#3a7a4e', backgroundColor: 'rgba(58,122,78,0.10)',
+        fill: true, tension: 0.3, pointRadius: 2,
+      }]},
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: 'policy_stability over 15 years (seed 3)', font: { size: 11 } },
+          legend: { display: false }
+        },
+        scales: {
+          x: { title: { display: true, text: 'year' } },
+          y: { min: 0, max: 100,
+               grid: { color: (c) => (c.tick.value === 30 || c.tick.value === 85) ? '#b08020' : 'rgba(0,0,0,0.06)' } }
+        }
+      }
+    });
+  }());
+
+  (function () {
+    const ctx = document.getElementById('capChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: { labels: years, datasets: [{
+        label: 'cap_modifier', data: capmod,
+        borderColor: '#2c6e7a', backgroundColor: 'rgba(44,110,122,0.10)',
+        fill: true, tension: 0.3, pointRadius: 2,
+      }]},
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: 'cap_modifier (clamped 0.88-1.10)', font: { size: 11 } },
+          legend: { display: false }
+        },
+        scales: {
+          x: { title: { display: true, text: 'year' } },
+          y: { min: 0.85, max: 1.12,
+               grid: { color: (c) => Math.abs(c.tick.value - 1.0) < 1e-9 ? '#3a7a4e' : 'rgba(0,0,0,0.06)' } }
+        }
+      }
+    });
+  }());
+</script>
+</body>
+</html>
