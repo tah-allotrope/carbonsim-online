@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase Report :: Sprint 5 — Meta: Capex, XP Unlock Tree &amp; Jurisdictions</title>
+  <meta name="color-scheme" content="light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --paper: #f7faf4; --paper-strong: #fdfff9; --ink: #1a2218;
+      --ink-soft: #4a5e44; --line: #c2d4ba; --line-strong: #8baa82;
+      --accent: #3a7a4e; --accent-2: #2c6e7a; --accent-3: #7a5c2e;
+      --green: #4a8c3a; --amber: #b08020; --red: #a03030;
+      --shadow: 0 14px 36px rgba(20, 50, 20, 0.08); --radius: 16px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace; --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(180deg, #eef4ea 0%, #f7faf4 28%, #edf3e9 100%); font-family: var(--body); line-height: 1.65; }
+    .page { width: min(980px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 64px; }
+    .hero { padding: 34px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%); }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 10px 0 12px; font-size: 1.95rem; line-height: 1.2; }
+    .lead { font-size: 1.04rem; color: var(--ink-soft); border-left: 3px solid var(--accent); padding-left: 14px; margin: 14px 0 0; }
+    .meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .chip { font-family: var(--mono); font-size: 0.70rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(58,122,78,0.08); }
+    .chip.done { background: rgba(74,140,58,0.12); border-color: var(--green); color: var(--green); font-weight: 600; }
+    .section { margin-top: 22px; padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    .section-num { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-2); margin-bottom: 4px; }
+    h2 { font-family: var(--display); margin: 0 0 16px; font-size: 1.45rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 20px 0 8px; font-size: 1.08rem; color: var(--ink-soft); }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 0 0 12px; padding-left: 22px; }
+    li { margin-bottom: 7px; }
+    code { font-family: var(--mono); background: rgba(58,122,78,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.84em; }
+    strong { color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.89rem; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+    th { font-family: var(--mono); text-transform: uppercase; font-size: 0.66rem; letter-spacing: 0.1em; color: var(--ink-soft); background: rgba(58,122,78,0.05); }
+    tr:last-child td { border-bottom: none; }
+    .ok { color: var(--green); font-weight: 700; }
+    .warn { color: var(--amber); font-weight: 700; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 16px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fdfff9; }
+    .stat-label { font-family: var(--mono); font-size: 0.62rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.12rem; font-weight: 700; margin-top: 5px; color: var(--accent); }
+    .stat-note { font-size: 0.72rem; color: var(--ink-soft); margin-top: 3px; }
+    .callout { border-left: 3px solid var(--accent); padding: 12px 16px; background: rgba(58,122,78,0.06); border-radius: 0 8px 8px 0; margin: 14px 0; }
+    .callout.warn { border-left-color: var(--amber); background: rgba(176,128,32,0.06); }
+    .callout.bug { border-left-color: var(--red); background: rgba(160,48,48,0.05); }
+    .callout-title { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--accent-3); margin-bottom: 6px; }
+    .callout.warn .callout-title { color: var(--amber); }
+    .callout.bug .callout-title { color: var(--red); }
+    .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+    @media (max-width: 640px) { .io-grid, .chart-row { grid-template-columns: 1fr !important; } }
+    .io-col h4 { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-3); margin: 0 0 8px; }
+    .mermaid-frame { overflow-x: auto; padding: 18px; background: rgba(58,122,78,0.04); border: 1px solid var(--line); border-radius: 10px; margin-top: 14px; max-height: 520px; }
+    .mermaid svg { max-width: 100%; }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .chart-frame { height: 270px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fdfff9; }
+    pre.codeblock { background: #1d241a; color: #d6e4cd; padding: 14px 16px; border-radius: 10px; overflow-x: auto; font-family: var(--mono); font-size: 0.78rem; line-height: 1.5; }
+    @media print {
+      body { background: #fff; }
+      .section, .hero { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+      .chart-row, .io-grid { grid-template-columns: 1fr; }
+      .mermaid-frame { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 1. PHASE HEADER -->
+  <div class="hero">
+    <div class="eyebrow">Phase Report &middot; Kairosoft Elevation Sprint 5 (final) &middot; carbonsim-online</div>
+    <h1>Sprint 5 — Meta: Capex Abatement, XP Unlock Tree &amp; Jurisdiction Skins</h1>
+    <p class="lead">The last sprint adds the persistent layer: abatement becomes a capex asset you can finance with loans, technology can fail, XP feeds a Kairosoft-style unlock tree saved across games, and the whole simulation can re-skin to EU ETS or California. All of it lands without disturbing the carefully-tuned Sprint 1–4 balance.</p>
+    <div class="meta">
+      <span class="chip">Date: 2026-06-21</span>
+      <span class="chip done">Commit 1493c6c</span>
+      <span class="chip done">152 tests (+14)</span>
+      <span class="chip done">Determinism ✓</span>
+      <span class="chip done">Unlock UI verified</span>
+      <span class="chip done">PHASE-05 of 5 — plan complete</span>
+    </div>
+  </div>
+
+  <!-- 2. INPUT -> OUTPUT -->
+  <div class="section">
+    <div class="section-num">Section 1</div>
+    <h2>Input → Output Summary</h2>
+    <div class="io-grid">
+      <div class="io-col">
+        <h4>Inputs (start state)</h4>
+        <ul>
+          <li>Abatement = a flat one-time cost; no opex, no asset life, no failure risk.</li>
+          <li>XP HUD existed but was driven only by a client-side heuristic; no canonical/server XP, no unlock tree.</li>
+          <li>Single Vietnam jurisdiction; no skin system.</li>
+          <li>No persistent player profile — progress vanished between games.</li>
+        </ul>
+      </div>
+      <div class="io-col">
+        <h4>Outputs (end state)</h4>
+        <ul>
+          <li>Capex schema (capex / opex / asset life / tech risk / break-even) + <code>finance_abatement</code> loan path.</li>
+          <li><code>active_abatement_assets</code>, <code>active_loans</code>, tech-failure rolls serviced each year.</li>
+          <li>Server XP engine + 7-node unlock tree, surfaced in a browser Unlock Tree modal.</li>
+          <li><code>player_profiles</code> table + <code>/api/players/{name}/xp</code> persistence.</li>
+          <li>EU ETS &amp; California ARB jurisdiction skins, balance-tuned.</li>
+        </ul>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Plan Task</th><th>Deliverable</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>TASK-05-01</td><td>Abatement capex schema + <code>break_even_year</code></td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-02</td><td><code>active_abatement_assets</code> + annual opex</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-03</td><td><code>finance_abatement</code> loan action + <code>active_loans</code></td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-04</td><td>Seeded <code>tech_failure</code> roll + 1-yr impairment</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-05</td><td>XP engine + thresholds; year-close hooks</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-06</td><td><code>unlock_tree.json</code> + loader + snapshot</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-07</td><td><code>player_profiles</code> + XP endpoints + persistence</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-08</td><td>EU ETS + California ARB jurisdiction skins</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-09</td><td>XP HUD wired (client) + server XP in snapshot</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-10</td><td>Unlock Tree modal</td><td class="ok">Done</td></tr>
+        <tr><td>TASK-05-11</td><td>Final sweep across jurisdictions</td><td class="ok">Done</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3. LOGIC FLOW -->
+  <div class="section">
+    <div class="section-num">Section 2</div>
+    <h2>Logic Flow</h2>
+    <p>The guiding constraint shaped every decision: the new mechanics are <strong>additive ledgers</strong>. <code>active_abatement_ids</code> remains the single source of truth for emissions, so the projection and penalty math are byte-identical to Sprint 4 on a default measure. Capex, opex, loans, and tech-failure ride alongside and are serviced once per year.</p>
+    <div class="mermaid-frame">
+      <pre class="mermaid">
+flowchart TB
+  ACT["activate_abatement\n(pay capex cash)"] --> REG["_register_abatement_asset"]
+  FIN["finance_abatement\n(amortized loan)"] --> REG
+  FIN --> LOAN["active_loans"]
+  REG --> ASSET["active_abatement_assets\n(opex, life, tech_risk)"]
+  YS["_start_year"] --> SVC["_service_abatement_assets"]
+  SVC --> OPEX["deduct annual_opex"]
+  SVC --> PAY["amortize active_loans"]
+  SVC --> ROLL["seeded tech-failure roll\n-> tech_impaired_ids (1yr, 50%)"]
+  ROLL --> PROJ["_projected_emissions\n(half abatement if impaired)"]
+  YC["year close"] --> XP["_award_year_xp -> award_xp"]
+  XP --> LVL["xp_level vs thresholds"]
+  LVL --> TREE["unlock_tree (snapshot)"]
+  XP --> PERSIST["/api/players/{name}/xp\n(player_profiles)"]
+
+  style REG fill:#eef6ea,stroke:#3a7a4e
+  style SVC fill:#eaf2f4,stroke:#2c6e7a
+  style XP fill:#f7ece0,stroke:#7a5c2e
+      </pre>
+    </div>
+    <p>Jurisdiction skins act earlier still: <code>create_initial_state</code> merges an <code>eu_ets</code>/<code>california_arb</code> overlay onto a deep copy of the base scenario pack before any company is built, so names, sector labels, and calibrated constants all come from the chosen market.</p>
+  </div>
+
+  <!-- 4. MATH / ALGORITHM -->
+  <div class="section">
+    <div class="section-num">Section 3</div>
+    <h2>Math / Algorithm Used</h2>
+    <h3>Loan amortization (finance_abatement)</h3>
+    <pre class="codeblock">term  = min(asset_life_years, scenario_loan_term)
+# standard annuity payment
+annual_payment = capex * r / (1 - (1 + r)^(-term))      # r = scenario_interest_rate
+# r == 0 fallback: capex / term</pre>
+    <h3>Tech failure (seeded, reproducible)</h3>
+    <pre class="codeblock">rng = Random(f"{game_seed}-techfail-{company_id}-{year}")
+for asset in active_abatement_assets:
+    if asset.tech_risk_pct > 0 and rng.random() < asset.tech_risk_pct:
+        company.tech_impaired_ids.append(asset.measure_id)   # 1 year only
+# in _projected_emissions: impaired measures deliver 50% of abatement_amount</pre>
+    <h3>XP &amp; levels</h3>
+    <pre class="codeblock">XP_EVENT_POINTS = {penalty_free_year:50, first_compliance:100,
+                   otc_trade_closed:20, vcm_project_matured:40, clean_game:250}
+XP_LEVEL_THRESHOLDS = [0, 200, 500, 1000, 2000, 4000]
+xp_level = count(t in thresholds where xp >= t)</pre>
+    <h3>Jurisdiction balance tuning</h3>
+    <p>Each jurisdiction has different offset economics (EU: cap 5%, $75/t; California: cap 8%, $38/t), which moves the penalty at which strategies balance. The dominance sweep was re-run per jurisdiction and <code>penalty_rate</code> tuned until no strategy exceeded 60% win rate — the same method established in Sprint 3.</p>
+  </div>
+
+  <!-- 5. TOOLS / METHODS -->
+  <div class="section">
+    <div class="section-num">Section 4</div>
+    <h2>Tools / Formulas / Methods</h2>
+    <ul>
+      <li><strong>Build-time enrichment</strong> — <code>_enrich_measure</code> adds capex fields with balance-neutral defaults at company construction, so no scenario content had to be hand-edited.</li>
+      <li><strong>Deterministic RNG</strong> — tech-failure rolls derive from the game seed + a salt, keeping the determinism guarantee intact.</li>
+      <li><strong>SQLite</strong> — a new <code>player_profiles</code> table on the existing <code>mayor.db</code>; XP stored monotonically so a lower in-session value can't erase lifetime progress.</li>
+      <li><strong>FastAPI</strong> — new <code>player</code> router (<code>GET/POST /api/players/{name}/xp</code>) registered in <code>main.py</code>; <code>finance_abatement</code> added to the decision allow-list.</li>
+      <li><strong>JSON overlays</strong> — jurisdiction skins as standalone data files merged over the base pack via <code>load_jurisdiction</code>.</li>
+      <li><strong>Monte-Carlo sweep</strong> — <code>run_strategy_sweep(jurisdiction=...)</code> for the final cross-jurisdiction balance gate.</li>
+      <li><strong>Browser preview</strong> — Unlock Tree modal, EU ETS game, and the loan path all verified live; zero console errors.</li>
+    </ul>
+  </div>
+
+  <!-- 6. RESULTS & VISUALIZATIONS -->
+  <div class="section">
+    <div class="section-num">Section 5</div>
+    <h2>Results &amp; Visualizations</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-label">Total tests</div><div class="stat-value">152</div><div class="stat-note">+14 test_meta.py</div></div>
+      <div class="stat"><div class="stat-label">Unlock nodes</div><div class="stat-value">7</div><div class="stat-note">levels 1–6</div></div>
+      <div class="stat"><div class="stat-label">Jurisdictions</div><div class="stat-value">3</div><div class="stat-note">VN, EU ETS, CA</div></div>
+      <div class="stat"><div class="stat-label">New action</div><div class="stat-value">finance</div><div class="stat-note">_abatement (loans)</div></div>
+      <div class="stat"><div class="stat-label">Sweep max win</div><div class="stat-value ok">≤0.55</div><div class="stat-note">all jurisdictions</div></div>
+      <div class="stat"><div class="stat-label">Determinism</div><div class="stat-value ok">✓</div><div class="stat-note">seed 42 stable</div></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-frame"><canvas id="jurChart"></canvas></div>
+      <div class="chart-frame"><canvas id="tuneChart"></canvas></div>
+    </div>
+    <p style="margin-top:14px;font-size:0.85rem;color:var(--ink-soft)">
+      <strong>Left:</strong> final 20-seed max single-strategy win rate per jurisdiction — all comfortably under the 60% dominance line.
+      <strong>Right:</strong> the per-jurisdiction penalty tuning that produced balance — EU ETS settled at 950 (was 1100), California at 1100 (was 850); Vietnam stayed at the Sprint 3 value of 1000.
+    </p>
+
+    <h3>Final balance table (20 seeds)</h3>
+    <table>
+      <thead><tr><th>Jurisdiction</th><th>penalty_rate</th><th>Top strategy</th><th>Max win rate</th><th>Dominant?</th></tr></thead>
+      <tbody>
+        <tr><td>Vietnam (solo_standard)</td><td>1000</td><td>aggressive</td><td>0.40</td><td class="ok">No</td></tr>
+        <tr><td>EU ETS Phase 4</td><td>950</td><td>conservative/aggressive</td><td>0.55</td><td class="ok">No</td></tr>
+        <tr><td>California ARB</td><td>1100</td><td>aggressive</td><td>0.50</td><td class="ok">No</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 7. LIMITATIONS / SECOND-BEST -->
+  <div class="section">
+    <div class="section-num">Section 6</div>
+    <h2>Limitations / Second-Best Alternative</h2>
+    <ul>
+      <li><strong>Capex defaults are balance-neutral by design.</strong> Existing measures keep <code>capex == cost</code>, zero opex, zero tech-risk — so the feature is fully wired but only bites where a measure or jurisdiction opts into richer values. The rejected second-best was retro-fitting opex/risk onto every existing measure, which would have silently re-balanced four sprints of tuning.</li>
+      <li><strong>Unlock tree displays, but does not yet hard-gate every feature.</strong> The tree, levels, and persistence are real; wiring each node to actually toggle its mechanic (limit orders, 2-year forwards) is follow-on content work, not new plumbing.</li>
+      <li><strong>Two XP systems coexist.</strong> The shipped client-side <code>Progression</code> drives the HUD bar; the new canonical server XP drives the unlock tree and persistence. They are intentionally separate; reconciling them into one is a tidy-up for later.</li>
+      <li><strong>Bots ignore financing.</strong> AI agents still pay capex in cash via <code>activate_abatement</code>; they never take loans or react to tech-failure. The sweep is therefore conservative about the loan mechanic.</li>
+      <li><strong>Jurisdictions reuse the base abatement catalog.</strong> EU/California companies map onto the existing three sectors; bespoke sector mixes would be a content addition.</li>
+    </ul>
+  </div>
+
+  <!-- 8. ERRORS / WARNINGS / FLAGS -->
+  <div class="section">
+    <div class="section-num">Section 7</div>
+    <h2>Errors / Warnings / Flags Encountered</h2>
+    <div class="callout warn">
+      <div class="callout-title">Flag — jurisdictions broke the dominance gate at first</div>
+      The first EU ETS / California sweeps failed TASK-05-11: EU favored aggressive (0.70), California favored conservative (0.75). Root cause was expected — each jurisdiction's distinct offset cost shifts the penalty at which strategies balance. Resolved exactly as in Sprint 3 by re-tuning each jurisdiction's <code>penalty_rate</code> (EU 1100→950, CA 850→1100); both now sit under 60%.
+    </div>
+    <div class="callout bug">
+      <div class="callout-title">Bug (test) — tech-failure restore timing</div>
+      The tech-failure test initially asserted restoration one phase-cycle too early; impairment clears at the next <code>_start_year</code>, not the next <code>force_advance</code>. Corrected the test's phase advancing — the engine behaviour was right.
+    </div>
+    <div class="callout">
+      <div class="callout-title">Observation — shared modal centering quirk</div>
+      The new Unlock Tree modal measured off-screen in the headless preview — but the shipped Save modal behaves identically, so it is a pre-existing shared <code>.modal-overlay</code> quirk, not a Sprint 5 regression. Content renders correctly (verified by scrolling the modal into view).
+    </div>
+  </div>
+
+  <!-- 9. OPEN QUESTIONS / NEXT PHASE SEEDS -->
+  <div class="section">
+    <div class="section-num">Section 8</div>
+    <h2>Open Questions / Next Phase Seeds</h2>
+    <ul>
+      <li><strong>Hard-gate unlock nodes.</strong> Wire each unlocked node to actually enable its mechanic (auction limit orders, 2-year forwards, speculator AI) rather than just display unlocked status.</li>
+      <li><strong>Teach bots to finance.</strong> Let <code>CompanyAgent</code> choose loans when cash-constrained and react to tech-failure — would make the loan/opex economics matter in the sweep.</li>
+      <li><strong>Unify XP.</strong> Collapse the client <code>Progression</code> heuristic and the server XP engine into one canonical source feeding both the HUD and the tree.</li>
+      <li><strong>Jurisdiction selector UI.</strong> The backend accepts <code>jurisdiction</code> on game create and the skins are balanced; a new-game selector on <code>index.html</code> would surface it to players.</li>
+      <li><strong>Capex/loans/assets panel.</strong> Asset life, opex, and outstanding loans are in the snapshot but not yet shown; a finance panel would make the capex decision legible.</li>
+      <li><strong>Star rating &amp; binary win gate (DEC-002).</strong> The meta layer is in place; the end-game star rating that ties XP, penalties, and survival together is the natural capstone.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis' } });
+
+  Chart.defaults.devicePixelRatio = 1;
+  Chart.defaults.animation = false;
+  Chart.defaults.resizeDelay = 150;
+  Chart.defaults.normalized = true;
+  Chart.defaults.maintainAspectRatio = false;
+
+  (function () {
+    const ctx = document.getElementById('jurChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Vietnam', 'EU ETS', 'California'],
+        datasets: [{
+          label: 'Max win rate',
+          data: [0.40, 0.55, 0.50],
+          backgroundColor: ['#3a7a4e', '#2c6e7a', '#7a5c2e'],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: 'Max single-strategy win rate by jurisdiction', font: { size: 11 } },
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => (c.parsed.y * 100).toFixed(0) + '%' } }
+        },
+        scales: {
+          y: { min: 0, max: 0.7, ticks: { callback: (v) => (v * 100) + '%' },
+               grid: { color: (c) => c.tick.value === 0.6 ? '#a03030' : 'rgba(0,0,0,0.06)' } }
+        }
+      }
+    });
+  }());
+
+  (function () {
+    const ctx = document.getElementById('tuneChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Vietnam', 'EU ETS', 'California'],
+        datasets: [
+          { label: 'Before', data: [1000, 1100, 850], backgroundColor: 'rgba(176,128,32,0.5)', borderRadius: 3 },
+          { label: 'After (balanced)', data: [1000, 950, 1100], backgroundColor: '#3a7a4e', borderRadius: 3 },
+        ]
+      },
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: 'penalty_rate tuning per jurisdiction ($/t)', font: { size: 11 } },
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+        },
+        scales: { y: { min: 700, title: { display: true, text: '$/t CO₂' } } }
+      }
+    });
+  }());
+</script>
+</body>
+</html>
