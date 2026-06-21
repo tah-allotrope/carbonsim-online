@@ -51,6 +51,7 @@
       <span class="xp-text" id="xpText">0 / 100 XP</span>
       <span class="streak-badge" id="streakBadge" style="display:none">🔥 0 Streak</span>
       <span id="globalXpBadge" style="color:var(--muted);font-size:0.75rem;border-left:1px solid rgba(74,59,45,0.2);padding-left:12px">Global: Lvl 1 (0 XP)</span>
+      <button class="btn" style="padding:2px 10px;font-size:0.75rem" onclick="showUnlockTree()" title="View the meta-progression unlock tree">🌳 Unlocks</button>
     </div>
   </div>
 
@@ -86,6 +87,15 @@
     <h2>Load Game</h2>
     <div id="savesList"><p style="color:var(--muted)">Loading saves...</p></div>
     <div class="modal-actions"><button class="btn" onclick="closeModal('loadModal')">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="unlockModal">
+  <div class="modal" style="max-width:640px">
+    <h2>🌳 Unlock Tree</h2>
+    <p style="color:var(--muted);font-size:0.85rem" id="unlockSubtitle">Earn XP through compliance to unlock new tools, scenarios, and difficulty.</p>
+    <div id="unlockNodes" style="display:flex;flex-direction:column;gap:8px;margin:14px 0"></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal('unlockModal')">Close</button></div>
   </div>
 </div>
 
@@ -234,6 +244,36 @@ function updatePolicyClimateBadge(snapshot) {
     badge.title = 'Policy climate. Active conditions: ' + conds.join(', ').replace(/_/g, ' ');
   }
   if (window.Isocity && Isocity.setPolicyClimate) Isocity.setPolicyClimate(stability);
+}
+
+// Sprint 5: Unlock Tree modal — reads server unlock_tree + xp_level from the snapshot.
+function showUnlockTree() {
+  const s = (gameState && gameState.snapshot) || {};
+  const tree = s.unlock_tree || [];
+  const level = s.xp_level || 1;
+  const xp = s.xp || 0;
+  const typeLabels = { market_tool: 'Market Tool', abatement_tier: 'Abatement', scenario_skin: 'Scenario', difficulty: 'Difficulty' };
+  document.getElementById('unlockSubtitle').textContent =
+    `Level ${level} · ${xp} XP — ${tree.filter(n => level >= (n.level_required || 1)).length} of ${tree.length} unlocked.`;
+  const sorted = tree.slice().sort((a, b) => (a.level_required || 0) - (b.level_required || 0));
+  document.getElementById('unlockNodes').innerHTML = sorted.map(n => {
+    const unlocked = level >= (n.level_required || 1);
+    const icon = unlocked ? '✅' : '🔒';
+    const opacity = unlocked ? '1' : '0.55';
+    const border = unlocked ? 'var(--green)' : 'rgba(74,59,45,0.2)';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid ${border};border-radius:8px;opacity:${opacity}">
+      <span style="font-size:1.2rem">${icon}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--text)">${n.label || n.unlock_id}</div>
+        <div style="font-size:0.78rem;color:var(--muted)">${n.description || ''}</div>
+      </div>
+      <div style="text-align:right;min-width:80px">
+        <div class="badge ${unlocked ? 'badge-green' : ''}" style="font-size:0.65rem">Lvl ${n.level_required || 1}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">${typeLabels[n.unlock_type] || n.unlock_type || ''}</div>
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:var(--muted)">No unlock data available.</p>';
+  document.getElementById('unlockModal').classList.remove('hidden');
 }
 
 function renderContent() {

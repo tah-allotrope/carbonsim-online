@@ -12,6 +12,7 @@ from .db import init_db
 from .routes.coop import router as coop_router
 from .routes.game import router as game_router
 from .routes.health import router as health_router
+from .routes.player import router as player_router
 from .ws import coop_ws_endpoint
 
 
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(game_router)
     app.include_router(coop_router)
+    app.include_router(player_router)
 
     @app.websocket("/ws/games/{game_id}/{participant_id}")
     async def coop_ws(websocket: WebSocket, game_id: str, participant_id: str):

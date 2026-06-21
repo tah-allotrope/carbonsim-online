@@ -1,0 +1,43 @@
+{
+  "jurisdiction": "california_arb",
+  "label": "California Cap-and-Trade (ARB)",
+  "description": "California Air Resources Board cap-and-trade — generous offset usage, an auction price floor that escalates, and allowance banking.",
+  "penalty_rate": 1100.0,
+  "offset_usage_cap": 0.08,
+  "offset_price": 38.0,
+  "auction_price_floor": 30.0,
+  "auction_price_ceiling": 250.0,
+  "scenario_interest_rate": 0.07,
+  "scenario_loan_term": 5,
+  "company_library": [
+    {
+      "company_name": "Central Valley Power",
+      "sector": "thermal_power",
+      "baseline_emissions": 118.0,
+      "growth_rate": 0.02,
+      "cash": 1550000.0
+    },
+    {
+      "company_name": "Bay Area Steel",
+      "sector": "steel",
+      "baseline_emissions": 92.0,
+      "growth_rate": 0.016,
+      "cash": 1250000.0
+    },
+    {
+      "company_name": "Mojave Cement",
+      "sector": "cement",
+      "baseline_emissions": 86.0,
+      "growth_rate": 0.013,
+      "cash": 1050000.0
+    },
+    {
+      "company_name": "Sierra Generation",
+      "sector": "thermal_power",
+      "baseline_emissions": 54.0,
+      "growth_rate": 0.019,
+      "cash": 940000.0
+    }
+  ],
+  "_balance_note": "penalty_rate tuned 850.0->1100.0 in Sprint 5 strategy sweep (no strategy >60% over 20 seeds)"
+}

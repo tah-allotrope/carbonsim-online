@@ -1,0 +1,55 @@
+{
+  "nodes": [
+    {
+      "unlock_id": "base_market",
+      "label": "Compliance Basics",
+      "description": "Spot offsets, ETS auctions, and abatement are available from the start.",
+      "level_required": 1,
+      "unlock_type": "market_tool"
+    },
+    {
+      "unlock_id": "abatement_tier_2",
+      "label": "Tier-2 Abatement",
+      "description": "Unlock higher-efficiency abatement retrofits.",
+      "level_required": 2,
+      "unlock_type": "abatement_tier"
+    },
+    {
+      "unlock_id": "auction_limit_orders",
+      "label": "Auction Limit Orders",
+      "description": "Place limit bids in allowance auctions.",
+      "level_required": 3,
+      "unlock_type": "market_tool"
+    },
+    {
+      "unlock_id": "forward_term_extension",
+      "label": "2-Year Forwards",
+      "description": "Forward contracts can be struck two years ahead.",
+      "level_required": 4,
+      "unlock_type": "market_tool"
+    },
+    {
+      "unlock_id": "skin_eu_ets",
+      "label": "EU ETS Scenario",
+      "description": "Unlock the EU ETS Phase 4 jurisdiction skin.",
+      "level_required": 5,
+      "unlock_type": "scenario_skin",
+      "unlock_ref": "eu_ets"
+    },
+    {
+      "unlock_id": "skin_california_arb",
+      "label": "California ARB Scenario",
+      "description": "Unlock the California Cap-and-Trade jurisdiction skin.",
+      "level_required": 5,
+      "unlock_type": "scenario_skin",
+      "unlock_ref": "california_arb"
+    },
+    {
+      "unlock_id": "difficulty_speculator",
+      "label": "Speculator AI",
+      "description": "Face the speculator AI difficulty profile.",
+      "level_required": 6,
+      "unlock_type": "difficulty"
+    }
+  ]
+}

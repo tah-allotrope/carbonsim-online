@@ -3,6 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 
+# XP awarded per game event (Sprint 5, TASK-05-05). Consumed by
+# engine.award_xp; level thresholds live in engine.XP_LEVEL_THRESHOLDS.
+XP_EVENT_POINTS = {
+    "penalty_free_year": 50,
+    "first_compliance": 100,
+    "otc_trade_closed": 20,
+    "vcm_project_matured": 40,
+    "clean_game": 250,
+}
+
+
 ACHIEVEMENTS = {
     "drawdown_pioneer": {
         "title": "Drawdown Pioneer",

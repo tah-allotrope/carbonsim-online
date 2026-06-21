@@ -1,35 +1,40 @@
-# Active Context — Sprint 4: Story (Cascading Cards + Policy Stability + City Canvas)
+# Active Context — Sprint 5: Meta (Capex Abatement + XP Unlock Tree + Jurisdiction Skins)
 
-Plan: `plans/2026-06-21-carbonsim-elevation-plan.md` → PHASE-04
-Cadence: implement fully → commit + push master → `/report Sprint 4`.
+Plan: `plans/2026-06-21-carbonsim-elevation-plan.md` → PHASE-05 (final)
+Cadence: implement fully → commit + push master → `/report Sprint 5` → `/report final`.
+
+## Design guardrail
+Keep `_projected_emissions` / penalty math defaults unchanged so Sprint 1–4 balance holds. Capex/opex/loans/tech-failure are ADDITIVE ledgers; `active_abatement_ids` stays the emissions source of truth.
 
 ## Tasks
-- [ ] TASK-04-01: `policy_stability` (0–100, start 70) + `active_conditions` + `active_effects` in state; yearly stability update in `_close_current_year`.
-- [ ] TASK-04-02: policy-stability cap modulation in `_start_year` (neutral at 70 so existing balance holds); auto crackdown (<30) / relief (>85) triggers.
-- [ ] TASK-04-03: Card schema: `follow_on_cards`, `sets_condition`, `requires_condition`, `effect_duration` in `resolve_card`. Injection queue in state.
-- [ ] TASK-04-04: State-weighted draw in `CardDeck.draw` (crisis up when stability<40, opportunity up when >75); `requires_condition` gate in `_prereqs_met`.
-- [ ] TASK-04-05: Author follow-on chains + `regulatory_crackdown` / `policy_relief` cards in `expansion_deck.json`.
-- [ ] TASK-04-06: `active_effects` multi-turn tracking applied + decremented in `_start_year`.
-- [ ] TASK-04-07: `web/js/isocity.js` — city-wide policy-climate smog overlay + "city clears" burst trigger.
-- [ ] TASK-04-08: snapshot `policy_stability` + `active_conditions`; Policy Climate HUD indicator in `web/game.html`.
-- [ ] Tests: extend `engine/tests/test_cards.py` / add policy-stability tests.
+- [ ] TASK-05-01: Abatement schema +capex/annual_opex/asset_life_years/tech_risk_pct (defaults: capex=cost, opex=0, life=large, risk=0); `break_even_year` helper.
+- [ ] TASK-05-02: `active_abatement_assets` ledger on activation; deduct annual_opex in `_start_year`.
+- [ ] TASK-05-03: `finance_abatement` action (pay cash OR loan); `active_loans`; deduct annual_payment in `_start_year`.
+- [ ] TASK-05-04: `tech_failure` roll in `_start_year` (seeded RNG vs tech_risk_pct) → 1-year 50% impairment via `tech_impaired_ids`.
+- [ ] TASK-05-05: XP engine in `achievements.py` (`award_xp`); `xp`/`xp_level` in state; thresholds [0,200,500,1000,2000,4000]; hook at year close.
+- [ ] TASK-05-06: `engine/data/unlock_tree.json` + loader; expose unlocked nodes in snapshot by level.
+- [ ] TASK-05-07: `player_profiles` table in `db.py`; `GET/POST /api/players/{name}/xp`; load on game start.
+- [ ] TASK-05-08: `jurisdiction` field + `eu_ets.json` / `california_arb.json`; merge over base in `create_initial_state`.
+- [ ] TASK-05-09: XP HUD (already client-wired) + canonical server XP in snapshot.
+- [ ] TASK-05-10: Unlock Tree modal in `web/game.html`.
+- [ ] TASK-05-11: Final sweep across Vietnam + EU ETS; no strategy >60%.
+- [ ] Tests: `engine/tests/test_meta.py`.
 
 ## Verification
-- `python -m pytest engine/tests/` all pass.
-- Missed-compliance year lowers policy_stability; clean year raises it.
-- follow_on chain: parent choice injects child; child drawn within 2 years.
-- Determinism check still passes.
+- `python -m pytest engine/tests/ server/tests/` all pass.
+- Loan creates active_loans + deducts annual_payment; tech_failure impairs then restores.
+- XP accrues + level increments at thresholds. EU ETS jurisdiction loads its names/constants.
+- Sweep: no strategy >60% in either jurisdiction. Determinism holds.
 
 ## Review (complete)
-- **All 8 tasks done.** 79 engine tests (+12 in `test_policy_story.py`); 138 total with server tests. Determinism holds. Frontend verified in browser preview (badge + crisis haze render, no console errors).
-- `policy_stability` (0–100, start 70) + `active_conditions` + `active_effects` + `pending_card_injections` in state, with `_start_year` migration guards.
-- Cap modulated by stability (`cap_modifier`, neutral 1.0 at 70 so Sprint 1–3 balance holds on a fresh game). Coefficient softened to 0.15, clamp [0.88, 1.10].
-- `_update_policy_stability` (mean-reverting toward 60 + outcome deltas) and `_apply_policy_triggers` (crackdown <30 / relief >85, non-ratcheting effects).
-- `_apply_active_effects` applies + decrements multi-turn card effects each year.
-- Cards: `requires_condition` gate, `sets_condition`, `follow_on_cards` injection queue, `effect_duration` → active_effects; state-weighted draw (crisis↑ when stability<40, opportunity↑ when >75). `CardDeck.take_by_id` for forced follow-on draws.
-- 10 cascading cards in `expansion_deck.json` (crackdown/relief + CBAM-lobby, missed-deadline→audit, green-tech→early-mover chains, 2 multi-turn duration cards).
-- `isocity.js`: city-wide policy-climate haze overlay + `triggerCityClears()` + `setPolicyClimate()`. `game.html`: Policy Climate HUD badge + city-clears on penalty-free close.
-- Added `scripts/preview_run.py` (launch.json referenced a missing file).
+- **All 11 tasks done.** 152 tests pass (+14 `test_meta.py`); determinism holds; frontend (Unlock Tree modal) browser-verified.
+- Abatement schema enriched at build time (capex=cost, opex 0, life 8, risk 0 — balance-neutral) + `break_even_year`. `active_abatement_ids` stays emissions source of truth, so Sprint 1–4 balance is untouched.
+- `active_abatement_assets` / `active_loans` / `tech_impaired_ids` ledgers; `finance_abatement` loan action (amortized); `_service_abatement_assets` deducts opex + loan payments and rolls seeded tech-failures (1-year 50% impairment) each year.
+- XP engine: `award_xp` + `XP_EVENT_POINTS` (achievements.py) + `XP_LEVEL_THRESHOLDS` [0,200,500,1000,2000,4000]; awarded at year close; in snapshot.
+- `unlock_tree.json` (7 nodes) + `load_unlock_tree`; surfaced in snapshot; Unlock Tree modal in game.html.
+- `player_profiles` SQLite table + `GET/POST /api/players/{name}/xp`; XP loaded at game create, persisted monotonically on year advance.
+- Jurisdiction skins: `eu_ets.json` / `california_arb.json` + `load_jurisdiction` merge over base pack; `jurisdiction` param threaded create_initial_state → create_solo_game → CreateGameRequest.
+- **Final sweep (TASK-05-11):** no dominant strategy in any jurisdiction — Vietnam 0.40, EU ETS 0.55, California 0.50. Tuned EU penalty 1100→950 and California 850→1100 to balance (each jurisdiction's offset cost shifts the balance point).
 
-## Balance note
-Policy-stability feedback initially re-created an aggressive-dominant death-spiral in the all-bot sweep (cap tightening + crackdown `cbam_threat` ratcheting penalty_rate via re-drawn crackdown card). Fixed by: softer cap coefficient, mean-reverting stability, and non-ratcheting crackdown effects (allowance_withdrawal, not cbam_threat). Sprint 3 sweep balance preserved (no strategy >60%; max ~0.40).
+## 5-sprint plan COMPLETE
+Foundation → Market → AI → Story → Meta all delivered. Final plan report to follow.

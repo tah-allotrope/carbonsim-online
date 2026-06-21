@@ -48,6 +48,7 @@ def create_solo_game(
     difficulty: str = "standard",
     num_years: int | None = None,
     tutorial_mode: bool = False,
+    jurisdiction: str | None = None,
 ) -> dict:
     scenario_key = "solo_tutorial" if tutorial_mode else SOLO_SCENARIO_MAP.get(difficulty, "solo_standard")
     bot_count = BOT_COUNT_MAP.get(difficulty, 3)
@@ -61,6 +62,7 @@ def create_solo_game(
         num_years=num_years,
         scenario=scenario_key,
         bot_count=bot_count,
+        jurisdiction=jurisdiction,
     )
 
     # Assign a varied strategy mix across the bot field (Sprint 3). Done before

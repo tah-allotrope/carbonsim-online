@@ -130,6 +130,7 @@ def run_strategy_sweep(
     *,
     scenario: str = "solo_standard",
     years: int | None = None,
+    jurisdiction: str | None = None,
 ) -> dict[str, Any]:
     """Dominant-strategy sweep (Sprint 3, TASK-03-06).
 
@@ -159,6 +160,7 @@ def run_strategy_sweep(
             scenario=scenario,
             num_years=years,
             rng_seed=seed,
+            jurisdiction=jurisdiction,
         )
         # Assign one strategy per company (every company is a bot here).
         strat_by_id: dict[str, str] = {}
@@ -250,6 +252,7 @@ def run_strategy_sweep(
         "dominant_strategies": dominant,
         "seeds": n,
         "scenario": scenario,
+        "jurisdiction": jurisdiction or "vietnam",
         "instrument_usage": dict(instrument_usage),
     }
 

@@ -45,10 +45,19 @@ def create_initial_state(
     bot_count: int = 0,
     bot_strategy: str = BOT_STRATEGY_MODERATE,
     rng_seed: int | None = None,
+    jurisdiction: str | None = None,
 ) -> dict[str, Any]:
     pack = SCENARIO_PACKS.get(
         scenario or "vietnam_pilot", SCENARIO_PACKS["vietnam_pilot"]
     )
+    # Jurisdiction skin overlay (TASK-05-08): merge over a copy of the base pack
+    # so company names, sector labels, and calibrated constants come from the
+    # chosen jurisdiction (EU ETS, California ARB) without mutating the base.
+    jurisdiction = jurisdiction or pack.get("jurisdiction")
+    if jurisdiction and jurisdiction != "vietnam":
+        overlay = load_jurisdiction(jurisdiction)
+        if overlay:
+            pack = {**deepcopy(pack), **overlay, "jurisdiction": jurisdiction}
     durations = dict(DEFAULT_PHASE_DURATIONS)
     if phase_durations:
         durations.update(phase_durations)
@@ -94,7 +103,7 @@ def create_initial_state(
                 "cumulative_penalties": 0.0,
                 "compliance_gap": 0.0,
                 "abatement_menu": [
-                    deepcopy(m) for m in scenario_abatement[base["sector"]]
+                    _enrich_measure(deepcopy(m)) for m in scenario_abatement[base["sector"]]
                 ],
                 "active_abatement_ids": [],
                 "pending_abatement_ids": [],
@@ -103,6 +112,11 @@ def create_initial_state(
                 "year_results": [],
                 "forward_contracts": [],
                 "vcm_projects": [],
+                # Sprint 5 — capex / financing / tech-risk ledgers (additive;
+                # active_abatement_ids remains the emissions source of truth).
+                "active_abatement_assets": [],
+                "active_loans": [],
+                "tech_impaired_ids": [],
                 "is_bot": is_bot,
                 "bot_strategy": bot_strategy if is_bot else None,
             }
@@ -163,11 +177,84 @@ def create_initial_state(
         "active_effects": [],
         # Card ids queued by follow_on_cards, force-drawn next decision window.
         "pending_card_injections": [],
+        # Sprint 5 — meta-progression.
+        "jurisdiction": pack.get("jurisdiction", "vietnam"),
+        "scenario_interest_rate": pack.get("scenario_interest_rate", 0.08),
+        "scenario_loan_term": pack.get("scenario_loan_term", 5),
+        "xp": 0,
+        "xp_level": 1,
+        "unlocked_features": [],
     }
 
 
+# XP level thresholds (TASK-05-05): index 0 -> level 1, etc.
+XP_LEVEL_THRESHOLDS = [0, 200, 500, 1000, 2000, 4000]
+
+# Default capex schema fields for abatement measures (TASK-05-01). Defaults are
+# balance-neutral: capex == the legacy `cost`, no opex, no tech risk, so existing
+# measures behave exactly as before; richer measures opt in explicitly.
+def _enrich_measure(measure: dict[str, Any]) -> dict[str, Any]:
+    cost = measure.get("cost", 0.0)
+    measure.setdefault("capex", cost)
+    measure.setdefault("annual_opex", 0.0)
+    measure.setdefault("asset_life_years", 8)
+    measure.setdefault("tech_risk_pct", 0.0)
+    abatement = max(measure.get("abatement_amount", 0.0), 0.01)
+    # break_even_year ~ capex / annual value of avoided penalty at a nominal rate.
+    measure["break_even_year"] = round(measure["capex"] / (abatement * 1000.0), 2)
+    return measure
+
+
+def _register_abatement_asset(
+    company: dict[str, Any], measure: dict[str, Any], year: int, *, financed: bool
+) -> None:
+    """Record an installed abatement asset for opex/tech-risk tracking (TASK-05-02)."""
+    company.setdefault("active_abatement_assets", []).append({
+        "measure_id": measure["measure_id"],
+        "installed_year": year,
+        "remaining_life": measure.get("asset_life_years", 8),
+        "annual_opex": measure.get("annual_opex", 0.0),
+        "annual_reduction": measure.get("abatement_amount", 0.0),
+        "tech_risk_pct": measure.get("tech_risk_pct", 0.0),
+        "financed": financed,
+    })
+
+
 def build_abatement_menu(sector: str) -> list[dict[str, Any]]:
-    return [deepcopy(measure) for measure in ABATEMENT_CATALOG[sector]]
+    return [_enrich_measure(deepcopy(measure)) for measure in ABATEMENT_CATALOG[sector]]
+
+
+_UNLOCK_TREE_CACHE: list[dict[str, Any]] | None = None
+
+
+def load_unlock_tree() -> list[dict[str, Any]]:
+    """Load the XP unlock tree definition (TASK-05-06), cached after first read."""
+    global _UNLOCK_TREE_CACHE
+    if _UNLOCK_TREE_CACHE is None:
+        import json
+        from pathlib import Path
+
+        path = Path(__file__).parent / "data" / "unlock_tree.json"
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            _UNLOCK_TREE_CACHE = data.get("nodes", data) if isinstance(data, dict) else data
+        except (OSError, ValueError):
+            _UNLOCK_TREE_CACHE = []
+    return _UNLOCK_TREE_CACHE
+
+
+def load_jurisdiction(jurisdiction: str) -> dict[str, Any]:
+    """Load a jurisdiction skin overlay (TASK-05-08). Returns {} if absent."""
+    import json
+    from pathlib import Path
+
+    if not jurisdiction or jurisdiction == "vietnam":
+        return {}
+    path = Path(__file__).parent / "data" / "jurisdictions" / f"{jurisdiction}.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
 
 
 def apply_company_decision(
@@ -193,10 +280,14 @@ def apply_company_decision(
             or measure_id in company["pending_abatement_ids"]
         ):
             return state
+        # Pay capex up front (legacy behaviour: capex defaults to `cost`). The
+        # loan path lives in finance_abatement.
+        capex = measure.get("capex", measure["cost"])
         company["abatement_cost_committed"] = round(
-            company["abatement_cost_committed"] + measure["cost"], 2
+            company["abatement_cost_committed"] + capex, 2
         )
-        company["cash"] = round(company["cash"] - measure["cost"], 2)
+        company["cash"] = round(company["cash"] - capex, 2)
+        _register_abatement_asset(company, measure, state["current_year"], financed=False)
         if measure["activation_timing"] == "immediate":
             company["active_abatement_ids"].append(measure_id)
         else:
@@ -210,6 +301,55 @@ def apply_company_decision(
                 "year": state["current_year"],
                 "company_id": company_id,
                 "measure_id": measure_id,
+            },
+        )
+        return state
+
+    if action == "finance_abatement":
+        # Capex via loan instead of cash up front (TASK-05-03).
+        measure_id = payload["measure_id"]
+        measure = _get_measure(company, measure_id)
+        if (
+            measure_id in company["active_abatement_ids"]
+            or measure_id in company["pending_abatement_ids"]
+        ):
+            return state
+        capex = measure.get("capex", measure["cost"])
+        rate = state.get("scenario_interest_rate", 0.08)
+        term = min(measure.get("asset_life_years", 8), state.get("scenario_loan_term", 5))
+        term = max(int(term), 1)
+        # Equal annual installments: amortized payment over the term.
+        if rate > 0:
+            annual_payment = round(capex * rate / (1 - (1 + rate) ** (-term)), 2)
+        else:
+            annual_payment = round(capex / term, 2)
+        company.setdefault("active_loans", []).append({
+            "loan_id": f"LN-Y{state['current_year']}-{len(company.get('active_loans', [])) + 1:02d}",
+            "principal": round(capex, 2),
+            "annual_payment": annual_payment,
+            "remaining_years": term,
+            "measure_id": measure_id,
+            "interest_rate": rate,
+        })
+        company["abatement_cost_committed"] = round(
+            company["abatement_cost_committed"] + capex, 2
+        )
+        _register_abatement_asset(company, measure, state["current_year"], financed=True)
+        if measure["activation_timing"] == "immediate":
+            company["active_abatement_ids"].append(measure_id)
+        else:
+            company["pending_abatement_ids"].append(measure_id)
+        _recalculate_company_projection(state, company)
+        _append_event(
+            state,
+            "abatement_financed",
+            decision_time,
+            {
+                "year": state["current_year"],
+                "company_id": company_id,
+                "measure_id": measure_id,
+                "annual_payment": annual_payment,
+                "term": term,
             },
         )
         return state
@@ -909,6 +1049,13 @@ def build_player_snapshot(
         "policy_climate": _policy_climate_label(state.get("policy_stability", 70.0)),
         "active_conditions": list(state.get("active_conditions", [])),
         "cap_modifier": state.get("cap_modifier", 1.0),
+        # Sprint 5 — meta-progression.
+        "jurisdiction": state.get("jurisdiction", "vietnam"),
+        "xp": state.get("xp", 0),
+        "xp_level": state.get("xp_level", 1),
+        "xp_thresholds": XP_LEVEL_THRESHOLDS,
+        "unlocked_features": list(state.get("unlocked_features", [])),
+        "unlock_tree": load_unlock_tree(),
     }
 
 
@@ -1699,6 +1846,9 @@ def _company_snapshot(state: dict[str, Any], company: dict[str, Any]) -> dict[st
         "year_results": company["year_results"],
         "forward_contracts": company.get("forward_contracts", []),
         "vcm_projects": company.get("vcm_projects", []),
+        "active_abatement_assets": company.get("active_abatement_assets", []),
+        "active_loans": company.get("active_loans", []),
+        "tech_impaired_ids": company.get("tech_impaired_ids", []),
         "is_bot": company.get("is_bot", False),
     }
 
@@ -1710,6 +1860,10 @@ def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
     state.setdefault("active_conditions", [])
     state.setdefault("active_effects", [])
     state.setdefault("pending_card_injections", [])
+    state.setdefault("xp", 0)
+    state.setdefault("xp_level", 1)
+    state.setdefault("unlocked_features", [])
+    state.setdefault("jurisdiction", "vietnam")
 
     # Apply any multi-turn active effects for this year, then decrement them.
     _apply_active_effects(state, now)
@@ -1768,6 +1922,13 @@ def _start_year(state: dict[str, Any], year: int, now: datetime) -> None:
         )
         company["auction_allowances_won"] = 0.0
         _activate_pending_abatements(company)
+
+        # --- Sprint 5: capex servicing + tech-failure (additive) ---
+        company.setdefault("active_abatement_assets", [])
+        company.setdefault("active_loans", [])
+        company.setdefault("tech_impaired_ids", [])
+        _service_abatement_assets(state, company, year, now)
+        _recalculate_company_projection(state, company)
 
         # Deliver maturing forward contracts
         delivered_ids: list[str] = []
@@ -2104,6 +2265,21 @@ def _close_current_year(state: dict[str, Any], now: datetime) -> None:
     )
 
     _update_policy_stability(state, year, now)
+    _award_year_xp(state, year, now)
+
+
+def _award_year_xp(state: dict[str, Any], year: int, now: datetime) -> None:
+    """Grant the human player XP for this year's outcome (TASK-05-05)."""
+    player = next((c for c in state.get("companies", []) if not c.get("is_bot")), None)
+    if not player or not player.get("year_results"):
+        return
+    latest = player["year_results"][-1]
+    if latest.get("penalty_due", 0) <= 0 and latest.get("shortfall", 0) <= 0:
+        award_xp(state, "penalty_free_year")
+        # First-ever compliant year carries a one-off bonus.
+        if not state.get("_first_compliance_awarded"):
+            award_xp(state, "first_compliance")
+            state["_first_compliance_awarded"] = True
 
 
 def _update_policy_stability(state: dict[str, Any], year: int, now: datetime) -> None:
@@ -2164,6 +2340,70 @@ def _update_policy_stability(state: dict[str, Any], year: int, now: datetime) ->
                 "compliance_rate": round(compliance_rate, 2),
             },
         )
+
+
+def _service_abatement_assets(
+    state: dict[str, Any], company: dict[str, Any], year: int, now: datetime
+) -> None:
+    """Annual capex servicing (TASK-05-02/03/04): opex, loan payments, tech rolls.
+
+    Runs once per company at year start. Restores last year's tech impairment
+    (it lasts one year), then rolls new failures with the seeded RNG, deducts
+    annual opex for active assets, and amortizes outstanding loans.
+    """
+    # Tech impairment lasts one year — clear last year's, then roll fresh ones.
+    company["tech_impaired_ids"] = []
+    rng = _deterministic_rng(state, f"techfail-{company['company_id']}-{year}")
+    for asset in company.get("active_abatement_assets", []):
+        asset["remaining_life"] = asset.get("remaining_life", 8) - 1
+        # Opex only while the asset is live and actually abating.
+        if asset["measure_id"] in company["active_abatement_ids"]:
+            opex = asset.get("annual_opex", 0.0)
+            if opex:
+                company["cash"] = round(company["cash"] - opex, 2)
+            risk = asset.get("tech_risk_pct", 0.0)
+            if risk > 0 and rng.random() < risk:
+                company["tech_impaired_ids"].append(asset["measure_id"])
+                _append_event(
+                    state, "tech_failure", now,
+                    {"year": year, "company_id": company["company_id"],
+                     "measure_id": asset["measure_id"]},
+                )
+
+    # Amortize outstanding loans.
+    surviving_loans = []
+    for loan in company.get("active_loans", []):
+        if loan.get("remaining_years", 0) > 0:
+            company["cash"] = round(company["cash"] - loan["annual_payment"], 2)
+            loan["remaining_years"] -= 1
+        if loan.get("remaining_years", 0) > 0:
+            surviving_loans.append(loan)
+    company["active_loans"] = surviving_loans
+
+
+def _deterministic_rng(state: dict[str, Any], salt: str) -> "_random.Random":
+    """A reproducible RNG derived from the game seed plus a salt string."""
+    base = state.get("rng_seed", 0)
+    return _random.Random(f"{base}-{salt}")
+
+
+def award_xp(state: dict[str, Any], event_type: str) -> int:
+    """Award XP for a game event and recompute level (TASK-05-05).
+
+    Returns the points awarded. Levels follow XP_LEVEL_THRESHOLDS.
+    """
+    from .achievements import XP_EVENT_POINTS
+
+    points = XP_EVENT_POINTS.get(event_type, 0)
+    if points == 0:
+        return 0
+    state["xp"] = int(state.get("xp", 0)) + points
+    new_level = 1
+    for i, threshold in enumerate(XP_LEVEL_THRESHOLDS):
+        if state["xp"] >= threshold:
+            new_level = i + 1
+    state["xp_level"] = new_level
+    return points
 
 
 def _apply_active_effects(state: dict[str, Any], now: datetime) -> None:
@@ -2242,9 +2482,12 @@ def _apply_policy_triggers(state: dict[str, Any], year: int, now: datetime) -> N
 
 def _projected_emissions(company: dict[str, Any], year: int) -> float:
     base = company["baseline_emissions"] * (1 + company["growth_rate"]) ** (year - 1)
+    impaired = set(company.get("tech_impaired_ids", []))
     for measure in company["abatement_menu"]:
         if measure["measure_id"] in company["active_abatement_ids"]:
-            base -= measure["abatement_amount"]
+            # A tech-failed asset delivers only half its abatement this year.
+            factor = 0.5 if measure["measure_id"] in impaired else 1.0
+            base -= measure["abatement_amount"] * factor
     return round(max(base, 0), 2)
 
 
@@ -2311,6 +2554,10 @@ def _event_summary(event_type: str, details: dict[str, Any]) -> str:
         return f"Policy stability {details['before']:.0f} -> {details['after']:.0f} ({details['delta']:+.0f}) in year {details['year']}"
     if event_type == "policy_climate_shift":
         return f"Policy climate shift: {details['shift'].replace('_', ' ')} in year {details['year']}"
+    if event_type == "abatement_financed":
+        return f"{details['company_id']} financed {details['measure_id']} (loan ${details['annual_payment']:,.0f}/yr x {details['term']}y)"
+    if event_type == "tech_failure":
+        return f"Tech failure on {details['measure_id']} for {details['company_id']} in year {details['year']}"
     if event_type == "card_resolved":
         title = details.get("title", details.get("card_id", "unknown"))
         return f"Event card '{title}' resolved in year {details['year']}"

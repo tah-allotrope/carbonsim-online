@@ -1,0 +1,43 @@
+{
+  "jurisdiction": "eu_ets",
+  "label": "EU ETS Phase 4",
+  "description": "European Union Emissions Trading System, Phase 4 — a mature market with a steep linear reduction factor and a high carbon price.",
+  "penalty_rate": 950.0,
+  "offset_usage_cap": 0.05,
+  "offset_price": 75.0,
+  "auction_price_floor": 60.0,
+  "auction_price_ceiling": 400.0,
+  "scenario_interest_rate": 0.06,
+  "scenario_loan_term": 6,
+  "company_library": [
+    {
+      "company_name": "Ruhr Thermal AG",
+      "sector": "thermal_power",
+      "baseline_emissions": 120.0,
+      "growth_rate": 0.018,
+      "cash": 1600000.0
+    },
+    {
+      "company_name": "Lorraine Steelworks",
+      "sector": "steel",
+      "baseline_emissions": 98.0,
+      "growth_rate": 0.014,
+      "cash": 1300000.0
+    },
+    {
+      "company_name": "Iberia Cementos",
+      "sector": "cement",
+      "baseline_emissions": 90.0,
+      "growth_rate": 0.012,
+      "cash": 1100000.0
+    },
+    {
+      "company_name": "Benelux Power BV",
+      "sector": "thermal_power",
+      "baseline_emissions": 58.0,
+      "growth_rate": 0.016,
+      "cash": 980000.0
+    }
+  ],
+  "_balance_note": "penalty_rate tuned 1100.0->950.0 in Sprint 5 strategy sweep (no strategy >60% over 20 seeds)"
+}

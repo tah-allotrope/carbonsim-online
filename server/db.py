@@ -44,9 +44,70 @@ def init_db(path: str | None = None) -> None:
             state_json TEXT NOT NULL,
             saved_at TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS player_profiles (
+            player_name TEXT PRIMARY KEY,
+            xp INTEGER NOT NULL DEFAULT 0,
+            unlocks_json TEXT NOT NULL DEFAULT '[]',
+            updated_at TEXT NOT NULL
+        );
     """)
     conn.commit()
     conn.close()
+
+
+def get_player_profile(player_name: str, db_path: str | None = None) -> dict[str, Any]:
+    """Return the persistent XP profile for a player (TASK-05-07).
+
+    Creates an empty profile on first access so callers always get a dict.
+    """
+    conn = _get_db(db_path)
+    row = conn.execute(
+        "SELECT player_name, xp, unlocks_json FROM player_profiles WHERE player_name = ?",
+        (player_name,),
+    ).fetchone()
+    conn.close()
+    if not row:
+        return {"player_name": player_name, "xp": 0, "unlocks": []}
+    return {
+        "player_name": row["player_name"],
+        "xp": row["xp"],
+        "unlocks": json.loads(row["unlocks_json"]),
+    }
+
+
+def upsert_player_profile(
+    player_name: str,
+    xp: int,
+    unlocks: list[str] | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any]:
+    """Insert or update a player's persistent XP / unlocks.
+
+    XP is stored monotonically (never decreases below the persisted value) so a
+    later, lower in-session value can't erase lifetime progress.
+    """
+    conn = _get_db(db_path)
+    now = datetime.now(timezone.utc).isoformat()
+    existing = conn.execute(
+        "SELECT xp, unlocks_json FROM player_profiles WHERE player_name = ?",
+        (player_name,),
+    ).fetchone()
+    prev_xp = existing["xp"] if existing else 0
+    prev_unlocks = json.loads(existing["unlocks_json"]) if existing else []
+    merged_xp = max(int(xp), prev_xp)
+    merged_unlocks = sorted(set(prev_unlocks) | set(unlocks or []))
+    conn.execute(
+        """
+        INSERT INTO player_profiles (player_name, xp, unlocks_json, updated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(player_name) DO UPDATE SET
+            xp = excluded.xp, unlocks_json = excluded.unlocks_json, updated_at = excluded.updated_at
+        """,
+        (player_name, merged_xp, json.dumps(merged_unlocks), now),
+    )
+    conn.commit()
+    conn.close()
+    return {"player_name": player_name, "xp": merged_xp, "unlocks": merged_unlocks}
 
 
 def compress_state(state: dict[str, Any]) -> str:

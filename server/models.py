@@ -12,6 +12,7 @@ class CreateGameRequest(BaseModel):
     difficulty: str = Field(default="standard", pattern=r"^(easy|standard|hard)$")
     num_years: int | None = Field(default=None, ge=5, le=25)
     tutorial_mode: bool = False
+    jurisdiction: str | None = Field(default=None, pattern=r"^(vietnam|eu_ets|california_arb)$")
 
 
 class CreateGameResponse(BaseModel):
@@ -64,7 +65,7 @@ class ResolveCardRequest(BaseModel):
 
 
 class DecisionRequest(BaseModel):
-    action: str = Field(pattern=r"^(activate_abatement|buy_offsets|propose_trade|respond_to_trade|submit_auction_bid|buy_forward|invest_vcm)$")
+    action: str = Field(pattern=r"^(activate_abatement|finance_abatement|buy_offsets|propose_trade|respond_to_trade|submit_auction_bid|buy_forward|invest_vcm)$")
     payload: dict[str, Any] = Field(default_factory=dict)
 
 

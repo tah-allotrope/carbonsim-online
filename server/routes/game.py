@@ -34,10 +34,12 @@ from ..db import (
     create_save as db_create_save,
     delete_game as db_delete_game,
     get_game as db_get_game,
+    get_player_profile as db_get_player_profile,
     list_games as db_list_games,
     list_saves as db_list_saves,
     load_save as db_load_save,
     update_game_state as db_update_game_state,
+    upsert_player_profile as db_upsert_player_profile,
     decompress_state,
 )
 from ..models import (
@@ -93,6 +95,19 @@ def _snapshot(state: dict[str, Any]) -> dict[str, Any]:
     return snap
 
 
+def _persist_player_xp(player_name: str, state: dict[str, Any]) -> None:
+    """Write the session's XP / unlocks back to the player's lifetime profile."""
+    try:
+        db_upsert_player_profile(
+            player_name,
+            int(state.get("xp", 0)),
+            list(state.get("unlocked_features", [])),
+        )
+    except Exception:
+        # XP persistence is best-effort; never block game progress on it.
+        pass
+
+
 def _available_actions(state: dict[str, Any]) -> list[str]:
     phase = state.get("phase", "")
     actions = []
@@ -101,6 +116,7 @@ def _available_actions(state: dict[str, Any]) -> list[str]:
         actions.append("fast_forward")
     if phase == "decision_window":
         actions.append("activate_abatement")
+        actions.append("finance_abatement")
         actions.append("buy_offsets")
         actions.append("buy_forward")
         actions.append("invest_vcm")
@@ -166,8 +182,16 @@ async def create_game_route(req: CreateGameRequest):
         difficulty=req.difficulty,
         num_years=num_years,
         tutorial_mode=req.tutorial_mode,
+        jurisdiction=req.jurisdiction,
     )
     state["game_id"] = game_id
+    # Seed the session with the player's persisted lifetime XP / unlocks so the
+    # unlock tree reflects prior progress (TASK-05-07).
+    profile = db_get_player_profile(req.player_name)
+    state["xp"] = int(profile.get("xp", 0))
+    state["unlocked_features"] = list(profile.get("unlocks", []))
+    from engine import XP_LEVEL_THRESHOLDS
+    state["xp_level"] = sum(1 for t in XP_LEVEL_THRESHOLDS if state["xp"] >= t) or 1
     # Open year 1's decision window so the player lands in an actionable state.
     state, _ = _open_decision_window(state, game_id, _utc())
     db_create_game(game_id, req.player_name, req.province_name, req.difficulty, num_years, state)
@@ -258,6 +282,7 @@ async def advance_year(game_id: str):
         state, drawn_cards = _open_decision_window(state, game_id, now)
 
     db_update_game_state(game_id, state)
+    _persist_player_xp(row["player_name"], state)
     return AdvanceYearResponse(
         game_id=game_id,
         year=state.get("current_year", 0),
