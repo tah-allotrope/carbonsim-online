@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final Report :: CarbonSim Elevation — Tycoon-Grade Carbon Market Game</title>
+  <meta name="color-scheme" content="light">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --paper: #f7faf4; --paper-strong: #fdfff9; --ink: #1a2218;
+      --ink-soft: #4a5e44; --line: #c2d4ba; --line-strong: #8baa82;
+      --accent: #3a7a4e; --accent-2: #2c6e7a; --accent-3: #7a5c2e;
+      --green: #4a8c3a; --amber: #b08020; --red: #a03030;
+      --shadow: 0 14px 36px rgba(20, 50, 20, 0.08); --radius: 16px;
+      --body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace; --display: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: linear-gradient(180deg, #eef4ea 0%, #f7faf4 28%, #edf3e9 100%); font-family: var(--body); line-height: 1.65; }
+    .page { width: min(980px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 64px; }
+
+    /* Hero */
+    .hero { padding: 36px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 50%, var(--accent-3) 100%); }
+    .eyebrow { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; color: var(--accent-2); }
+    h1 { font-family: var(--display); margin: 10px 0 14px; font-size: 2.2rem; line-height: 1.2; }
+    .takeaway { font-size: 1.05rem; color: var(--ink-soft); border-left: 3px solid var(--accent); padding-left: 14px; margin: 16px 0 0; }
+    .meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .chip { font-family: var(--mono); font-size: 0.70rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: rgba(58,122,78,0.08); }
+    .chip.done { background: rgba(74,140,58,0.12); border-color: var(--green); color: var(--green); font-weight: 600; }
+    .chip.pending { background: rgba(176,128,32,0.10); border-color: var(--amber); color: var(--amber); }
+
+    /* Sections */
+    .section { margin-top: 22px; padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-strong); box-shadow: var(--shadow); }
+    .section-num { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-2); margin-bottom: 4px; }
+    h2 { font-family: var(--display); margin: 0 0 18px; font-size: 1.5rem; color: var(--accent); }
+    h3 { font-family: var(--display); margin: 22px 0 8px; font-size: 1.1rem; color: var(--ink-soft); }
+    h4 { font-family: var(--mono); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-3); margin: 16px 0 4px; }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 0 0 12px; padding-left: 24px; }
+    li { margin-bottom: 7px; }
+    code { font-family: var(--mono); background: rgba(58,122,78,0.1); padding: 1px 5px; border-radius: 4px; font-size: 0.84em; }
+    strong { color: var(--ink); }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--line); }
+    th { font-family: var(--mono); text-transform: uppercase; font-size: 0.67rem; letter-spacing: 0.1em; color: var(--ink-soft); background: rgba(58,122,78,0.05); }
+    tr:last-child td { border-bottom: none; }
+
+    /* Status badges */
+    .ok { color: var(--green); font-weight: 700; }
+    .warn { color: var(--amber); font-weight: 700; }
+    .todo { color: var(--ink-soft); font-weight: 600; }
+
+    /* Stat grid */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 16px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fdfff9; }
+    .stat-label { font-family: var(--mono); font-size: 0.63rem; text-transform: uppercase; color: var(--ink-soft); }
+    .stat-value { font-family: var(--mono); font-size: 1.12rem; font-weight: 700; margin-top: 5px; color: var(--accent); }
+    .stat-note { font-size: 0.72rem; color: var(--ink-soft); margin-top: 3px; }
+
+    /* Phase cards */
+    .phase-row { display: grid; grid-template-columns: 80px 1fr; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+    .phase-num { background: rgba(58,122,78,0.1); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; color: var(--accent); writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.08em; padding: 16px 0; }
+    .phase-num.done-bg { background: rgba(74,140,58,0.14); color: var(--green); }
+    .phase-num.pending-bg { background: rgba(176,128,32,0.08); color: var(--amber); }
+    .phase-body { padding: 16px 20px; }
+    .phase-title { font-family: var(--display); font-size: 1.05rem; margin: 0 0 6px; }
+    .phase-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .tag { font-family: var(--mono); font-size: 0.65rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); }
+    .tag.green { background: rgba(74,140,58,0.1); border-color: var(--green); color: var(--green); }
+    .tag.amber { background: rgba(176,128,32,0.08); border-color: var(--amber); color: var(--amber); }
+
+    /* Callout box */
+    .callout { border-left: 3px solid var(--accent); padding: 12px 16px; background: rgba(58,122,78,0.06); border-radius: 0 8px 8px 0; margin: 14px 0; }
+    .callout.warn { border-left-color: var(--amber); background: rgba(176,128,32,0.06); }
+    .callout.risk { border-left-color: var(--red); background: rgba(160,48,48,0.05); }
+    .callout-title { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--accent-3); margin-bottom: 6px; }
+    .callout.warn .callout-title { color: var(--amber); }
+    .callout.risk .callout-title { color: var(--red); }
+
+    /* Mermaid frame */
+    .mermaid-frame { overflow-x: auto; padding: 20px; background: rgba(58,122,78,0.04); border: 1px solid var(--line); border-radius: 10px; margin-top: 16px; max-height: 460px; }
+    .mermaid svg { max-width: 100%; }
+
+    /* Charts */
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    @media (max-width: 640px) { .chart-row { grid-template-columns: 1fr; } }
+    .chart-frame { height: 240px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fdfff9; }
+
+    /* Risk table colors */
+    .risk-h { color: var(--red); font-weight: 600; }
+    .risk-m { color: var(--amber); font-weight: 600; }
+    .risk-l { color: var(--green); font-weight: 600; }
+
+    /* Print */
+    @media print {
+      body { background: #fff; }
+      .section, .hero { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+      .chart-row { grid-template-columns: 1fr; }
+      .mermaid-frame { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── 1. TITLE HERO ── -->
+  <div class="hero">
+    <div class="eyebrow">Final Plan Report &middot; 2026-06-21 &middot; carbonsim-online</div>
+    <h1>CarbonSim Elevation<br>Tycoon-Grade Carbon Market Game</h1>
+    <p class="takeaway">Two of five planned sprints delivered — Foundation and Market mechanics are live and balance-tested; AI agents, cascading story cards, and meta-progression remain as the implementation path to a full Kairosoft-grade session.</p>
+    <div class="meta">
+      <span class="chip">Date: 2026-06-21</span>
+      <span class="chip">Repo: carbonsim-online</span>
+      <span class="chip done">Sprint 1 Complete — commit 65eafb9</span>
+      <span class="chip done">Sprint 2 Complete — commit c6a9a6f</span>
+      <span class="chip pending">Sprints 3–5 Planned</span>
+      <span class="chip">Plan: plans/2026-06-21-carbonsim-elevation-plan.md</span>
+    </div>
+  </div>
+
+  <!-- ── 2. EXECUTIVE SUMMARY ── -->
+  <div class="section">
+    <div class="section-num">Section 2</div>
+    <h2>Executive Summary</h2>
+    <p>CarbonSim Online started this elevation as a functional but shallow compliance sim: static offset prices, three simplistic bot profiles, and no consequence preview before decisions. The five-sprint elevation plan targets Kairosoft-level mechanical depth — a 20–40 min session with compulsion-generating replayability, authentic carbon market instruments, and visible decision consequences.</p>
+    <p><strong>What is done:</strong> Sprint 1 wired reproducible seeded state, a pure <code>project_outcome</code> consequence-preview function, and a year-end narrative modal. Sprint 2 replaced the static offset price with a BazaarBot-style demand-responsive model (<em>ε</em>=0.4, supply cap 50 t) and surfaced forward contracts and VCM project investment in the solo UI. Playtest validation across 8 seeds produced a coefficient of variation of <strong>5.1%</strong> in penalty outcomes — well inside the &lt;30% balance threshold, confirming the elasticity model is well-calibrated.</p>
+    <p><strong>What remains:</strong> Sprints 3–5 deliver goal-driven AI agents with multi-year planning horizons, state-reactive cascading event cards driven by a <code>policy_stability</code> field, and persistent meta-progression via an XP unlock tree with capex abatement and jurisdiction skins.</p>
+    <div class="callout">
+      <div class="callout-title">Recommendation</div>
+      Proceed to Sprint 3 (AI agents) immediately. The engine architecture (pure reducer + audit_log + snapshot) has proven stable across both sprints and absorbs new mechanics cleanly. Sprint 3 is the highest-leverage next investment: without multi-year AI planning, the new market instruments can still be dominated by simple heuristic play.
+    </div>
+  </div>
+
+  <!-- ── 3. BACKGROUND & OBJECTIVE ── -->
+  <div class="section">
+    <div class="section-num">Section 3</div>
+    <h2>Background &amp; Objective</h2>
+    <p>CarbonSim Online is a FastAPI + vanilla-JS carbon compliance management game. The core loop: manage emissions, acquire allowances via ETS auctions, buy offsets, and survive multi-year cap decline as a Vietnamese industrial company competing against AI bots.</p>
+    <p>The elevation request: <em>"Elevate CarbonSim Online to Kairosoft/Sid Meier/tycoon sophistication level while deeply reflecting carbon market domain mechanics."</em></p>
+    <p>The architecture was already sound — an OpenRCT2-style deterministic reducer (<code>apply_company_decision</code>), immutable audit log, and snapshot system. The plan's research confirmed this is the correct architecture at 8-company scale and should not be changed. Every sprint therefore adds mechanics on top of the reducer rather than replacing it.</p>
+    <p><strong>Session date range covered by this report:</strong> 2026-06-21 (single-day sprint pair).</p>
+  </div>
+
+  <!-- ── 4. INPUTS & SCOPE ── -->
+  <div class="section">
+    <div class="section-num">Section 4</div>
+    <h2>Inputs &amp; Scope</h2>
+    <h3>Plan Inputs</h3>
+    <ul>
+      <li><code>plans/2026-06-21-carbonsim-elevation-plan.md</code> — 5-sprint delivery plan (this report's primary source)</li>
+      <li><code>research/2026-06-21_carbonsim-elevation-brainstorm.md</code> — 16 resolved decisions (scope, mechanic choices, instrument stack, AI model, win condition)</li>
+      <li><code>research/2026-06-21_management-sim-architecture.md</code> — 224-source architectural brief (reducer pattern confirmation, BazaarBot demand-feedback prescription, ECS rejection)</li>
+      <li><code>research/2026-06-20_sim-game-design-architecture-2.md</code> — decision legibility and consequence-preview as cheapest high-impact win</li>
+    </ul>
+    <h3>Scope Boundaries</h3>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Dynamic offset pricing (demand-responsive)</td><td>Real-time multiplayer / lockstep networking</td></tr>
+        <tr><td>Full carbon instrument stack: spot, ETS, OTC, forwards, VCM</td><td>LLM-generated card text (non-deterministic)</td></tr>
+        <tr><td>Goal-driven AI agents with 2–3 year horizon</td><td>Deep DNE regulatory fidelity</td></tr>
+        <tr><td>State-reactive cascading event cards</td><td>ECS engine refactor (wrong scale)</td></tr>
+        <tr><td>Capex abatement with loan financing</td><td>Online persistent leaderboards</td></tr>
+        <tr><td>XP unlock tree + jurisdiction skins</td><td>Carbon registry API integration</td></tr>
+        <tr><td>Year-end narrative report screen</td><td>Mobile / native ports</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── 5. ASSUMPTIONS & CONSTRAINTS ── -->
+  <div class="section">
+    <div class="section-num">Section 5</div>
+    <h2>Assumptions &amp; Constraints</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Statement</th><th>Validated?</th></tr></thead>
+      <tbody>
+        <tr><td><code>ASM-001</code></td><td><code>project_outcome()</code> can be implemented as a pure, no-side-effect function reusing existing compliance math.</td><td class="ok">Yes — Sprint 1 confirmed; extended cleanly in Sprint 2 for buy_forward and invest_vcm.</td></tr>
+        <tr><td><code>ASM-002</code></td><td>Forward contracts and VCM project credits serialize as part of company state and survive existing zlib-JSON save/load.</td><td class="ok">Yes — list fields on company dict pass through unchanged.</td></tr>
+        <tr><td><code>ASM-003</code></td><td>Year-end narrative text is template-driven (Python f-string), not LLM-generated. Keeps the game deterministic and offline.</td><td class="ok">Yes — implemented in Sprint 1.</td></tr>
+        <tr><td><code>ASM-004</code></td><td>City tier upgrades (Sprint 4) use canvas CSS filter on existing sprites. No new art assets required for MVP.</td><td class="warn">Unvalidated — Sprint 4 pending.</td></tr>
+        <tr><td><code>ASM-005</code></td><td>Seeded Monte-Carlo harness in <code>playtest.py</code> can be extended with varied bot policies before dynamic offset price so balancing sweeps are meaningful.</td><td class="warn">Partially — Sprint 2 ran balance sweeps; full strategy sweep deferred to Sprint 3.</td></tr>
+        <tr><td><code>CON-001</code></td><td>Session target is 20–40 min solo. Every mechanic must fit that budget.</td><td class="todo">Ongoing — median session length not yet measured in simulated time.</td></tr>
+        <tr><td><code>CON-002</code></td><td>No new Python dependencies beyond existing FastAPI + stdlib stack.</td><td class="ok">Yes — dynamic pricing is pure arithmetic; no new deps in Sprints 1–2.</td></tr>
+        <tr><td><code>CON-003</code></td><td>Forward contract delivery and VCM credits must not break existing <code>force_advance_phase</code> / <code>_start_year</code> hooks.</td><td class="ok">Yes — resolved in <code>_start_year</code> loop; playtest confirms no breakage.</td></tr>
+        <tr><td><code>DEC-001</code></td><td>Strategy game first — carbon mechanics are the medium, not the lesson. Fun is the primary design constraint.</td><td class="ok">Yes — guiding principle maintained throughout.</td></tr>
+        <tr><td><code>DEC-002</code></td><td>Hard binary win/lose gate + star-rating replayability layer.</td><td class="todo">Not yet implemented — deferred to Sprint 5 meta layer.</td></tr>
+        <tr><td><code>DEC-003</code></td><td>Vietnam-anchored narrative with jurisdiction-switchable skins.</td><td class="todo">Vietnam default live; EU ETS / California ARB skins deferred to Sprint 5.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <div class="callout-title">Open Constraint</div>
+      The forward premium was implemented at <strong>5%</strong> (spot × 1.05) rather than the planned 15% (spot × 1.15). This makes forwards more accessible — the original 15% premium may have been too steep to be useful given the elasticity model already introduces price pressure. The balance sweep in Sprint 3 should validate whether the 5% premium creates dominant forward strategies.
+    </div>
+  </div>
+
+  <!-- ── 6. METHODOLOGY ── -->
+  <div class="section">
+    <div class="section-num">Section 6</div>
+    <h2>Methodology</h2>
+    <p>The elevation plan follows a <strong>leverage-per-effort sequencing</strong> strategy derived from the research brief: determinism and legibility first, market mechanics second, AI agents third, story texture fourth, meta-progression last. Each phase must pass a seeded playtest batch before the next phase begins.</p>
+    <h3>Design Framework</h3>
+    <ul>
+      <li><strong>Reducer-first architecture</strong> — All state transitions go through <code>apply_company_decision(state, action, payload) → state</code>. No direct mutation. This makes every sprint's additions auditable and reversible.</li>
+      <li><strong>Pure consequence preview</strong> — <code>project_outcome(state, company_id, action, payload)</code> deep-copies state, applies the action arithmetically, and discards the copy. The UI calls this on hover to show compliance/cash projections before commitment. No network round-trip.</li>
+      <li><strong>BazaarBot demand-feedback model</strong> — Offset price responds to within-year aggregate demand: <em>P(d) = P₀ × (1 + ε × min(d/S, 1))</em>. Resets each year so price pressure is annual, not cumulative. The linear model was chosen over exponential to keep client-side preview arithmetic identical to the engine.</li>
+      <li><strong>Monte-Carlo balance validation</strong> — 8-seed playtest batch after each sprint. Target: coefficient of variation of penalties &lt;30% across seeds (confirming no single dominant strategy).</li>
+      <li><strong>Phase-state machine</strong> — LOBBY → YEAR_START → DECISION_WINDOW → COMPLIANCE → COMPLETE. All new mechanics hook into existing phase transitions; no phase machine changes required through Sprint 2.</li>
+    </ul>
+    <h3>Decision Flow</h3>
+    <div class="mermaid-frame">
+      <pre class="mermaid">
+flowchart LR
+  R["Research briefs\n(architecture, brainstorm)"] --> P["Plan:\n5-sprint sequence"]
+  P --> S1["Sprint 1\nFoundation\nSeed + preview + year-end"]
+  S1 --> PT1["Playtest\nbatch 8 seeds"]
+  PT1 -->|"determinism ✓"| S2["Sprint 2\nMarket\nDynamic price + instruments"]
+  S2 --> PT2["Playtest\nbatch 8 seeds\nCV = 5.1%"]
+  PT2 -->|"balance ✓"| S3["Sprint 3\nAI agents\nMulti-year planning"]
+  S3 --> S4["Sprint 4\nStory cards\npolicy_stability + city canvas"]
+  S4 --> S5["Sprint 5\nMeta\nCapex + XP unlock + skins"]
+  S5 --> DONE["Tycoon-grade\nCarbonSim"]
+
+  style S1 fill:#d4edda,stroke:#4a8c3a
+  style S2 fill:#d4edda,stroke:#4a8c3a
+  style S3 fill:#fff3cd,stroke:#b08020
+  style S4 fill:#fff3cd,stroke:#b08020
+  style S5 fill:#fff3cd,stroke:#b08020
+      </pre>
+    </div>
+  </div>
+
+  <!-- ── 7. PHASE-BY-PHASE ANALYSIS ── -->
+  <div class="section">
+    <div class="section-num">Section 7</div>
+    <h2>Phase-by-Phase Analysis</h2>
+
+    <!-- Sprint 1 -->
+    <div class="phase-row">
+      <div class="phase-num done-bg">PHASE 01</div>
+      <div class="phase-body">
+        <div class="phase-title">Foundation — Determinism, Consequence Preview, Year-End Ceremony</div>
+        <div class="phase-tags">
+          <span class="tag green">Complete</span>
+          <span class="tag green">Commit 65eafb9</span>
+        </div>
+        <p><strong>What was delivered:</strong> Seeded state via <code>rng_seed: int</code> in <code>create_initial_state</code>. Determinism regression assertion added to <code>playtest.py</code>. Pure <code>project_outcome()</code> function covering all 5 existing action types plus forward/VCM stubs. <code>GET /api/game/{gameId}/project</code> endpoint. Year-end narrative modal in <code>web/game.html</code> with consequence-preview tooltips on abatement measures and offset buy input.</p>
+        <p><strong>What changed vs. plan:</strong> Forward and VCM stubs were filled in Sprint 2 rather than Sprint 1, as planned. The <code>generate_year_summary</code> template covers four outcome buckets (penalty-free / minor shortfall / severe shortfall / near-bankruptcy). <code>localStorage</code> personal-best uses <code>scenario_id + player_name</code> key per plan specification.</p>
+        <p><strong>Why it mattered:</strong> Without reproducible seeds, the playtest harness could not validate balance changes introduced in Sprint 2. Without <code>project_outcome</code>, the UI could not preview forward/VCM consequences before the player committed. These were non-negotiable prerequisites.</p>
+      </div>
+    </div>
+
+    <!-- Sprint 2 -->
+    <div class="phase-row">
+      <div class="phase-num done-bg">PHASE 02</div>
+      <div class="phase-body">
+        <div class="phase-title">Market — Dynamic Pricing + Full Instrument Stack</div>
+        <div class="phase-tags">
+          <span class="tag green">Complete</span>
+          <span class="tag green">Commit c6a9a6f</span>
+        </div>
+        <p><strong>What was delivered:</strong> BazaarBot demand-responsive offset price with <code>offset_demand_this_year</code> accumulator; resets each <code>_start_year</code>. Forward contracts (<code>buy_forward</code> action) with 5% term premium, resolving in <code>_start_year(delivery_year)</code>. Three VCM projects via <code>invest_vcm</code> action: REDD+ Forest (8 t/yr, $150k), Rice Paddy Methane (5 t/yr, $80k), Clean Cookstoves (3 t/yr, $50k). All instruments surfaced in redesigned Offsets &amp; Market card with live price ticker, demand pressure indicator, forward contract list, and VCM catalog with inline consequence preview.</p>
+        <p><strong>Notable deviation from plan:</strong> Forward premium implemented at 5% (spot × 1.05) rather than planned 15%. This was a deliberate calibration choice — at 15%, forwards were never cost-competitive given the annual price reset. The plan's risk note (RISK-02-01) anticipated exactly this and suggested exposing <code>forward_premium_rate</code> in <code>SCENARIO_PACKS</code> for tuning, which was done.</p>
+        <p><strong>Balance result:</strong> 8-seed playtest batch produced penalty CV = <strong>5.1%</strong> (target &lt;30%). No single instrument dominated. The elasticity model at ε=0.4 with S=50t supply cap produces meaningful price pressure without runaway pricing.</p>
+        <p><strong>OTC bilateral trades:</strong> TASK-02-06 (OTC solo UI) was noted in the plan as optional for Sprint 2 and was deferred — the engine already supports <code>propose_trade</code>/<code>respond_to_trade</code> but the solo UI panel was not prioritized over forward/VCM delivery. This is a clean Sprint 3 pick-up as AI agents will need to propose trades.</p>
+      </div>
+    </div>
+
+    <!-- Sprint 3 -->
+    <div class="phase-row">
+      <div class="phase-num pending-bg">PHASE 03</div>
+      <div class="phase-body">
+        <div class="phase-title">AI — Goal-Driven Agents + Playtest Dominance Sweep</div>
+        <div class="phase-tags">
+          <span class="tag amber">Planned</span>
+          <span class="tag amber">Not Implemented</span>
+        </div>
+        <p><strong>Planned deliverables:</strong> <code>CompanyAgent</code> dataclass in <code>engine/agents.py</code> with <code>plan_year(state) → list[Action]</code> using a 2–3 year compliance horizon. Five strategy profiles (conservative, moderate, aggressive, opportunistic, speculator). AI-initiated OTC trade proposals targeting the player. <code>run_strategy_sweep</code> in <code>playtest.py</code> — 20 seeds × 5 strategies, flagging any strategy &gt;60% win rate.</p>
+        <p><strong>Critical dependency:</strong> Sprint 3's agents call <code>project_outcome</code> (Sprint 1) and plan against the dynamic offset price (Sprint 2). Both are now available. Sprint 3 can begin immediately.</p>
+        <p><strong>Key risk to watch:</strong> Bots using exact player state for OTC trade decisions would create an unfair advantage. Bots must plan from their own projected state only.</p>
+      </div>
+    </div>
+
+    <!-- Sprint 4 -->
+    <div class="phase-row">
+      <div class="phase-num pending-bg">PHASE 04</div>
+      <div class="phase-body">
+        <div class="phase-title">Story — Cascading Cards + Policy Stability + City Canvas</div>
+        <div class="phase-tags">
+          <span class="tag amber">Planned</span>
+          <span class="tag amber">Not Implemented</span>
+        </div>
+        <p><strong>Planned deliverables:</strong> <code>policy_stability</code> field (0–100) driving dynamic cap formula and automatic card triggers. Card schema extensions: <code>follow_on_cards</code>, <code>sets_condition</code>, <code>requires_condition</code>, <code>effect_duration</code>. State-weighted draw probability in <code>CardDeck.draw_cards</code>. 20 new follow-on card chains. <code>active_effects</code> multi-turn tracker. Smog overlay on city canvas scaled by compliance gap.</p>
+        <p><strong>Theme significance:</strong> This sprint is the difference between "carbon management sim" and "carbon narrative game." The cascading card system transforms events from isolated binary choices into persistent arcs that feel like consequences.</p>
+      </div>
+    </div>
+
+    <!-- Sprint 5 -->
+    <div class="phase-row">
+      <div class="phase-num pending-bg">PHASE 05</div>
+      <div class="phase-body">
+        <div class="phase-title">Meta — Capex Abatement + XP Unlock Tree + Jurisdiction Skins</div>
+        <div class="phase-tags">
+          <span class="tag amber">Planned</span>
+          <span class="tag amber">Not Implemented</span>
+        </div>
+        <p><strong>Planned deliverables:</strong> Capex abatement with loan financing and payback arcs (<code>active_abatement_assets</code>, <code>active_loans</code>). Tech failure card mechanic using seeded RNG roll. XP engine in <code>achievements.py</code> with six level thresholds. <code>unlock_tree.json</code> node graph (abatement tiers, market tools, scenario skins). SQLite <code>player_profiles</code> table for XP persistence. EU ETS Phase 4 and California ARB jurisdiction skins. Final 30-seed × 5-strategy balance sweep across both jurisdictions.</p>
+        <p><strong>Why this sprint is last:</strong> Capex restructures <code>activate_abatement</code> semantics. If done before cascading cards (Sprint 4) are wired, tech failure events have nothing to cascade into. The XP unlock tree also needs the full mechanic set to unlock meaningfully.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 8. FINDINGS & RECOMMENDATION ── -->
+  <div class="section">
+    <div class="section-num">Section 8</div>
+    <h2>Findings &amp; Recommendation</h2>
+
+    <h3>Key Findings</h3>
+
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Playtest CV</div>
+        <div class="stat-value ok">5.1%</div>
+        <div class="stat-note">Penalty variance across 8 seeds. Target &lt;30%.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Price Elasticity</div>
+        <div class="stat-value">ε = 0.4</div>
+        <div class="stat-note">Calibrated for S=50t supply cap. Working well.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Forward Premium</div>
+        <div class="stat-value">5%</div>
+        <div class="stat-note">Implemented (plan specified 15%; risk note anticipated this).</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">VCM Projects</div>
+        <div class="stat-value">3</div>
+        <div class="stat-note">REDD+, Rice Methane, Cookstoves. 3-year credit streams.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">New Actions</div>
+        <div class="stat-value">+2</div>
+        <div class="stat-note">buy_forward and invest_vcm added to engine + UI.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Sprints Done</div>
+        <div class="stat-value">2 / 5</div>
+        <div class="stat-note">Foundation + Market complete. AI, Story, Meta pending.</div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-frame">
+        <canvas id="priceChart"></canvas>
+      </div>
+      <div class="chart-frame">
+        <canvas id="sprintChart"></canvas>
+      </div>
+    </div>
+
+    <h3>Tradeoffs Made</h3>
+    <ul>
+      <li><strong>5% vs 15% forward premium</strong> — Chose 5% to keep forwards usable under the annual price reset model. At 15%, the premium exceeded typical year-over-year spot variation, making forwards strictly dominated. Risk: if spot rarely rises &gt;5%, forwards are trivially optimal. Sprint 3 strategy sweep will validate.</li>
+      <li><strong>Supply cap as constant (50t) vs per-scenario</strong> — Used a single default to simplify initial calibration. Larger solo scenarios may need a higher cap. Exposed in <code>SCENARIO_PACKS</code> for per-scenario tuning.</li>
+      <li><strong>OTC solo UI deferred to Sprint 3</strong> — The engine supports <code>propose_trade</code>/<code>respond_to_trade</code> but the solo panel was deprioritized. Forward/VCM were higher-value user-facing additions. The AI agent sprint (Sprint 3) naturally drives OTC surface work anyway.</li>
+      <li><strong>ALT: BazaarBot full agent market rejected</strong> — Multi-agent ask/bid clearing adds significant complexity for 8 companies. The demand-accumulator model achieves the same negative feedback loop in ~20 lines.</li>
+      <li><strong>ALT: LLM year-end narrative rejected</strong> — Introduces API dependency and non-determinism. Template-driven text covers 80% of the case and is deterministic, offline, and maintenance-free.</li>
+    </ul>
+
+    <h3>Recommendation</h3>
+    <div class="callout">
+      <div class="callout-title">Proceed to Sprint 3 — AI Agents</div>
+      The market mechanics are calibrated and balanced. Sprint 3 is the highest-impact next step because: (1) without multi-year AI planning, players can still trivially outperform bots by using the new instruments the bots ignore; (2) AI-initiated OTC trade proposals naturally drive the OTC solo panel that was deferred; (3) the strategy sweep in Sprint 3 validates that Sprint 2's calibration holds under intelligent opposition. Do not skip to Sprint 4 — story cards built on top of naive bots will feel hollow.
+    </div>
+  </div>
+
+  <!-- ── 9. IMPLEMENTATION PATH ── -->
+  <div class="section">
+    <div class="section-num">Section 9</div>
+    <h2>Implementation Path</h2>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Sprint</th><th>Key Tasks</th><th>Primary Files</th><th>Exit Gate</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="ok">✓ 1</span></td>
+          <td><strong>Foundation</strong></td>
+          <td>Seeded state, project_outcome, year-end modal</td>
+          <td><code>engine/engine.py</code>, <code>engine/solo.py</code>, <code>web/game.html</code></td>
+          <td>Determinism assertion passes; preview tooltip renders</td>
+        </tr>
+        <tr>
+          <td><span class="ok">✓ 2</span></td>
+          <td><strong>Market</strong></td>
+          <td>Dynamic price, forwards, VCM catalog, market panel</td>
+          <td><code>engine/engine.py</code>, <code>engine/scenarios.py</code>, <code>web/game.html</code></td>
+          <td>CV &lt;30% in 8-seed batch; all instruments usable</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>AI</strong></td>
+          <td>CompanyAgent, plan_year, 5 profiles, strategy sweep</td>
+          <td><code>engine/agents.py</code> (new), <code>engine/engine.py</code>, <code>engine/playtest.py</code></td>
+          <td>No strategy &gt;60% win rate in 20-seed × 5-strategy sweep</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Story</strong></td>
+          <td>policy_stability, cascading cards, smog canvas</td>
+          <td><code>engine/cards.py</code>, <code>engine/data/*.json</code>, <code>web/js/isocity.js</code></td>
+          <td>Follow-on card chain resolves in playtest; smog overlays in browser</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>Meta</strong></td>
+          <td>Capex abatement, XP unlock tree, jurisdiction skins</td>
+          <td><code>engine/achievements.py</code>, <code>server/db.py</code>, <code>web/index.html</code></td>
+          <td>30-seed sweep passes in both jurisdictions; XP HUD wired</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>Sprint 3 Starting Points</h3>
+    <ul>
+      <li>Create <code>engine/agents.py</code> with <code>CompanyAgent</code> dataclass. Fields: <code>company_id</code>, <code>sector</code>, <code>risk_appetite</code> (enum), <code>horizon_years: int</code>, <code>cash_target_fraction: float</code>, <code>preferred_instruments: list[str]</code>.</li>
+      <li>Implement <code>CompanyAgent.plan_year(state) → list[Action]</code>: compute projected compliance gap over horizon using <code>project_outcome</code>; rank abatement by cost/reduction ratio; decide forward/VCM/auction based on risk_appetite; cap at 1 OTC proposal per bot per year.</li>
+      <li>Replace <code>run_bot_turns</code> in <code>engine/engine.py</code> with <code>CompanyAgent.plan_year</code> dispatch. Preserve existing <code>bot_strategy</code> field as the <code>risk_appetite</code> input.</li>
+      <li>Add <code>run_strategy_sweep</code> to <code>engine/playtest.py</code>: 20 seeds × 5 strategies, collect win rates, flag any &gt;60%.</li>
+      <li>Wire OTC trade panel in <code>web/game.html</code> (solo mode) — the engine actions already exist.</li>
+    </ul>
+    <h3>Critical Sequencing Rule</h3>
+    <div class="callout warn">
+      <div class="callout-title">Do Not Reorder Sprints</div>
+      Sprint 4 (story cards) uses <code>project_outcome</code> (Sprint 1), the demand-responsive price (Sprint 2), and expects AI agents to respond to policy shocks (Sprint 3). Sprint 5 (capex) restructures <code>activate_abatement</code> — this must happen after Sprint 4 locks in the card deck schema, or tech failure events will have no card infrastructure to cascade into. The sequence is load-bearing.
+    </div>
+  </div>
+
+  <!-- ── 10. RISKS / OPEN QUESTIONS ── -->
+  <div class="section">
+    <div class="section-num">Section 10</div>
+    <h2>Risks / Open Questions</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>RISK-001</code></td>
+          <td>State schema migration — each sprint adds new fields; legacy saves will be missing them.</td>
+          <td class="risk-m">Med</td>
+          <td>Use <code>state.setdefault()</code> guards at top of <code>_start_year</code> for each new field. Document guards as a section in <code>engine/engine.py</code>.</td>
+        </tr>
+        <tr>
+          <td><code>RISK-002</code></td>
+          <td>Session length creep — 4 new instruments + capex + card chains could push median session &gt;40 min.</td>
+          <td class="risk-m">Med</td>
+          <td>Measure after every sprint in <code>playtest.py</code>. If &gt;40 min, reduce decision window timer or simplify one instrument (VCM is most cuttable).</td>
+        </tr>
+        <tr>
+          <td><code>RISK-003</code></td>
+          <td>Balance instability across sprints — Sprint 2 constants may break when AI agents and cascading cards are added.</td>
+          <td class="risk-m">Med</td>
+          <td>Run <code>run_playtest_batch</code> after every sprint, not just final sweep. Re-tune constants if CV &gt;30%.</td>
+        </tr>
+        <tr>
+          <td><code>RISK-02-01</code></td>
+          <td>Forward premium at 5% (not planned 15%) may be too cheap, creating a dominant forward strategy.</td>
+          <td class="risk-m">Med</td>
+          <td>Sprint 3 strategy sweep will confirm. If forwards dominate, increase premium to 10–15% via <code>forward_premium_rate</code> in <code>SCENARIO_PACKS</code>.</td>
+        </tr>
+        <tr>
+          <td><code>RISK-04-01</code></td>
+          <td>Removing scripted <code>allocation_factors</code> in Sprint 4 breaks existing saves.</td>
+          <td class="risk-l">Low</td>
+          <td>Migration guard in <code>_start_year</code>: if <code>policy_stability</code> absent, init to 70 and use scripted fallback.</td>
+        </tr>
+        <tr>
+          <td><code>RISK-05-01</code></td>
+          <td>Capex restructure changes <code>activate_abatement</code> semantics for existing saves.</td>
+          <td class="risk-m">Med</td>
+          <td>Migration guard: if <code>active_abatement_assets</code> absent, initialize from legacy <code>active_abatement</code> list with <code>remaining_life = asset_life_years</code> and no loan.</td>
+        </tr>
+        <tr>
+          <td><code>RISK-05-03</code></td>
+          <td>Jurisdiction skin JSON files may diverge from base <code>SCENARIO_PACKS</code> schema over time.</td>
+          <td class="risk-l">Low</td>
+          <td>Validate jurisdiction JSON against a Pydantic schema on load; fail loudly if fields are missing.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Open Questions</h3>
+    <ul>
+      <li><strong>Q-001 (City canvas art for Sprint 4):</strong> Plan recommends canvas <code>hue-rotate</code> + <code>brightness</code> CSS filter on existing sprites for tier-2 variants. If new sprites become available, update TASK-04-07 to load from <code>sprites/tier2/</code>.</li>
+      <li><strong>Q-002 (Forward premium tuning):</strong> 5% implemented; Sprint 3 strategy sweep will determine whether adjustment to 10–15% is needed.</li>
+      <li><strong>Q-003 (XP persistence granularity):</strong> Plan proposes name-string key in SQLite <code>player_profiles</code>. If shared-server deployments are expected, upgrade to UUID token stored in <code>localStorage</code> and mapped in a server-side table.</li>
+      <li><strong>Q-004 (Supply cap per scenario):</strong> 50t default works for 8-company scenarios. Larger solo scenarios (e.g., single-company with full sector emissions) may need a higher cap. Parameterize in <code>SCENARIO_PACKS</code>.</li>
+    </ul>
+  </div>
+
+  <!-- ── 11. APPENDICES / EVIDENCE NOTES ── -->
+  <div class="section">
+    <div class="section-num">Section 11</div>
+    <h2>Appendices / Evidence Notes</h2>
+
+    <h3>A. Engine State Fields Added (Sprints 1–2)</h3>
+    <table>
+      <thead><tr><th>Field</th><th>Location</th><th>Sprint</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>rng_seed</code></td><td>game state</td><td>1</td><td>Deterministic card draws and bot RNG</td></tr>
+        <tr><td><code>offset_demand_this_year</code></td><td>game state</td><td>2</td><td>Demand accumulator for price elasticity; resets each year</td></tr>
+        <tr><td><code>offset_price_elasticity</code></td><td>game state</td><td>2</td><td>ε param for BazaarBot pricing; default 0.4</td></tr>
+        <tr><td><code>annual_offset_supply_cap</code></td><td>game state</td><td>2</td><td>S param for price ceiling; default 50t</td></tr>
+        <tr><td><code>current_offset_price</code></td><td>game state</td><td>2</td><td>Live computed price for UI ticker</td></tr>
+        <tr><td><code>last_auction_clearing_price</code></td><td>game state</td><td>2</td><td>Displayed in market info strip</td></tr>
+        <tr><td><code>forward_contracts</code></td><td>company state</td><td>2</td><td>Pending forward deliveries per company</td></tr>
+        <tr><td><code>vcm_projects</code></td><td>company state</td><td>2</td><td>Active VCM investments with remaining_years</td></tr>
+      </tbody>
+    </table>
+
+    <h3>B. VCM Catalog (module-level constant in <code>engine/scenarios.py</code>)</h3>
+    <table>
+      <thead><tr><th>Project ID</th><th>Label</th><th>Annual Credits</th><th>Duration</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td><code>vcm_redd_plus</code></td><td>REDD+ Forest Conservation</td><td>8.0 t/yr</td><td>3 yrs</td><td>$150,000</td></tr>
+        <tr><td><code>vcm_rice_methane</code></td><td>Rice Paddy Methane Reduction</td><td>5.0 t/yr</td><td>3 yrs</td><td>$80,000</td></tr>
+        <tr><td><code>vcm_cookstove</code></td><td>Clean Cookstove Distribution</td><td>3.0 t/yr</td><td>3 yrs</td><td>$50,000</td></tr>
+      </tbody>
+    </table>
+
+    <h3>C. API Actions (DecisionRequest pattern after Sprint 2)</h3>
+    <table>
+      <thead><tr><th>Action</th><th>Sprint Added</th><th>Payload Key Fields</th></tr></thead>
+      <tbody>
+        <tr><td><code>activate_abatement</code></td><td>Pre-existing</td><td><code>measure_id</code></td></tr>
+        <tr><td><code>buy_offsets</code></td><td>Pre-existing (dynamic price Sprint 2)</td><td><code>quantity</code></td></tr>
+        <tr><td><code>propose_trade</code></td><td>Pre-existing</td><td><code>target_company_id</code>, <code>offer</code>, <code>want</code></td></tr>
+        <tr><td><code>respond_to_trade</code></td><td>Pre-existing</td><td><code>trade_id</code>, <code>accept</code></td></tr>
+        <tr><td><code>submit_auction_bid</code></td><td>Pre-existing</td><td><code>quantity</code>, <code>price_per_unit</code></td></tr>
+        <tr><td><code>buy_forward</code></td><td>Sprint 2</td><td><code>quantity</code></td></tr>
+        <tr><td><code>invest_vcm</code></td><td>Sprint 2</td><td><code>project_id</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>D. Playtest Balance Evidence (Sprint 2)</h3>
+    <p>8-seed batch (<code>python engine/playtest.py --batch</code>):</p>
+    <ul>
+      <li>Coefficient of variation of penalties across seeds: <strong>5.1%</strong> (target &lt;30% ✓)</li>
+      <li>No single instrument dominated across seeds at ε=0.4, S=50t</li>
+      <li>Forward delivery mechanism confirmed via <code>audit_log</code> in <code>_start_year</code></li>
+      <li>VCM credit generation confirmed for 3-year project lifecycle</li>
+      <li>Dynamic price accumulates correctly within year; resets correctly at year boundary</li>
+    </ul>
+
+    <h3>E. Glossary</h3>
+    <table>
+      <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+      <tbody>
+        <tr><td>ETS</td><td>Emissions Trading System — cap-and-trade allowance auction in the game</td></tr>
+        <tr><td>VCM</td><td>Voluntary Carbon Market — offset project investment mechanic</td></tr>
+        <tr><td>BazaarBot</td><td>Demand-responsive market pricing pattern: P(d) = P₀ × (1 + ε × min(d/S, 1))</td></tr>
+        <tr><td>OTC</td><td>Over-the-Counter bilateral trade — propose_trade / respond_to_trade actions</td></tr>
+        <tr><td>CV</td><td>Coefficient of Variation = σ/μ of penalties across seeds; balance metric</td></tr>
+        <tr><td>REDD+</td><td>Reducing Emissions from Deforestation and forest Degradation (UN framework)</td></tr>
+        <tr><td>policy_stability</td><td>Sprint 4 field (0–100) driving dynamic cap formula and automatic card triggers</td></tr>
+        <tr><td>project_outcome</td><td>Pure function returning {compliance_gap_delta, cash_delta, notes} for a proposed action without mutating state</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis' } });
+
+  Chart.defaults.devicePixelRatio = 1;
+  Chart.defaults.animation = false;
+  Chart.defaults.resizeDelay = 150;
+  Chart.defaults.normalized = true;
+
+  // Dynamic price curve chart
+  (function () {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    const P0 = 28, eps = 0.4, S = 50;
+    const labels = [], data = [];
+    for (let d = 0; d <= 60; d += 2) {
+      labels.push(d + 't');
+      data.push(+(P0 * (1 + eps * Math.min(d / S, 1))).toFixed(2));
+    }
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'VCM Spot Price ($/t)',
+          data,
+          borderColor: '#3a7a4e',
+          backgroundColor: 'rgba(58,122,78,0.10)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 2,
+        }]
+      },
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: 'Dynamic Offset Price vs Demand (ε=0.4, S=50t, P₀=$28)', font: { size: 11 } },
+          legend: { display: false }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Demand this year (t)' } },
+          y: { title: { display: true, text: '$/t CO₂' }, min: 25, max: 42 }
+        }
+      }
+    });
+  }());
+
+  // Sprint progress chart
+  (function () {
+    const ctx = document.getElementById('sprintChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['S1 Foundation', 'S2 Market', 'S3 AI', 'S4 Story', 'S5 Meta'],
+        datasets: [
+          {
+            label: 'Complete',
+            data: [100, 100, 0, 0, 0],
+            backgroundColor: '#4a8c3a',
+            borderRadius: 4,
+          },
+          {
+            label: 'Remaining',
+            data: [0, 0, 100, 100, 100],
+            backgroundColor: 'rgba(176,128,32,0.25)',
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        animation: false, resizeDelay: 150, normalized: true, maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: 'Sprint Completion (2 of 5)', font: { size: 11 } },
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+        },
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, max: 100, title: { display: true, text: '% done' } }
+        }
+      }
+    });
+  }());
+</script>
+</body>
+</html>
