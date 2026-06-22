@@ -17,11 +17,21 @@ pip install -e engine/
 
 ## Running the Server
 
-```bash
-uvicorn server.main:create_app --factory --reload
+### Quickest way (Windows — from the project folder)
+
+Double-click `start.bat`, or in any terminal opened inside the folder:
+
+```bat
+start.bat
 ```
 
-Open `http://localhost:8000` in a browser.
+### Manual command (any OS)
+
+```bash
+python scripts/preview_run.py
+```
+
+Both methods start the FastAPI server and print the URL. Open the URL printed in the console — usually **http://localhost:8000** — in a browser. Port 8000 is used by default; if it is already in use, the server picks the next free port automatically.
 
 ## Running Tests
 
