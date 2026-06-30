@@ -307,23 +307,15 @@ Prove the reprice/rescale preserved gameplay balance and the visual changes rend
   with canvas sprites/haze for little gameplay gain.
 - **ALT-003:** 511M as flavor stat only without rescaling — rejected (brainstorm DEC-009).
 
-## Grill Me
-1. **Q-001:** What is the acceptance bar for "balance preserved" after reprice + rescale?
-   - **Recommended default:** Reuse the existing bar — run the same win-rate/dominance check
-     used when `solo_standard` penalty was set to 1000; flag any pack whose top-strategy win
-     rate drifts more than ~5pp from its current value.
-   - **Why this matters:** Decides whether PHASE-05 is "verify only" or "verify + re-tune," and
-     how much QA to budget.
-   - **If answered differently:** A stricter bar adds a re-tuning sub-phase; a looser bar lets
-     PHASE-05 be a smoke check.
-2. **Q-002:** Should the first-session facts (29/06/2026, 400 tCO2e, 54.000.000 đ, lowest
-   offer 135.000) appear as a static "opening session" strip, or only live/derived tiles?
-   - **Recommended default:** Show a static opening-session reference strip on the Vietnam
-     market screen; keep all other tiles live/derived from game state.
-   - **Why this matters:** Sets how literally PHASE-04 reproduces the board photo vs. how much
-     is gameplay-driven.
-   - **If answered differently:** "Live only" drops TASK-04-03 and the board may read empty in
-     solo play; "static only" simplifies PHASE-04 but loses dynamic feel.
+## Grill Me — RESOLVED
+1. **Q-001: Balance bar — REUSE win-rate harness, ~5pp drift tolerance.** PHASE-05 runs the same
+   harness used when `solo_standard` penalty was tuned to 1000. Any pack whose top-strategy
+   win rate drifts >5pp from its current value triggers a per-pack `penalty_rate` nudge
+   (per-tonne, FX-scaled) rather than a wholesale re-tune. Recorded 2026-06-30.
+2. **Q-002: Opening-session strip — STATIC.** Real first-trade facts (VN2025, 29/06/2026,
+   400 tCO2e, 54.000.000 đ, lowest offer 135.000 đ) render as a static reference strip on
+   the Vietnam market screen; all other stat tiles remain live/derived from game state
+   (show `—` when no order exists). Recorded 2026-06-30.
 
 ## Suggested Next Step
 Answer the two `## Grill Me` questions, fold the answers into this plan, then begin

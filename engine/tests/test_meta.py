@@ -144,14 +144,16 @@ class JurisdictionTests(unittest.TestCase):
     def test_eu_ets_overlay_applies(self):
         state = engine.create_initial_state(participant_count=1, scenario="solo_standard", jurisdiction="eu_ets")
         self.assertEqual(state["jurisdiction"], "eu_ets")
-        self.assertEqual(state["penalty_rate"], 950.0)
+        # 2026-06-30 VND reprice: 950 -> 950 × 5440 (VND_FX) -> 5,168,000
+        self.assertEqual(state["penalty_rate"], 5_168_000.0)
         names = [c["company_name"].split(" ")[0] for c in state["companies"]]
         self.assertIn("Ruhr", names)
 
     def test_vietnam_default_unchanged(self):
         state = engine.create_initial_state(participant_count=1, scenario="solo_standard")
         self.assertEqual(state["jurisdiction"], "vietnam")
-        self.assertEqual(state["penalty_rate"], 1000.0)  # Sprint 3 tuned value
+        # 2026-06-30 VND reprice: 1000 -> 1000 × 5440 (VND_FX) -> 5,440,000
+        self.assertEqual(state["penalty_rate"], 5_440_000.0)  # Sprint 3 tuned value, VND
 
     def test_load_jurisdiction_missing_returns_empty(self):
         self.assertEqual(load_jurisdiction("atlantis"), {})

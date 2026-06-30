@@ -329,7 +329,9 @@ class TestNewShockTypes(unittest.TestCase):
         self.state = apply_shock(self.state, shock_type="fdi_proposal", magnitude=0.1, now=self.now)
         after = [c["cash"] for c in self.state["companies"]]
         for b, a in zip(before, after):
-            self.assertAlmostEqual(a, round(b * 1.1, 2))
+            # delta=1.0 absorbs float-rounding drift at the post-FX × V cash
+            # scale (5e15 đ); the underlying math is exact in đ.
+            self.assertAlmostEqual(a, round(b * 1.1, 2), delta=1.0)
 
     def test_cbam_threat_increases_penalty_rate(self):
         from engine.engine import apply_shock
@@ -359,7 +361,9 @@ class TestNewShockTypes(unittest.TestCase):
         self.state = apply_shock(self.state, shock_type="cash_boost", magnitude=0.08, now=self.now)
         after = [c["cash"] for c in self.state["companies"]]
         for b, a in zip(before, after):
-            self.assertAlmostEqual(a, round(b * 1.08, 2))
+            # delta=1.0 absorbs float-rounding drift at the post-FX × V cash
+            # scale (5e15 đ); the underlying math is exact in đ.
+            self.assertAlmostEqual(a, round(b * 1.08, 2), delta=1.0)
 
     def test_shock_appears_in_active_shocks(self):
         from engine.engine import apply_shock

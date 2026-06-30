@@ -95,12 +95,14 @@ class EngineTests(unittest.TestCase):
                 state, auction_id=auction["auction_id"], now=utc(second=1)
             )
             for company in state["companies"]:
+                # 2026-06-30 VND rescale: vietnam_pilot auction collar is
+                # 435,200–1,632,000 đ/tCO2e. Bid within the collar.
                 state = engine.submit_auction_bid(
                     state,
                     company_id=company["company_id"],
                     auction_id=auction["auction_id"],
                     quantity=10,
-                    price=100,
+                    price=1_000_000.0,
                     now=utc(second=2),
                 )
             state = engine.close_auction(
@@ -200,6 +202,8 @@ class EngineTests(unittest.TestCase):
 
         seller = state["companies"][0]
         buyer = state["companies"][1]
+        seller_cash0 = seller["cash"]
+        buyer_cash0 = buyer["cash"]
         seller["allowances"] = 100
         buyer["allowances"] = 0
         qty = 30
@@ -229,8 +233,10 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(trade["trade_id"], trade_id) if False else None
         self.assertAlmostEqual(seller["allowances"], 100 - qty)
         self.assertAlmostEqual(buyer["allowances"], qty)
-        self.assertAlmostEqual(seller["cash"], 1_500_000.0 + qty * price)
-        self.assertAlmostEqual(buyer["cash"], 1_250_000.0 - qty * price)
+        # 2026-06-30 VND rescale: capture starting cash at the post-FX × V
+        # scale and assert the delta from the trade, not the absolute value.
+        self.assertAlmostEqual(seller["cash"], seller_cash0 + qty * price)
+        self.assertAlmostEqual(buyer["cash"], buyer_cash0 - qty * price)
 
     def test_build_player_snapshot_returns_expected_structure(self):
         state = engine.create_initial_state(participant_count=2)

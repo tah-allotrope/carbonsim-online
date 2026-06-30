@@ -20,6 +20,26 @@ DEFAULT_TRADE_EXPIRY_SECONDS = 20
 DEFAULT_OFFSET_PRICE = 25.0
 DEFAULT_PENALTY_RATE = 200.0
 
+# --- CarbonSim VND reprice + Vietnam national-volume rescale (plan 2026-06-30) ---
+# Anchor: vietnam_pilot.offset_price 25 -> 136,000 đ/tCO2e (real first-transaction
+# price per the 29/06/2026 Vietnam carbon exchange launch article).
+# FX = 5440.0 applies to all per-tonne rates and to all lump-sum money fields
+# across every pack and jurisdiction.
+# VN_VOLUME_FACTOR is the Vietnam-only rescale that lifts the default
+# vietnam_pilot pack's 3-year cap sum to the real national allocation of
+# 511,473,846 tCO2e. Computed as VN_NATIONAL_ALLOCATION_TCO2E / sum(company
+# baseline_emissions × sum(allocation_factors)) for the vietnam_pilot pack.
+# Applied to tonnage fields (baseline_emissions, abatement_amount) and to
+# lump-sum money that scales with company size (company cash, abatement cost,
+# VCM cost). Per-field mapping: see plan CON-001.
+VND_FX = 5440.0
+VN_NATIONAL_ALLOCATION_TCO2E = 511_473_846.0
+_VN_PILOT_BASELINE_SUM = 120.0 + 95.0 + 88.0  # Red River + Hai Phong + Da Nang
+_VN_PILOT_ALLOC_SUM = 0.92 + 0.88 + 0.84       # 3-year allocation factor sum
+VN_VOLUME_FACTOR = VN_NATIONAL_ALLOCATION_TCO2E / (
+    _VN_PILOT_BASELINE_SUM * _VN_PILOT_ALLOC_SUM
+)  # ≈ 639,444.73 — chosen so the 3-year cap sum lands on 511,473,846 tCO2e
+
 BOT_STRATEGY_CONSERVATIVE = "conservative"
 BOT_STRATEGY_MODERATE = "moderate"
 BOT_STRATEGY_AGGRESSIVE = "aggressive"

@@ -21,6 +21,7 @@ from .constants import (
     DEFAULT_TRADE_EXPIRY_SECONDS,
     DEFAULT_OFFSET_PRICE,
     DEFAULT_PENALTY_RATE,
+    VND_FX,
     BOT_STRATEGY_CONSERVATIVE,
     BOT_STRATEGY_MODERATE,
     BOT_STRATEGY_AGGRESSIVE,
@@ -244,17 +245,34 @@ def load_unlock_tree() -> list[dict[str, Any]]:
 
 
 def load_jurisdiction(jurisdiction: str) -> dict[str, Any]:
-    """Load a jurisdiction skin overlay (TASK-05-08). Returns {} if absent."""
+    """Load a jurisdiction skin overlay (TASK-05-08). Returns {} if absent.
+
+    Money fields are FX'd to VND at load time so the JSON stays human-readable
+    in the original per-tonne units. The Vietnam volume factor is intentionally
+    NOT applied: jurisdiction overlays (EU/CA) keep their own realistic
+    tonnages, and their company cash reflects an EU/California industrial
+    budget, not the Vietnam national-scale rescale (plan DEC-002).
+    """
     import json
+    from copy import deepcopy
     from pathlib import Path
 
     if not jurisdiction or jurisdiction == "vietnam":
         return {}
     path = Path(__file__).parent / "data" / "jurisdictions" / f"{jurisdiction}.json"
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
+
+    overlay = deepcopy(raw)
+    for key in ("penalty_rate", "offset_price", "auction_price_floor", "auction_price_ceiling"):
+        if key in overlay:
+            overlay[key] = round(overlay[key] * VND_FX, 2)
+    for company in overlay.get("company_library", []):
+        if "cash" in company:
+            company["cash"] = round(company["cash"] * VND_FX, 2)
+    return overlay
 
 
 def apply_company_decision(
