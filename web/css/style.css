@@ -179,6 +179,71 @@ label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8r
 .stat-value.green { color: var(--green); }
 .stat-value.red { color: var(--red); }
 
+/* 2026-06-30 PHASE-04 — Vietnam carbon exchange "trading board" tiles.
+   Same monospace tickers as the surrounding stat cards; cyan/teal accent
+   border + label reads as the "active / listed" board language. */
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.board-tile {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  box-shadow: 0 1px 3px rgba(74, 59, 45, 0.06);
+  transition: transform 0.15s ease;
+}
+.board-tile:hover { transform: translateY(-1px); }
+.board-tile-label {
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+  font-family: var(--mono);
+}
+.board-tile-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+/* 2026-06-30 PHASE-04 — Opening-session reference strip. Static, VN-only.
+   Mimics the "opening session" annotation row on the real board. */
+.opening-session-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(8, 145, 178, 0.06);
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  font-family: var(--mono);
+  color: var(--text);
+}
+.opening-session-tag {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.opening-session-date { color: var(--accent-ink); font-weight: 700; }
+.opening-session-sep { color: var(--muted); opacity: 0.6; }
+.opening-session-cell strong { color: var(--text); font-weight: 700; }
+.opening-session-pill { font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; }
+
 .header {
   display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: 12px; margin-bottom: 20px;

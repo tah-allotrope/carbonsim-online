@@ -123,5 +123,83 @@ class JurisdictionFXTests(unittest.TestCase):
         self.assertEqual(ruhr["baseline_emissions"], 120.0)
 
 
+class MarketBoardSnapshotTests(unittest.TestCase):
+    """2026-06-30 PHASE-04 — the six board stat tiles surface in the
+    player snapshot under ``market_board``. Live/derived from state where
+    possible; ``None`` for absent data (plan ASM-002)."""
+
+    def _make_state(self, scenario="vietnam_pilot"):
+        from engine import engine
+        state = engine.create_initial_state(participant_count=1, scenario=scenario)
+        state = engine.start_simulation(state, __import__("datetime").datetime(2026, 1, 1, tzinfo=__import__("datetime").timezone.utc))
+        return state
+
+    def test_vietnam_total_allocated_quota_anchors_511m(self):
+        from engine import engine
+        import datetime
+        state = engine.create_initial_state(participant_count=1, scenario="vietnam_pilot")
+        state = engine.start_simulation(
+            state, datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+        )
+        snap = engine.build_player_snapshot(
+            state, company_id="C01", is_facilitator=False, participant_label="P",
+            now=datetime.datetime(2026, 1, 2, tzinfo=datetime.timezone.utc),
+        )
+        self.assertIn("market_board", snap)
+        board = snap["market_board"]
+        self.assertEqual(board["total_allocated_quota"], VN_NATIONAL_ALLOCATION_TCO2E)
+
+    def test_latest_execution_price_falls_back_to_offset(self):
+        from engine import engine
+        import datetime
+        state = engine.create_initial_state(participant_count=1, scenario="vietnam_pilot")
+        state = engine.start_simulation(
+            state, datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+        )
+        snap = engine.build_player_snapshot(
+            state, company_id="C01", is_facilitator=False, participant_label="P",
+            now=datetime.datetime(2026, 1, 2, tzinfo=datetime.timezone.utc),
+        )
+        board = snap["market_board"]
+        # No auction cleared yet, so falls back to the (FX'd) offset price.
+        self.assertEqual(
+            board["latest_execution_price"],
+            SCENARIO_PACKS["vietnam_pilot"]["offset_price"],
+        )
+
+    def test_empty_bid_and_offer_are_none(self):
+        from engine import engine
+        import datetime
+        state = engine.create_initial_state(participant_count=1, scenario="vietnam_pilot")
+        state = engine.start_simulation(
+            state, datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+        )
+        snap = engine.build_player_snapshot(
+            state, company_id="C01", is_facilitator=False, participant_label="P",
+            now=datetime.datetime(2026, 1, 2, tzinfo=datetime.timezone.utc),
+        )
+        board = snap["market_board"]
+        self.assertIsNone(board["best_bid"])
+        self.assertIsNone(board["lowest_offer"])
+        self.assertEqual(board["total_trade_volume"], 0.0)
+        self.assertEqual(board["total_trade_value"], 0.0)
+
+    def test_eu_jurisdiction_keeps_own_total(self):
+        from engine import engine
+        import datetime
+        state = engine.create_initial_state(participant_count=1, scenario="solo_standard", jurisdiction="eu_ets")
+        state = engine.start_simulation(
+            state, datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+        )
+        snap = engine.build_player_snapshot(
+            state, company_id="C01", is_facilitator=False, participant_label="P",
+            now=datetime.datetime(2026, 1, 2, tzinfo=datetime.timezone.utc),
+        )
+        board = snap["market_board"]
+        # EU total is NOT 511M — it's the jurisdiction's own realistic sum.
+        self.assertNotEqual(board["total_allocated_quota"], VN_NATIONAL_ALLOCATION_TCO2E)
+        self.assertGreater(board["total_allocated_quota"], 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

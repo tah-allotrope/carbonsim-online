@@ -1062,6 +1062,11 @@ def build_player_snapshot(
         "offset_demand_this_year": state.get("offset_demand_this_year", 0.0),
         "annual_offset_supply_cap": state.get("annual_offset_supply_cap", 50.0),
         "vcm_catalog": VCM_CATALOG,
+        # 2026-06-30 PHASE-04 — board stat tiles. Headline values for the
+        # Vietnam carbon exchange "trading board" view; live/derived from
+        # current game state where possible, with `None` for absent data
+        # so the UI can render "—" (plan ASM-002).
+        "market_board": _build_market_board(state),
         # Sprint 4 — policy climate.
         "policy_stability": state.get("policy_stability", 70.0),
         "policy_climate": _policy_climate_label(state.get("policy_stability", 70.0)),
@@ -2595,6 +2600,94 @@ def _status_text(state: dict[str, Any]) -> str:
         PHASE_PAUSED: "Session paused by facilitator. Waiting for resume...",
     }
     return texts.get(state["phase"], f"Phase: {state['phase']}")
+
+
+def _build_market_board(state: dict[str, Any]) -> dict[str, Any]:
+    """Headline values for the Vietnam carbon exchange 'trading board' view
+    (plan 2026-06-30 PHASE-04). Live/derived from current state where
+    possible; `None` for absent data so the UI can render "—".
+
+    Fields:
+      * total_allocated_quota (tCO2e)  — sum of company baseline × current
+        year's allocation factor. For Vietnam this lands on
+        VN_NATIONAL_ALLOCATION_TCO2E (511,473,846) by design (PHASE-01).
+      * latest_execution_price (đ/tCO2e) — last auction clearing price if
+        any auction has cleared, else the live offset price.
+      * total_trade_volume (tCO2e)     — sum of accepted OTC trade qty.
+      * total_trade_value (đ)          — sum of accepted OTC trade total.
+      * best_bid (đ/tCO2e)             — max live bid across open
+        auctions. None when no auction is open or no bid submitted.
+      * lowest_offer (đ/tCO2e)         — min price_per_allowance across
+        open OTC trades. None when no OTC offer is open.
+    """
+    from .constants import VN_NATIONAL_ALLOCATION_TCO2E
+
+    companies = state.get("companies", [])
+    if not companies:
+        return {
+            "total_allocated_quota": 0.0,
+            "latest_execution_price": None,
+            "total_trade_volume": 0.0,
+            "total_trade_value": 0.0,
+            "best_bid": None,
+            "lowest_offer": None,
+        }
+
+    current_year = state.get("current_year", 1)
+    factors = state.get("allocation_factors", {}) or {}
+    year_factor = factors.get(current_year) or factors.get(str(current_year)) or 1.0
+    jurisdiction = state.get("jurisdiction", "vietnam")
+    if jurisdiction == "vietnam":
+        # Headline tile: Vietnam is anchored to the real national quota.
+        total_quota = float(VN_NATIONAL_ALLOCATION_TCO2E)
+    else:
+        # EU/CA keep their own realistic totals.
+        total_quota = round(
+            sum(co.get("baseline_emissions", 0.0) * year_factor for co in companies),
+            2,
+        )
+
+    last_auction = state.get("last_auction_clearing_price") or 0.0
+    if last_auction > 0:
+        latest_execution = float(last_auction)
+    else:
+        latest_execution = float(
+            state.get("current_offset_price")
+            or state.get("offset_price")
+            or DEFAULT_OFFSET_PRICE
+        )
+
+    accepted = [t for t in state.get("trades", []) if t.get("status") == "accepted"]
+    total_volume = round(sum(t.get("quantity", 0.0) for t in accepted), 2)
+    total_value = round(sum(t.get("total_value", 0.0) for t in accepted), 2)
+
+    best_bid: float | None = None
+    for auction in state.get("auctions", []):
+        if auction.get("status") != "open":
+            continue
+        for bid in auction.get("bids", []) or []:
+            price = bid.get("price")
+            if price is None:
+                continue
+            best_bid = price if best_bid is None else max(best_bid, price)
+
+    lowest_offer: float | None = None
+    for trade in state.get("trades", []):
+        if trade.get("status") != "open":
+            continue
+        price = trade.get("price_per_allowance")
+        if price is None:
+            continue
+        lowest_offer = price if lowest_offer is None else min(lowest_offer, price)
+
+    return {
+        "total_allocated_quota": total_quota,
+        "latest_execution_price": latest_execution,
+        "total_trade_volume": total_volume,
+        "total_trade_value": total_value,
+        "best_bid": best_bid,
+        "lowest_offer": lowest_offer,
+    }
 
 
 def _get_company(state: dict[str, Any], company_id: str) -> dict[str, Any]:

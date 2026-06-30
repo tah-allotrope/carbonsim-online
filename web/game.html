@@ -474,6 +474,13 @@ function renderContent() {
 
     html += `<div class="card"><div class="card-title">Offsets &amp; Market</div>
 
+      <!-- 2026-06-30 PHASE-04: Board stat tiles + opening-session reference strip.
+           Renders six headline tiles for the Vietnam carbon exchange 'trading
+           board' look, plus a static opening-session strip with the real
+           29/06/2026 first-transaction facts. Shows '—' for absent data. -->
+      ${renderOpeningSessionStrip(s)}
+      ${renderBoardStatTiles(s)}
+
       <!-- Market ticker strip -->
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
         <div style="display:flex;flex-direction:column">
@@ -698,6 +705,50 @@ function fmtDelta(v, prefix = '') {
   if (v == null || v === 0) return '';
   const sign = v > 0 ? '+' : '';
   return `${prefix}${sign}${formatVndAbbrev(Math.abs(v))}`;
+}
+
+// 2026-06-30 PHASE-04: Six board stat tiles in the Vietnam carbon exchange
+// "trading board" style. Renders "—" for absent data (plan ASM-002).
+function renderBoardStatTiles(s) {
+  const board = (s && s.market_board) || {};
+  const cell = (label, value) => `
+    <div class="board-tile">
+      <div class="board-tile-label">${label}</div>
+      <div class="board-tile-value">${value}</div>
+    </div>`;
+  const fmtV = (v) => v == null ? '—' : formatVnd(v);
+  const fmtT = (v) => v == null ? '—' : formatTonnes(v);
+  return `
+    <div class="board-grid">
+      ${cell('Total Allocated Quota', fmtT(board.total_allocated_quota))}
+      ${cell('Latest Execution Price', `${fmtV(board.latest_execution_price)}/tCO2e`)}
+      ${cell('Total Trade Volume', fmtT(board.total_trade_volume))}
+      ${cell('Total Trade Value', fmtV(board.total_trade_value))}
+      ${cell('Highest Buy Bid', `${fmtV(board.best_bid)}/tCO2e`)}
+      ${cell('Lowest Sell Offer', `${fmtV(board.lowest_offer)}/tCO2e`)}
+    </div>`;
+}
+
+// 2026-06-30 PHASE-04: Static "Opening session" reference strip with the
+// real 29/06/2026 first-transaction facts (resolved Q-002 — static, not
+// live/derived). VN-only; hidden for EU/CA jurisdictions.
+function renderOpeningSessionStrip(s) {
+  if (!s || (s.jurisdiction || 'vietnam') !== 'vietnam') return '';
+  return `
+    <div class="opening-session-strip" role="note" aria-label="Opening session reference">
+      <span class="opening-session-tag">Opening session</span>
+      <span class="opening-session-date">29/06/2026</span>
+      <span class="opening-session-sep">·</span>
+      <span class="opening-session-cell"><strong>VN2025</strong></span>
+      <span class="opening-session-sep">·</span>
+      <span class="opening-session-cell">First trade: <strong>400 tCO2e</strong></span>
+      <span class="opening-session-sep">·</span>
+      <span class="opening-session-cell">Value: <strong>54.000.000 đ</strong></span>
+      <span class="opening-session-sep">·</span>
+      <span class="opening-session-cell">Lowest offer: <strong>135.000 đ/tCO2e</strong></span>
+      <span class="opening-session-sep">·</span>
+      <span class="opening-session-pill badge-green">Listed</span>
+    </div>`;
 }
 
 function previewHtml(action, payload) {
