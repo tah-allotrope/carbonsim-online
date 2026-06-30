@@ -124,6 +124,7 @@
 <script src="/js/api.js"></script>
 <script src="/js/effects.js"></script>
 <script src="/js/audio.js"></script>
+  <script src="/js/format.js"></script>
   <script src="/js/progression.js"></script>
   <script src="/js/shortcuts.js"></script>
   <script src="/js/assets.js"></script>
@@ -344,7 +345,7 @@ function renderContent() {
       if (yrRes) {
         const isComp = (yrRes.shortfall || 0) <= 0;
         segClass = isComp ? 'compliant' : 'shortfall';
-        labelText = `Year ${yr}: ${isComp ? 'Compliant' : 'Shortfall (+$' + fmt(yrRes.shortfall) + ')'}`;
+        labelText = `Year ${yr}: ${isComp ? 'Compliant' : 'Shortfall (+' + formatVnd(yrRes.shortfall) + ')'}`;
       } else {
         segClass = 'compliant';
         labelText = `Year ${yr}: Compliant`;
@@ -381,9 +382,9 @@ function renderContent() {
 
       <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
         <div class="grid-3" style="flex:1;margin-bottom:0">
-          <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent" id="stat-cash">$${fmt(cash)}</div></div>
-          <div class="stat"><div class="stat-label">Allowances</div><div class="stat-value" id="stat-allowances">${fmt(allowances)}</div></div>
-          <div class="stat"><div class="stat-label">Projected Emissions</div><div class="stat-value ${projected > allowances ? 'red' : 'green'}" id="stat-emissions">${fmt(projected)}</div></div>
+          <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent" id="stat-cash">${formatVnd(cash)}</div></div>
+          <div class="stat"><div class="stat-label">Allowances</div><div class="stat-value" id="stat-allowances">${formatTonnes(allowances)}</div></div>
+          <div class="stat"><div class="stat-label">Projected Emissions</div><div class="stat-value ${projected > allowances ? 'red' : 'green'}" id="stat-emissions">${formatTonnes(projected)}</div></div>
         </div>
 
         <!-- Radial gauge dial -->
@@ -398,13 +399,13 @@ function renderContent() {
 
       <div class="compliance-meter" id="complianceMeter">
         <span>Compliance Gap</span>
-        <span class="gap-indicator ${gap > 0 ? 'red' : 'green'}" id="stat-gap">${gap > 0 ? '+'+fmt(gap) : fmt(gap)}</span>
+        <span class="gap-indicator ${gap > 0 ? 'red' : 'green'}" id="stat-gap">${gap > 0 ? '+'+formatTonnesAbbrev(gap) : formatTonnesAbbrev(gap)}</span>
         <span class="badge ${gap <= 0 ? 'badge-green' : 'badge-red'}">${gap <= 0 ? 'Compliant' : 'Shortfall'}</span>
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.85rem;color:var(--muted)">
-        <span>Banked: ${fmt(banked)}</span>
-        <span>Offsets: ${fmt(offsetHoldings)} t (Usable: ${fmt(usableOffsets)} t)</span>
-        <span>Penalty Due: $${fmt(penalties)}</span>
+        <span>Banked: ${formatTonnes(banked)}</span>
+        <span>Offsets: ${formatTonnesAbbrev(offsetHoldings)} t (Usable: ${formatTonnesAbbrev(usableOffsets)} t)</span>
+        <span>Penalty Due: ${formatVnd(penalties)}</span>
       </div>
     </div>
     <div class="card">
@@ -455,7 +456,7 @@ function renderContent() {
         html += `<tr>
           <td>${m.label}</td>
           <td style="font-family:var(--mono)">-${m.abatement_amount} t</td>
-          <td style="font-family:var(--mono)">$${fmt(m.cost)}</td>
+          <td style="font-family:var(--mono)">${formatVndAbbrev(m.cost)}</td>
           <td>${timingLabel(m.activation_timing)}</td>
           <td>${statusLabel ? `<span class="badge ${statusClass}">${statusLabel}</span>` : `<div><button class="btn" id="abBtn-${m.measure_id}" onclick="doDecision('activate_abatement',{measure_id:'${m.measure_id}'}, event)" style="padding:6px 12px;font-size:0.8rem">Activate</button>${preview}</div>`}</td>
         </tr>`;
@@ -468,8 +469,8 @@ function renderContent() {
     const basePrice = s.offset_price || 25;
     const demandPct = s.annual_offset_supply_cap > 0 ? Math.min(1, (s.offset_demand_this_year || 0) / s.annual_offset_supply_cap) : 0;
     const priceMove = livePrice - basePrice;
-    const priceMoveStr = priceMove > 0 ? `<span style="color:var(--orange);font-size:0.75rem">▲ +$${priceMove.toFixed(2)}/t demand pressure</span>` : `<span style="color:var(--green);font-size:0.75rem">Base price (no demand pressure)</span>`;
-    const lastAuction = s.last_auction_clearing_price > 0 ? `$${fmt(s.last_auction_clearing_price)}/EUA` : 'No auctions cleared';
+    const priceMoveStr = priceMove > 0 ? `<span style="color:var(--orange);font-size:0.75rem">▲ +${formatVndAbbrev(priceMove)}/tCO2e demand pressure</span>` : `<span style="color:var(--green);font-size:0.75rem">Base price (no demand pressure)</span>`;
+    const lastAuction = s.last_auction_clearing_price > 0 ? `${formatVnd(s.last_auction_clearing_price)}/EUA` : 'No auctions cleared';
 
     html += `<div class="card"><div class="card-title">Offsets &amp; Market</div>
 
@@ -477,7 +478,7 @@ function renderContent() {
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
         <div style="display:flex;flex-direction:column">
           <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">VCM Spot</span>
-          <span style="font-size:1.15rem;font-weight:700;font-family:var(--mono);color:${priceMove > 0 ? 'var(--orange)' : 'var(--green)'}">$${livePrice.toFixed(2)}</span>
+          <span style="font-size:1.15rem;font-weight:700;font-family:var(--mono);color:${priceMove > 0 ? 'var(--orange)' : 'var(--green)'}">${formatVnd(livePrice)}</span>
           <span style="margin-top:2px">${priceMoveStr}</span>
         </div>
         <div style="width:1px;background:rgba(255,255,255,0.08);align-self:stretch"></div>
@@ -488,7 +489,7 @@ function renderContent() {
         <div style="width:1px;background:rgba(255,255,255,0.08);align-self:stretch"></div>
         <div style="display:flex;flex-direction:column">
           <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Penalty Rate</span>
-          <span style="font-size:1.1rem;font-weight:700;font-family:var(--mono)">$${fmt(s.penalty_rate || 200)}/t</span>
+          <span style="font-size:1.1rem;font-weight:700;font-family:var(--mono)">${formatVnd(s.penalty_rate || 5_440_000)}/tCO2e</span>
         </div>
         <div style="width:1px;background:rgba(255,255,255,0.08);align-self:stretch"></div>
         <div style="display:flex;flex-direction:column">
@@ -497,8 +498,8 @@ function renderContent() {
         </div>
         <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end">
           <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">Holdings</span>
-          <span style="font-size:1rem;font-weight:700"><span style="color:var(--text)">${fmt(offsetHoldings)}</span> <span style="color:var(--muted);font-size:0.8rem">t</span></span>
-          <span style="font-size:0.78rem;color:${usableOffsets >= maxUsableOffsets && offsetHoldings > 0 ? 'var(--orange)' : 'var(--muted)'}">Usable: ${fmt(usableOffsets)} / ${fmt(maxUsableOffsets)} t</span>
+          <span style="font-size:1rem;font-weight:700"><span style="color:var(--text)">${formatTonnesAbbrev(offsetHoldings)}</span> <span style="color:var(--muted);font-size:0.8rem">t</span></span>
+          <span style="font-size:0.78rem;color:${usableOffsets >= maxUsableOffsets && offsetHoldings > 0 ? 'var(--orange)' : 'var(--muted)'}">Usable: ${formatTonnesAbbrev(usableOffsets)} / ${formatTonnesAbbrev(maxUsableOffsets)} t</span>
         </div>
       </div>
 
@@ -523,7 +524,7 @@ function renderContent() {
           ${(player.forward_contracts||[]).map(fc => `
           <div style="display:flex;gap:10px;align-items:center;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;margin-bottom:4px;font-size:0.82rem">
             <span style="color:var(--muted)">${fc.contract_id}</span>
-            <span><strong>${fc.quantity} t</strong> @ <strong style="color:var(--orange)">$${fc.locked_price.toFixed(2)}/t</strong></span>
+            <span><strong>${formatTonnesAbbrev(fc.quantity)}</strong> @ <strong style="color:var(--orange)">${formatVnd(fc.locked_price)}/tCO2e</strong></span>
             <span style="color:var(--muted)">→ delivers Year ${fc.delivery_year}</span>
           </div>`).join('')}
         </div>` : ''}
@@ -559,7 +560,7 @@ function renderContent() {
               <div style="color:var(--muted);font-size:0.78rem;margin-top:2px">${proj.description}</div>
               <div style="display:flex;gap:10px;margin-top:4px;font-size:0.78rem">
                 <span style="color:var(--green)">${proj.annual_credits} t/yr × ${proj.duration_years} yrs</span>
-                <span style="color:var(--muted)">Cost: $${fmt(proj.cost)}</span>
+                <span style="color:var(--muted)">Cost: ${formatVndAbbrev(proj.cost)}</span>
                 ${prevHtml ? `<span>${prevHtml}</span>` : ''}
               </div>
             </div>
@@ -582,10 +583,10 @@ function renderContent() {
       html += `<tr style="${isPlayer ? 'background:rgba(31,147,199,0.10)' : ''}">
         <td>${i+1}</td>
         <td>${c.company_name || c.name} ${isPlayer ? '(You)' : ''}</td>
-        <td style="font-family:var(--mono)">${fmt(c.projected_emissions || c.emissions || 0)}</td>
-        <td style="font-family:var(--mono)">${fmt(c.allowances || 0)}</td>
-        <td style="font-family:var(--mono)">$${fmt(c.cash || 0)}</td>
-        <td style="font-family:var(--mono);color:${(c.penalty_due||0) > 0 ? 'var(--red)' : 'var(--green)'}">$${fmt(c.penalty_due || 0)}</td>
+        <td style="font-family:var(--mono)">${formatTonnes(c.projected_emissions || c.emissions || 0)}</td>
+        <td style="font-family:var(--mono)">${formatTonnes(c.allowances || 0)}</td>
+        <td style="font-family:var(--mono)">${formatVnd(c.cash || 0)}</td>
+        <td style="font-family:var(--mono);color:${(c.penalty_due||0) > 0 ? 'var(--red)' : 'var(--green)'}">${formatVnd(c.penalty_due || 0)}</td>
       </tr>`;
     });
     html += `</table></div>`;
@@ -681,7 +682,7 @@ function projectOutcome(action, payload) {
     const lockedPrice = Math.round(livePrice * 1.05 * 100) / 100;
     cashDelta = -Math.round(qty * lockedPrice * 100) / 100;
     const yr = (gameState && gameState.current_year || 0) + 1;
-    note = `Delivers Year ${yr} @ $${lockedPrice.toFixed(2)}/t locked`;
+    note = `Delivers Year ${yr} @ ${formatVnd(lockedPrice)}/tCO2e locked`;
   } else if (action === 'invest_vcm') {
     const catalog = s.vcm_catalog || [];
     const proj = catalog.find(p => p.project_id === payload.project_id);
@@ -696,7 +697,7 @@ function projectOutcome(action, payload) {
 function fmtDelta(v, prefix = '') {
   if (v == null || v === 0) return '';
   const sign = v > 0 ? '+' : '';
-  return `${prefix}${sign}${fmt(Math.abs(v))}`;
+  return `${prefix}${sign}${formatVndAbbrev(Math.abs(v))}`;
 }
 
 function previewHtml(action, payload) {
@@ -705,7 +706,7 @@ function previewHtml(action, payload) {
   const gapColor = r.gapDelta < 0 ? 'var(--green)' : r.gapDelta > 0 ? 'var(--red)' : 'var(--muted)';
   const cashColor = r.cashDelta < 0 ? 'var(--red)' : 'var(--green)';
   const gapStr = r.gapDelta !== 0 ? `<span style="color:${gapColor};font-size:0.75rem">gap ${fmtDelta(r.gapDelta)} t</span>` : '';
-  const cashStr = r.cashDelta !== 0 ? `<span style="color:${cashColor};font-size:0.75rem">$${fmtDelta(r.cashDelta)}</span>` : '';
+  const cashStr = r.cashDelta !== 0 ? `<span style="color:${cashColor};font-size:0.75rem">${fmtDelta(r.cashDelta)}</span>` : '';
   const noteStr = r.note ? `<span style="color:var(--muted);font-size:0.7rem">${r.note}</span>` : '';
   const parts = [gapStr, cashStr, noteStr].filter(Boolean);
   return parts.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">${parts.join('')}</div>` : '';
@@ -761,12 +762,12 @@ function showYearEndModal(yearSummary, closedYear, snapshot) {
   document.getElementById('yearEndTitle').textContent = `Year ${closedYear || ''} Complete`;
 
   const metrics = [
-    { label: 'Emissions', value: `${fmt(yr.emissions || 0)} t`, color: '' },
-    { label: 'Allocation', value: `${fmt(yr.allocation || 0)} t`, color: '' },
-    { label: 'Shortfall', value: `${fmt(yr.shortfall || 0)} t`, color: (yr.shortfall || 0) > 0 ? 'var(--red)' : 'var(--green)' },
-    { label: 'Penalty', value: `$${fmt(yr.penalty_due || 0)}`, color: (yr.penalty_due || 0) > 0 ? 'var(--red)' : 'var(--green)' },
-    { label: 'Banked', value: `${fmt(yr.banked_allowances || 0)} t`, color: 'var(--accent)' },
-    { label: 'Cash', value: `$${fmt(yr.cash || player.cash || 0)}`, color: '' },
+    { label: 'Emissions', value: `${formatTonnes(yr.emissions || 0)} t`, color: '' },
+    { label: 'Allocation', value: `${formatTonnes(yr.allocation || 0)} t`, color: '' },
+    { label: 'Shortfall', value: `${formatTonnes(yr.shortfall || 0)} t`, color: (yr.shortfall || 0) > 0 ? 'var(--red)' : 'var(--green)' },
+    { label: 'Penalty', value: `${formatVnd(yr.penalty_due || 0)}`, color: (yr.penalty_due || 0) > 0 ? 'var(--red)' : 'var(--green)' },
+    { label: 'Banked', value: `${formatTonnes(yr.banked_allowances || 0)} t`, color: 'var(--accent)' },
+    { label: 'Cash', value: `${formatVnd(yr.cash || player.cash || 0)}`, color: '' },
   ];
   document.getElementById('yearEndMetrics').innerHTML = metrics.map(m =>
     `<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px 10px">
@@ -790,7 +791,7 @@ function showYearEndModal(yearSummary, closedYear, snapshot) {
       pbText = '✅ Penalty-free again';
     }
   } else if (thisPenalty < prevBest) {
-    pbText = `📉 New best for this year type: $${fmt(thisPenalty)} penalty`;
+    pbText = `📉 New best for this year type: ${formatVndAbbrev(thisPenalty)} penalty`;
     localStorage.setItem(pbKey, String(thisPenalty));
   }
   document.getElementById('yearEndPersonalBest').textContent = pbText;
@@ -899,7 +900,7 @@ function doDecision(action, payload, event) {
         .find(x => x.measure_id === (payload && payload.measure_id));
       if (m) {
         CityRenderer.float('-' + m.abatement_amount + ' t', '#4caf50');
-        if (m.cost) CityRenderer.float('-$' + fmt(m.cost), '#e2553f');
+        if (m.cost) CityRenderer.float('-' + formatVndAbbrev(m.cost), '#e2553f');
       }
     }
     if (action === 'buy_offsets') {
@@ -1118,6 +1119,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function fmt(n) {
+  // 2026-06-30 PHASE-02: legacy abbreviation shim used only by inline
+  // tooling (floaters, log deltas) where the full dot-grouped form would
+  // blow out the layout. New code should call formatVndAbbrev /
+  // formatTonnesAbbrev directly from web/js/format.js.
   if (n == null) return '0';
   if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1)+'M';
   if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1)+'K';

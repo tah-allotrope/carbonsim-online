@@ -22,20 +22,24 @@ const Effects = {
     const start = performance.now();
 
     function fmt(n) {
+      // 2026-06-30 PHASE-02: delegate to the shared formatters. Currency
+      // animations use the abbreviated form so the count-up fits in the
+      // stat tile width; non-currency uses the abbreviated tonnes form.
       if (n == null) return '0';
-      const prefix = isCurrency ? (n < 0 ? '-$' : '$') : '';
-      const displayVal = Math.abs(n);
-
-      let formatted = '';
-      if (displayVal >= 1e6) {
-        formatted = (displayVal / 1e6).toFixed(1) + 'M';
-      } else if (displayVal >= 1e3) {
-        formatted = (displayVal / 1e3).toFixed(1) + 'K';
-      } else {
-        formatted = displayVal.toFixed(0);
+      if (isCurrency) {
+        const sign = n < 0 ? '-' : '';
+        const abs = Math.abs(n);
+        if (abs >= 1e12) return sign + (abs / 1e12).toFixed(1) + 'T đ';
+        if (abs >= 1e9) return sign + (abs / 1e9).toFixed(1) + 'B đ';
+        if (abs >= 1e6) return sign + (abs / 1e6).toFixed(1) + 'M đ';
+        if (abs >= 1e3) return sign + (abs / 1e3).toFixed(1) + 'K đ';
+        return sign + abs.toFixed(0) + ' đ';
       }
-
-      return prefix + formatted;
+      const abs = Math.abs(n);
+      const sign = n < 0 ? '-' : '';
+      if (abs >= 1e6) return sign + (abs / 1e6).toFixed(1) + 'M';
+      if (abs >= 1e3) return sign + (abs / 1e3).toFixed(1) + 'K';
+      return sign + abs.toFixed(0);
     }
 
     element.classList.remove('stat-value-bump');

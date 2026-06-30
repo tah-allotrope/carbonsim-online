@@ -98,6 +98,7 @@
 <script src="/js/api.js"></script>
 <script src="/js/effects.js"></script>
 <script src="/js/audio.js"></script>
+  <script src="/js/format.js"></script>
   <script src="/js/progression.js"></script>
   <script src="/js/assets.js"></script>
   <script src="/js/isocity.js"></script>
@@ -123,9 +124,9 @@ async function load() {
 
     document.getElementById('subtitle').textContent = `${summary.player_name} · ${summary.difficulty} · ${summary.completed_years}/${summary.total_years} years`;
     document.getElementById('totalYears').textContent = `${summary.completed_years}/${summary.total_years}`;
-    document.getElementById('finalCash').textContent = `$${fmt(player.cash || 0)}`;
-    document.getElementById('totalPenalties').textContent = `$${fmt(player.cumulative_penalties || player.penalty_due || 0)}`;
-    document.getElementById('bankedAllowances').textContent = fmt(player.banked_allowances || 0);
+    document.getElementById('finalCash').textContent = `${formatVnd(player.cash || 0)}`;
+    document.getElementById('totalPenalties').textContent = `${formatVnd(player.cumulative_penalties || player.penalty_due || 0)}`;
+    document.getElementById('bankedAllowances').textContent = formatTonnes(player.banked_allowances || 0);
 
     const totalPen = player.cumulative_penalties || player.penalty_due || 0;
 
@@ -164,10 +165,10 @@ async function load() {
         html += `<tr style="${isPlayer ? 'background:rgba(31,147,199,0.10)' : ''}">
           <td>${i+1}</td>
           <td>${c.company_name || c.name} ${isPlayer ? '(You)' : ''}</td>
-          <td style="font-family:var(--mono)">${fmt(c.projected_emissions || c.emissions || 0)}</td>
-          <td style="font-family:var(--mono)">${fmt(c.allowances || 0)}</td>
-          <td style="font-family:var(--mono)">$${fmt(c.cash || 0)}</td>
-          <td style="font-family:var(--mono);color:${(c.cumulative_penalties||0) > 0 ? 'var(--red)' : 'var(--green)'}">$${fmt(c.cumulative_penalties || 0)}</td>
+          <td style="font-family:var(--mono)">${formatTonnes(c.projected_emissions || c.emissions || 0)}</td>
+          <td style="font-family:var(--mono)">${formatTonnes(c.allowances || 0)}</td>
+          <td style="font-family:var(--mono)">${formatVnd(c.cash || 0)}</td>
+          <td style="font-family:var(--mono);color:${(c.cumulative_penalties||0) > 0 ? 'var(--red)' : 'var(--green)'}">${formatVnd(c.cumulative_penalties || 0)}</td>
         </tr>`;
       });
       html += '</table>';
@@ -180,8 +181,8 @@ Difficulty: ${summary.difficulty}
 Years: ${summary.completed_years}/${summary.total_years}
 Performance Grade: ${perf.grade} (${perf.gradeLabel})
 Performance Score: ${perf.score}/100
-Final Cash: $${fmt(player.cash || 0)}
-Total Penalties: $${fmt(totalPen)}
+Final Cash: ${formatVnd(player.cash || 0)}
+Total Penalties: ${formatVnd(totalPen)}
 Global Progress: Level ${progInfo.lifetimeLevelInfo.level}
 Achievements Unlocked: ${(summary.achievements || []).map(a => a.title).join(', ') || 'None'}`;
     document.getElementById('shareText').value = share;
@@ -256,6 +257,8 @@ function copyShare() {
 function shareSummary() { copyShare(); }
 
 function fmt(n) {
+  // 2026-06-30 PHASE-02: legacy abbreviation shim. New code calls the
+  // shared formatters in web/js/format.js (formatVnd, formatTonnes, ...).
   if (n == null) return '0';
   if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1)+'M';
   if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1)+'K';

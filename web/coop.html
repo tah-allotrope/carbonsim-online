@@ -41,6 +41,7 @@
 <script src="/js/api.js"></script>
 <script src="/js/effects.js"></script>
 <script src="/js/audio.js"></script>
+  <script src="/js/format.js"></script>
   <script src="/js/shortcuts.js"></script>
   <script src="/js/assets.js"></script>
   <script src="/js/isocity.js"></script>
@@ -192,13 +193,13 @@ function renderGame(s) {
   html += `<div class="grid-2"><div class="card">
     <div class="card-title">Your Company</div>
     <div class="stat"><div class="stat-label">Company</div><div class="stat-value">${player.company_name || '-'}</div></div>
-    <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent" id="coop-cash">$${fmt(cash)}</div></div>
-    <div class="stat"><div class="stat-label">Projected Emissions</div><div class="stat-value">${fmt(projected)} t</div></div>
-    <div class="stat"><div class="stat-label">Allowances</div><div class="stat-value">${fmt(player.allowances || 0)} t</div></div>
-    <div class="stat"><div class="stat-label">Offsets Held</div><div class="stat-value">${fmt(offsetHoldings)} t (Usable: ${fmt(usableOffsets)} t)</div></div>
-    <div class="stat"><div class="stat-label">Banked</div><div class="stat-value">${fmt(player.banked_allowances || 0)} t</div></div>
-    <div class="stat"><div class="stat-label">Compliance Gap</div><div class="stat-value ${gap > 0 ? 'red' : 'green'}" id="coop-gap">${fmt(gap)}</div></div>
-    <div class="stat"><div class="stat-label">Cumulative Penalties</div><div class="stat-value red">$${fmt(player.cumulative_penalties || 0)}</div></div>
+    <div class="stat"><div class="stat-label">Cash</div><div class="stat-value accent" id="coop-cash">${formatVnd(cash)}</div></div>
+    <div class="stat"><div class="stat-label">Projected Emissions</div><div class="stat-value">${formatTonnes(projected)} t</div></div>
+    <div class="stat"><div class="stat-label">Allowances</div><div class="stat-value">${formatTonnes(player.allowances || 0)} t</div></div>
+    <div class="stat"><div class="stat-label">Offsets Held</div><div class="stat-value">${formatTonnesAbbrev(offsetHoldings)} t (Usable: ${formatTonnesAbbrev(usableOffsets)} t)</div></div>
+    <div class="stat"><div class="stat-label">Banked</div><div class="stat-value">${formatTonnes(player.banked_allowances || 0)} t</div></div>
+    <div class="stat"><div class="stat-label">Compliance Gap</div><div class="stat-value ${gap > 0 ? 'red' : 'green'}" id="coop-gap">${formatTonnes(gap)}</div></div>
+    <div class="stat"><div class="stat-label">Cumulative Penalties</div><div class="stat-value red">${formatVnd(player.cumulative_penalties || 0)}</div></div>
   </div>`;
 
   html += `<div class="card">
@@ -211,8 +212,8 @@ function renderGame(s) {
     html += `<div class="leaderboard-row" style="${isYou ? 'background:rgba(31,147,199,0.10);border-radius:6px;padding:6px 8px' : ''}">
       <span><span style="color:${rankColor};font-family:var(--mono);margin-right:8px">#${row.rank}</span>${row.player_name}${isYou ? ' (you)' : ''}</span>
       <span style="font-family:var(--mono);font-size:0.8rem">
-        <span style="color:var(--green)">$${fmt(row.cash)}</span> ·
-        <span style="color:${row.cumulative_penalties > 0 ? 'var(--red)' : 'var(--muted)'}">-$${fmt(row.cumulative_penalties)}</span>
+        <span style="color:var(--green)">${formatVndAbbrev(row.cash)}</span> ·
+        <span style="color:${row.cumulative_penalties > 0 ? 'var(--red)' : 'var(--muted)'}">-${formatVndAbbrev(row.cumulative_penalties)}</span>
       </span>
     </div>`;
   }
@@ -223,8 +224,8 @@ function renderGame(s) {
     for (const m of menu) {
       html += `<tr>
         <td>${m.label}</td>
-        <td>${fmt(m.abatement_amount)} t</td>
-        <td>$${fmt(m.cost)}</td>
+        <td>${formatTonnesAbbrev(m.abatement_amount)} t</td>
+        <td>${formatVndAbbrev(m.cost)}</td>
         <td>${m.active || m.pending ? '<span class="badge badge-green">Active</span>' : `<button class="btn" onclick="activateMeasure('${m.measure_id}')">Activate</button>`}</td>
       </tr>`;
     }
@@ -234,7 +235,7 @@ function renderGame(s) {
   if (s.phase === 'decision_window' || s.phase === 'year_start') {
     html += `<div class="card"><div class="card-title">Offset Market</div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
-        <span style="color:var(--muted)">Price: <strong style="color:var(--text)">$${fmt(s.offset_price || 25)}/t</strong></span>
+        <span style="color:var(--muted)">Price: <strong style="color:var(--text)">${formatVnd(s.offset_price || 136000)}/tCO2e</strong></span>
         <span style="color:var(--muted)">Cap: <strong style="color:var(--text)">${((s.offset_usage_cap || 0.1)*100).toFixed(0)}%</strong></span>
       </div>
       <div class="glass-panel" style="padding:12px;border-radius:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -259,18 +260,18 @@ function renderGame(s) {
           <span style="font-family:var(--mono)">Auction: ${a.supply}t allowances</span>
           ${statusBadge}
         </div>
-        <div style="color:var(--muted);font-size:0.8rem;margin-bottom:8px">Price range: $${a.price_floor || 80} - $${a.price_ceiling || 300}</div>`;
+        <div style="color:var(--muted);font-size:0.8rem;margin-bottom:8px">Price range: ${formatVnd(a.price_floor || 435200)} - ${formatVnd(a.price_ceiling || 1632000)}</div>`;
       if (a.status === 'open') {
         html += `<div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
           <div style="flex:1;min-width:100px"><label style="font-size:0.7rem;color:var(--muted)">Qty (t)</label><input type="number" id="bidQty_${a.auction_id}" min="1" value="10" class="input-base" style="width:100%"></div>
-          <div style="flex:1;min-width:100px"><label style="font-size:0.7rem;color:var(--muted)">Price ($)</label><input type="number" id="bidPrice_${a.auction_id}" min="${a.price_floor || 80}" max="${a.price_ceiling || 300}" value="${Math.round((a.price_floor + a.price_ceiling) / 2)}" class="input-base" style="width:100%"></div>
+          <div style="flex:1;min-width:100px"><label style="font-size:0.7rem;color:var(--muted)">Price (đ/tCO2e)</label><input type="number" id="bidPrice_${a.auction_id}" min="${a.price_floor || 435200}" max="${a.price_ceiling || 1632000}" value="${Math.round((a.price_floor + a.price_ceiling) / 2)}" class="input-base" style="width:100%"></div>
           <button class="btn btn-primary" onclick="submitBid('${a.auction_id}')" style="height:38px">Bid</button>
         </div>`;
         if (isHost) {
           html += `<div style="margin-top:8px"><button class="btn btn-danger" onclick="closeAuction('${a.auction_id}')" style="font-size:0.8rem">Close Auction</button></div>`;
         }
       } else if (a.status === 'cleared' && a.results) {
-        html += `<div style="font-size:0.8rem;color:var(--muted)">Clearing price: $${a.clearing_price || 0}/t</div>`;
+        html += `<div style="font-size:0.8rem;color:var(--muted)">Clearing price: ${formatVnd(a.clearing_price || 0)}/tCO2e</div>`;
       } else if (a.status === 'scheduled' && isHost) {
         html += `<button class="btn btn-primary" onclick="openAuction()" style="font-size:0.8rem;margin-top:8px">Open Auction</button>`;
       }
@@ -322,9 +323,9 @@ function renderSummary(s) {
       <td style="${rankStyle}">${medal}#${row.rank}</td>
       <td>${row.player_name}</td>
       <td style="color:var(--muted)">${row.company_name}</td>
-      <td style="color:var(--green)">$${fmt(row.cash)}</td>
-      <td style="color:${row.cumulative_penalties > 0 ? 'var(--red)' : 'var(--muted)'}">$${fmt(row.cumulative_penalties)}</td>
-      <td>${fmt(row.compliance_gap)}</td>
+      <td style="color:var(--green)">${formatVndAbbrev(row.cash)}</td>
+      <td style="color:${row.cumulative_penalties > 0 ? 'var(--red)' : 'var(--muted)'}">${formatVndAbbrev(row.cumulative_penalties)}</td>
+      <td>${formatTonnesAbbrev(row.compliance_gap)}</td>
     </tr>`;
   }
   html += `</table></div>`;
@@ -408,6 +409,8 @@ function closeAuction(auctionId) {
 }
 
 function fmt(n) {
+  // 2026-06-30 PHASE-02: legacy abbreviation shim. New code calls the
+  // shared formatters in web/js/format.js (formatVnd, formatTonnes, ...).
   if (n == null) return '0';
   if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1) + 'M';
   if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1) + 'K';
