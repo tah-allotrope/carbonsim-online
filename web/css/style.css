@@ -7,19 +7,29 @@
 }
 
 :root {
-  /* Kairosoft-bright tycoon palette */
+  /* CarbonSim palette (2026-06-30 PHASE-03):
+     - Retinted to the Vietnam carbon exchange board language: cyan/teal
+       for active/headers, green for listed/compliant, red for sell-side /
+       shortfall, on the retained warm cream base.
+     - --accent-* are the cyan/teal family.
+     - --green is the listed-green (a touch more saturated than the
+       pre-retint grass green for board parity).
+     - --red is the sell-side red (also nudged to a more saturated
+       board-style red).
+     - The cream / panel / text / line tokens are unchanged so the
+       structural chrome and copy stay legible. */
   --bg: #fdf6e9;          /* bright warm cream */
   --bg-soft: #f4e8d2;     /* deeper cream */
   --panel: #fffefb;       /* near-white panel */
   --line: rgba(74, 59, 45, 0.22);
   --text: #2a2018;        /* warm near-black */
   --muted: #6f5d46;
-  --accent: #1f93c7;      /* bright sky azure */
-  --accent-bright: #2bb0e0; /* lighter azure for gradients/highlights */
-  --accent-ink: #157197;  /* darker azure for small accent TEXT (>=4.5:1 on panel) */
-  --green: #4caf50;       /* fresh grass green */
-  --red: #e2553f;         /* cheerful warm red */
-  --orange: #f5a623;      /* sunny */
+  --accent: #0891b2;      /* cyan-600 (board teal) */
+  --accent-bright: #06b6d4; /* cyan-500 (lighter gradient top) */
+  --accent-ink: #155e75;  /* cyan-800 — small accent TEXT (>=4.5:1 on panel) */
+  --green: #16a34a;       /* green-600 (board listed-green) */
+  --red: #dc2626;         /* red-600 (board sell-red) */
+  --orange: #f5a623;      /* sunny (unchanged) */
   --glow: 0 0 0 transparent;
 
   /* Bevel chrome tokens (rounded/softened in Sprint 1 Phase 2) */
@@ -27,11 +37,11 @@
   --bevel-dark: #caa96c;
   --bevel-shadow: #a07d44;
 
-  /* Gradient tokens (used by rounded chrome in Phase 2) */
+  /* Gradient tokens — lighter-top-to-darker-base convention unchanged */
   --grad-panel: linear-gradient(180deg, #fffefb, #f7eed9);
   --grad-accent: linear-gradient(180deg, var(--accent-bright), var(--accent));
-  --grad-green: linear-gradient(180deg, #66c06a, var(--green));
-  --grad-red: linear-gradient(180deg, #ef6e59, var(--red));
+  --grad-green: linear-gradient(180deg, #4ade80, var(--green));
+  --grad-red: linear-gradient(180deg, #f87171, var(--red));
 
   /* Typography */
   --font: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -103,9 +113,9 @@ a:hover { text-decoration: underline; color: var(--text); }
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--bevel-dark);
 }
-.btn-primary { background: var(--grad-accent); border-color: rgba(0,0,0,0.12); color: #fff; box-shadow: 0 3px 0 #156f97, 0 5px 9px rgba(31,147,199,0.32); }
-.btn-primary:hover { filter: brightness(1.06); box-shadow: 0 4px 0 #156f97, 0 7px 13px rgba(31,147,199,0.38); }
-.btn-danger { background: var(--grad-red); border-color: rgba(0,0,0,0.12); color: #fff; box-shadow: 0 3px 0 #b23e2c, 0 5px 9px rgba(226,85,63,0.32); }
+.btn-primary { background: var(--grad-accent); border-color: rgba(0,0,0,0.12); color: #fff; box-shadow: 0 3px 0 #155e75, 0 5px 9px rgba(8,145,178,0.32); }
+.btn-primary:hover { filter: brightness(1.06); box-shadow: 0 4px 0 #155e75, 0 7px 13px rgba(8,145,178,0.38); }
+.btn-danger { background: var(--grad-red); border-color: rgba(0,0,0,0.12); color: #fff; box-shadow: 0 3px 0 #b91c1c, 0 5px 9px rgba(220,38,38,0.32); }
 .btn-danger:hover { filter: brightness(1.06); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; filter: grayscale(0.5); }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -122,7 +132,7 @@ a:hover { text-decoration: underline; color: var(--text); }
   box-shadow: inset 0 2px 4px rgba(74, 59, 45, 0.08);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: inset 0 2px 4px rgba(74,59,45,0.08), 0 0 0 3px rgba(31,147,199,0.25); }
+.input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: inset 0 2px 4px rgba(74,59,45,0.08), 0 0 0 3px rgba(8,145,178,0.25); }
 .input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 select { cursor: pointer; }
 label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--mono); }
@@ -219,7 +229,7 @@ label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.8r
   transition: background-color 0.2s;
   border-radius: 6px;
 }
-.leaderboard-row:hover { background-color: rgba(31,147,199,0.07); }
+.leaderboard-row:hover { background-color: rgba(8,145,178,0.07); }
 .leaderboard-row:last-child { border-bottom: none; }
 
 .hidden { display: none !important; }
@@ -264,7 +274,7 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); }
 th { color: var(--accent-ink); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--mono); }
 tr { transition: background-color 0.2s; }
-tbody tr:hover { background-color: rgba(31, 147, 199, 0.07); }
+tbody tr:hover { background-color: rgba(8, 145, 178, 0.07); }
 
 /* GAMIFICATION & PROGRESSION ELEMENT STYLES */
 

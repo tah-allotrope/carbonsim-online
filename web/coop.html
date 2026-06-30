@@ -209,7 +209,7 @@ function renderGame(s) {
     const isYou = row.participant_id === PARTICIPANT_ID;
     const rankColors = ['', 'var(--accent)', 'var(--muted)', 'var(--orange)'];
     const rankColor = rankColors[row.rank] || 'var(--muted)';
-    html += `<div class="leaderboard-row" style="${isYou ? 'background:rgba(31,147,199,0.10);border-radius:6px;padding:6px 8px' : ''}">
+    html += `<div class="leaderboard-row" style="${isYou ? 'background:rgba(8,145,178,0.10);border-radius:6px;padding:6px 8px' : ''}">
       <span><span style="color:${rankColor};font-family:var(--mono);margin-right:8px">#${row.rank}</span>${row.player_name}${isYou ? ' (you)' : ''}</span>
       <span style="font-family:var(--mono);font-size:0.8rem">
         <span style="color:var(--green)">${formatVndAbbrev(row.cash)}</span> ·
@@ -369,7 +369,7 @@ function activateMeasure(measureId) {
     CityRenderer.emote('\u{1F49A}'); // 💚
     const m = ((coopState && coopState.snapshot && coopState.snapshot.player_company &&
       coopState.snapshot.player_company.abatement_menu) || []).find(x => x.measure_id === measureId);
-    if (m) CityRenderer.float('-' + m.abatement_amount + ' t', '#4caf50');
+    if (m) CityRenderer.float('-' + m.abatement_amount + ' t', '#16a34a');
   }
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'activate_abatement',
@@ -385,7 +385,7 @@ function buyOffsets() {
   if (CityRenderer) {
     CityRenderer.triggerOffsetEffect();
     CityRenderer.emote('\u{1FA99}'); // 🪙
-    CityRenderer.float('+' + quantity + ' t', '#1f93c7');
+    CityRenderer.float('+' + quantity + ' t', '#0891b2');
   }
   API.coopDecision(GAME_ID, PARTICIPANT_ID, {
     action: 'buy_offsets',

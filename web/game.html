@@ -580,7 +580,7 @@ function renderContent() {
     html += `<table><tr><th>#</th><th>Company</th><th>Emissions</th><th>Allowances</th><th>Cash</th><th>Penalties</th></tr>`;
     leaderboardArr.slice(0, 10).forEach((c, i) => {
       const isPlayer = c.company_id === player.company_id;
-      html += `<tr style="${isPlayer ? 'background:rgba(31,147,199,0.10)' : ''}">
+      html += `<tr style="${isPlayer ? 'background:rgba(8,145,178,0.10)' : ''}">
         <td>${i+1}</td>
         <td>${c.company_name || c.name} ${isPlayer ? '(You)' : ''}</td>
         <td style="font-family:var(--mono)">${formatTonnes(c.projected_emissions || c.emissions || 0)}</td>
@@ -899,14 +899,14 @@ function doDecision(action, payload, event) {
         gameState.snapshot.player_company.abatement_menu) || [])
         .find(x => x.measure_id === (payload && payload.measure_id));
       if (m) {
-        CityRenderer.float('-' + m.abatement_amount + ' t', '#4caf50');
-        if (m.cost) CityRenderer.float('-' + formatVndAbbrev(m.cost), '#e2553f');
+        CityRenderer.float('-' + m.abatement_amount + ' t', '#16a34a');
+        if (m.cost) CityRenderer.float('-' + formatVndAbbrev(m.cost), '#dc2626');
       }
     }
     if (action === 'buy_offsets') {
       CityRenderer.triggerOffsetEffect();
       CityRenderer.emote('\u{1FA99}'); // 🪙
-      if (payload && payload.quantity) CityRenderer.float('+' + payload.quantity + ' t', '#1f93c7');
+      if (payload && payload.quantity) CityRenderer.float('+' + payload.quantity + ' t', '#0891b2');
     }
   }
   API.decision(GAME_ID, { action, payload }).then(r => {
