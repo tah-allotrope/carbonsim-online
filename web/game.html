@@ -470,7 +470,7 @@ function renderContent() {
     const demandPct = s.annual_offset_supply_cap > 0 ? Math.min(1, (s.offset_demand_this_year || 0) / s.annual_offset_supply_cap) : 0;
     const priceMove = livePrice - basePrice;
     const priceMoveStr = priceMove > 0 ? `<span style="color:var(--orange);font-size:0.75rem">▲ +${formatVndAbbrev(priceMove)}/tCO2e demand pressure</span>` : `<span style="color:var(--green);font-size:0.75rem">Base price (no demand pressure)</span>`;
-    const lastAuction = s.last_auction_clearing_price > 0 ? `${formatVnd(s.last_auction_clearing_price)}/EUA` : 'No auctions cleared';
+    const lastAuction = s.last_auction_clearing_price > 0 ? `${formatVnd(s.last_auction_clearing_price)}/tCO2e` : 'No auctions cleared';
 
     html += `<div class="card"><div class="card-title">Offsets &amp; Market</div>
 

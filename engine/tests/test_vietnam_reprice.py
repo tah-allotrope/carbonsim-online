@@ -102,11 +102,23 @@ class VCMAandTechUnlockTests(unittest.TestCase):
         redd = next(p for p in VCM_CATALOG if p["project_id"] == "vcm_redd_plus")
         self.assertEqual(redd["cost"], round(150_000.0 * VND_FX * VN_VOLUME_FACTOR, 2))
 
+    def test_vcm_annual_credits_get_v_only(self):
+        # annual_credits is tonnage (tCO2e/yr into offset_holdings) → V only, no FX.
+        redd = next(p for p in VCM_CATALOG if p["project_id"] == "vcm_redd_plus")
+        self.assertEqual(redd["annual_credits"], round(8.0 * VN_VOLUME_FACTOR, 2))
+
     def test_tech_unlock_templates_get_fx_times_v(self):
         # default 40,000 → 40,000 * FX * V
         self.assertEqual(
             TECH_UNLOCK_TEMPLATES["default"]["cost"],
             round(40_000.0 * VND_FX * VN_VOLUME_FACTOR, 2),
+        )
+
+    def test_tech_unlock_abatement_amount_gets_v_only(self):
+        # abatement_amount is tonnage → V only, no FX.
+        self.assertEqual(
+            TECH_UNLOCK_TEMPLATES["default"]["abatement_amount"],
+            round(5.0 * VN_VOLUME_FACTOR, 2),
         )
 
 

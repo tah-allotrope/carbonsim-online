@@ -27,6 +27,10 @@ db.sqlite3
 .pytest_cache/
 .ruff_cache/
 
+# Server run logs
+server.log
+server.log.err
+
 # Claude worktrees and local (per-user) settings
 .claude/worktrees/
 .claude/settings.local.json

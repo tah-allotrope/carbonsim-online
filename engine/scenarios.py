@@ -305,20 +305,21 @@ _RAW_PACKS = {
 
 SCENARIO_PACKS = {key: _rescale_vn_pack(pack) for key, pack in _RAW_PACKS.items()}
 
-# VCM_CATALOG is a Vietnam-themed catalogue; costs are lump-sum money that
-# scales with company size, so they get FX × V.
+# VCM_CATALOG is a Vietnam-themed catalogue. Per plan CON-001: `annual_credits`
+# is a tonnage field (tCO2e/yr delivered into offset_holdings) so it gets V only;
+# `cost` is lump-sum money that scales with company size so it gets FX × V.
 VCM_CATALOG_RAW = [
     {"project_id": "vcm_redd_plus", "label": "REDD+ Forest Conservation", "description": "Protect 500 ha of tropical forest in the Mekong Delta.", "annual_credits": 8.0, "duration_years": 3, "cost": 150_000.0},
     {"project_id": "vcm_rice_methane", "label": "Rice Paddy Methane Reduction", "description": "Alternate wetting-and-drying technique across partner farms.", "annual_credits": 5.0, "duration_years": 3, "cost": 80_000.0},
     {"project_id": "vcm_cookstove", "label": "Clean Cookstove Distribution", "description": "Distribute efficient cookstoves to 10,000 rural households.", "annual_credits": 3.0, "duration_years": 3, "cost": 50_000.0},
 ]
 VCM_CATALOG = [
-    {**p, "cost": _scale_money(p["cost"])} for p in VCM_CATALOG_RAW
+    {**p, "annual_credits": _scale_tonnage(p["annual_credits"]), "cost": _scale_money(p["cost"])}
+    for p in VCM_CATALOG_RAW
 ]
 
-# Tech-unlock templates are global (not Vietnam-specific), but they are
-# lump-sum costs and remain VN-themed. Apply FX × V for consistency with
-# other in-pack costs.
+# Tech-unlock templates are Vietnam-themed. Per plan CON-001: `abatement_amount`
+# is a tonnage field so it gets V only; `cost` is lump-sum money so it gets FX × V.
 TECH_UNLOCK_TEMPLATES_RAW = {
     "default": {"measure_label": "Process Optimization", "abatement_amount": 5.0, "cost": 40000.0, "activation_timing": "immediate"},
     "solar_subsidy": {"measure_label": "Rooftop Solar Installation", "abatement_amount": 8.0, "cost": 60000.0, "activation_timing": "immediate"},
@@ -334,7 +335,8 @@ TECH_UNLOCK_TEMPLATES_RAW = {
     "renewable_certificates": {"measure_label": "Renewable Energy Certificates", "abatement_amount": 3.0, "cost": 20000.0, "activation_timing": "immediate"},
 }
 TECH_UNLOCK_TEMPLATES = {
-    key: {**t, "cost": _scale_money(t["cost"])} for key, t in TECH_UNLOCK_TEMPLATES_RAW.items()
+    key: {**t, "abatement_amount": _scale_tonnage(t["abatement_amount"]), "cost": _scale_money(t["cost"])}
+    for key, t in TECH_UNLOCK_TEMPLATES_RAW.items()
 }
 
 SHOCK_CATALOG = {
