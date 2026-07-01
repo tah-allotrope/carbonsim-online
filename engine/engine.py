@@ -1651,14 +1651,23 @@ def apply_shock(
         state["offset_usage_cap"] = max(0.0, min(1.0, new_cap))
 
     elif shock_type == "tech_unlock":
-        from .scenarios import TECH_UNLOCK_TEMPLATES
+        from .scenarios import TECH_UNLOCK_TEMPLATES, _scale_tonnage, _scale_money
         params = shock_params or {}
         sector = params.get("sector", "all")
         template_key = params.get("template", "default")
         template = TECH_UNLOCK_TEMPLATES.get(template_key, TECH_UNLOCK_TEMPLATES["default"])
         measure_label = params.get("measure_label", template["measure_label"])
-        abatement_amount = params.get("abatement_amount", template["abatement_amount"])
-        cost = params.get("cost", template["cost"])
+        # Card decks carry RAW (unscaled) abatement_amount/cost. On a Vietnam
+        # V-rescaled game these must be scaled to match real measures, or the
+        # injected tech unlock delivers ~8 t against 76M-t baselines and is dead
+        # weight — which silently skews strategy balance (plan CON-001). Template
+        # fallbacks are already scaled, so only param-supplied values are scaled.
+        # EU/CA jurisdiction games keep their own raw tonnages (plan DEC-002).
+        vn_scaled = state.get("jurisdiction") in (None, "", "vietnam")
+        _st = _scale_tonnage if vn_scaled else (lambda x: x)
+        _sm = _scale_money if vn_scaled else (lambda x: x)
+        abatement_amount = _st(params["abatement_amount"]) if "abatement_amount" in params else template["abatement_amount"]
+        cost = _sm(params["cost"]) if "cost" in params else template["cost"]
         activation_timing = params.get("activation_timing", template["activation_timing"])
         new_measure = {
             "measure_id": f"card_{len(state.get('active_shocks', []))}_{state['current_year']}",

@@ -37,6 +37,16 @@ def _rescale_vn_pack(pack):
     out["penalty_rate"] = _scale_per_tonne(pack["penalty_rate"])
     out["auction_price_floor"] = _scale_per_tonne(pack["auction_price_floor"])
     out["auction_price_ceiling"] = _scale_per_tonne(pack["auction_price_ceiling"])
+    # annual_offset_supply_cap is a tonnage: it divides offset demand in the
+    # price-elasticity term (engine `min(demand/supply_cap, 1.0)`). Demand scales
+    # with the V-rescaled emissions, so the cap must scale by V too or the term
+    # permanently saturates to 1.0 and pins offset price at its ceiling. No pack
+    # sets it today, so we materialise the engine default (50.0) here, V-scaled,
+    # keeping the demand/supply ratio scale-invariant (plan CON-001; fixes the
+    # solo_standard balance regression). EU/CA overlays keep the raw 50.0.
+    out["annual_offset_supply_cap"] = _scale_tonnage(
+        pack.get("annual_offset_supply_cap", 50.0)
+    )
     out["company_library"] = [
         {
             **co,

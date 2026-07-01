@@ -213,5 +213,53 @@ class MarketBoardSnapshotTests(unittest.TestCase):
         self.assertGreater(board["total_allocated_quota"], 0.0)
 
 
+class ScaleInvarianceTests(unittest.TestCase):
+    """The V rescale must leave gameplay balance invariant. Two tonnage fields
+    were missed in the initial reprice — the offset supply cap (a fixed 50.0
+    engine default that divides demand in the price-elasticity term) and the
+    card-injected tech_unlock abatement — which made solo_standard's strategy
+    field collapse into aggressive-dominance. These lock the fixes in place.
+    """
+
+    def test_offset_supply_cap_scaled_by_v(self):
+        # annual_offset_supply_cap is tonnage → V-scaled from the 50.0 default.
+        self.assertEqual(
+            SCENARIO_PACKS["solo_standard"]["annual_offset_supply_cap"],
+            round(50.0 * VN_VOLUME_FACTOR, 2),
+        )
+
+    def test_card_tech_unlock_measure_is_v_scaled(self):
+        # A tech_unlock card carrying raw params injects a V-scaled measure on a
+        # Vietnam game (abatement_amount → V, cost → FX × V).
+        from engine import engine
+        import datetime
+
+        state = engine.create_initial_state(participant_count=1, scenario="solo_standard")
+        state = engine.start_simulation(
+            state, datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+        )
+        before = {m["measure_id"] for m in state["companies"][0]["abatement_menu"]}
+        state = engine.apply_shock(
+            state,
+            shock_type="tech_unlock",
+            magnitude=0.0,
+            shock_params={"sector": "all", "abatement_amount": 8.0, "cost": 60000.0},
+            now=datetime.datetime(2026, 1, 2, tzinfo=datetime.timezone.utc),
+        )
+        new = [m for m in state["companies"][0]["abatement_menu"] if m["measure_id"] not in before]
+        self.assertEqual(len(new), 1)
+        self.assertEqual(new[0]["abatement_amount"], round(8.0 * VN_VOLUME_FACTOR, 2))
+        self.assertEqual(new[0]["cost"], round(60000.0 * VND_FX * VN_VOLUME_FACTOR, 2))
+
+    def test_solo_standard_field_has_no_dominant_strategy(self):
+        # Balance guard (memory CON-003): at penalty 1000 no strategy should
+        # dominate. The reprice must not reintroduce dominance.
+        from engine.playtest import run_strategy_sweep
+
+        result = run_strategy_sweep(range(20), scenario="solo_standard")
+        self.assertEqual(result["dominant_strategies"], [])
+        self.assertLessEqual(max(r["win_rate"] for r in result["rows"]), 0.45)
+
+
 if __name__ == "__main__":
     unittest.main()
